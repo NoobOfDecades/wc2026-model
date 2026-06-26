@@ -860,9 +860,15 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v5.6.1";
-const BUILD_STAMP="2026-06-26 17:14 SAST";
+const BUILD_VERSION="v5.7.0";
+const BUILD_STAMP="2026-06-26 17:44 SAST";
 const CHANGELOG=[
+  {v:"v5.7.0",d:"2026-06-26",items:[
+    "Reworked what the model's \"★ MODEL PICK\" badge recommends, so it marks what the model actually BELIEVES rather than the lowest-risk hedge. Previously the default pick fell back to a \"favourite or draw\" Double Chance for almost every competitive match - even when the model gave the draw little chance - which misrepresented the model as hedging onto a draw it never rated. Now the pick is conviction-based: when the favourite's own win probability is 50% or higher (a real directional edge), the badge backs the OUTRIGHT WIN; only when the favourite is below 50% (a genuinely close match with no clean-win conviction) does it fall to the honest favourite-or-draw hedge; in a near coin-flip the hedge stands as an expression of real uncertainty. Grounded in the model's own maths: a draw is never its single most-likely outcome (it peaks at 28% when teams are equal), so the draw-hedge now appears only when the favourite genuinely is not dominant - never in place of a win the model was confident about."
+  ]},
+  {v:"v5.6.2",d:"2026-06-26",items:[
+    "Fixed a genuinely confusing betting-tab bug. The model does preselect its recommended bet when you open a match (the safest high-probability market, or the bold pick when it strongly favours one side). But the \"★ MODEL PICK\" badge was wrongly attached to the SELECTED state, so the moment you tapped any other option to explore it, that option ALSO got a \"MODEL PICK\" badge - making it impossible to tell what the model actually recommended versus what you had added yourself. The badge now stays fixed on the model's genuine recommendation regardless of what you select, so there is always exactly one MODEL PICK per match. Confirmed via a deep audit of the selection and stake logic ahead of the knockouts: tap-to-select, stake redistribution and the block-bad-bet guard all behave correctly; this badge mislabel was the only issue."
+  ]},
   {v:"v5.6.1",d:"2026-06-26",items:[
     "Fixed a real structural flaw: 12 of 48 teams (including France, England, Netherlands) were fielding a Starting XI with NO goalkeeper. The XI builder only included a GK if one happened to be flagged as a likely starter; for teams whose 11 flagged starters were all outfielders, the keeper was squeezed out entirely - nonsensical, since a poor or absent keeper materially changes a result. Now the best available goalkeeper by model score is ALWAYS force-included in the XI and Top 15 (the second-best is used automatically if the best is injured), displacing the weakest outfielder. Every team now fields exactly one keeper. Rankings shift only slightly; the model-vs-market comparison is essentially unchanged, since Top-15 mode already tended to include a keeper - the bug mainly hit the Starting XI view."
   ]},
@@ -1272,7 +1278,7 @@ function renderBettingPlan(kA,kB){
   const P=bettingPlan(kA,kB);
   const br=STATE.bankroll||'';
   const safeSplit=stakeSplit(P.safe), riskSplit=stakeSplit(P.risky);
-  function lineHTML(l,pctWithin,blockId,idx,on){
+  function lineHTML(l,pctWithin,blockId,idx,on,isModelPick){
     const lineId=blockId+'-'+idx;
     const outcStr=(l.outc||[]).join(',');
     const sel=on?'1':'0';
@@ -1282,7 +1288,7 @@ function renderBettingPlan(kA,kB){
       <div class="bline-top">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
           <span class="bline-check" data-line="${lineId}" style="width:17px;height:17px;border-radius:5px;border:2px solid ${on?'var(--gold)':'var(--dim)'};background:${on?'var(--gold)':'transparent'};display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#0a1929;font-weight:900;flex-shrink:0">${on?'✓':''}</span>
-          <div class="bline-mkt">${l.market}${on?' <span style="font-size:8px;font-weight:800;color:var(--gold);background:rgba(200,155,60,.15);border:1px solid var(--gdim);border-radius:4px;padding:1px 5px;letter-spacing:.5px;vertical-align:middle">★ MODEL PICK</span>':''}</div>
+          <div class="bline-mkt">${l.market}${isModelPick?' <span style="font-size:8px;font-weight:800;color:var(--gold);background:rgba(200,155,60,.15);border:1px solid var(--gdim);border-radius:4px;padding:1px 5px;letter-spacing:.5px;vertical-align:middle">★ MODEL PICK</span>':''}</div>
         </div>
         <div class="bline-odds">${l.odds}<span class="bline-oddlbl">fair odds</span></div></div>
       <div class="bline-sporty">🎯 Ask for: <b>${l.sporty}</b></div>
@@ -1298,16 +1304,30 @@ function renderBettingPlan(kA,kB){
   // NOTE: deliberately NOT weighted by the model's accuracy/Brier track record yet — kept clean while
   // the sample is small and group-stage-only; revisit mid-knockouts. Hook: change _defaultPick below.
   function _defaultPick(){
-    const r=P.ratio;
-    if(r>=1.8 && P.risky.length>0 && !P.noHighEdge) return {block:'risk',idx:0}; // bold
-    return {block:'safe',idx:0}; // balanced / safe haven
+    // CONVICTION-BASED default (group-stage tuned). The badge marks what the MODEL BELIEVES,
+    // not the lowest-variance hedge. Key fact about this model's own maths: a draw is NEVER the
+    // single most-likely outcome (it peaks at 28% when teams are equal), so the model's confident
+    // call is almost always the favourite to WIN — and the draw-inclusive hedge is only honest when
+    // the favourite is NOT dominant enough to back a clean win.
+    //   - Favourite win prob >= 50% (ratio ~1.5+): the model has real directional conviction ->
+    //     pick the OUTRIGHT WIN (never a draw hedge the model didn't rate).
+    //   - Favourite win below 50% (close match): no clean-win conviction -> the honest pick is the
+    //     Double Chance (favourite or draw), which genuinely expresses "leans this way, not certain".
+    //   - Near coin-flip: Double Chance stands as an expression of genuine uncertainty, not a wimp.
+    const favWin = P.strong.p; // the stronger side's outright-win probability (%)
+    // find the outright "favourite to win" line in the risky block, if present
+    const winIdx = P.risky.findIndex(r=>Array.isArray(r.outc)&&r.outc.length===1&&r.outc[0]==='s'&&!r.voidOnDraw);
+    if(favWin>=50 && winIdx>=0 && !P.noHighEdge){
+      return {block:'risk',idx:winIdx}; // confident directional call: back the win
+    }
+    return {block:'safe',idx:0}; // close/coin-flip: honest favourite-or-draw hedge
   }
   const _def=_defaultPick();
   function isDefault(blockId,idx){return _def.block===blockId && _def.idx===idx;}
   const safeMulti = P.safe.length>1;
   const riskMulti = P.risky.length>1;
-  const safeLines=P.safe.map((l,i)=>lineHTML(l,safeSplit[i],'safe',i,isDefault('safe',i))).join('');
-  const riskLines=P.risky.map((l,i)=>lineHTML(l,riskSplit[i],'risk',i,isDefault('risk',i))).join('');
+  const safeLines=P.safe.map((l,i)=>lineHTML(l,safeSplit[i],'safe',i,isDefault('safe',i),isDefault('safe',i))).join('');
+  const riskLines=P.risky.map((l,i)=>lineHTML(l,riskSplit[i],'risk',i,isDefault('risk',i),isDefault('risk',i))).join('');
   const _mostLikely = (P.wA>=P.d&&P.wA>=P.wB)?(P.strong.k===kA?'s':'w'):(P.wB>=P.d&&P.wB>=P.wA)?(P.strong.k===kA?'w':'s'):'d';
   return `<div class="bpanel" data-mostlikely="${_mostLikely}">
     <div class="bpanel-title">BETTING VIEW · ${modeTag().toUpperCase()} BASIS · PURE MODEL</div>
