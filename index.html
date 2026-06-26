@@ -1,6 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!--
+========================================================================
+  If you are reading the source of this page, you may have found this
+  on purpose. Good. That is the right instinct - to look underneath the
+  surface of a thing and see how it actually works.
+
+  This message is for my son.
+
+  I built this model the year you were eleven. The idea came to me on an
+  ordinary good morning, lying next to you while you read and built your
+  Lego. I was inspired by something that simple, and I wanted to chase it
+  down properly.
+
+  So I did. And the one thing I cared about more than being right was
+  being honest. I refused to fudge the numbers to make the model look
+  better than it was. When the honest answer made my results worse, I
+  took the worse result, because a true thing that disappoints beats a
+  false thing that flatters. Every dead end is written down in here, not
+  hidden. That was the whole point.
+
+  I do not know, as I write this, whether the model turned out to be any
+  good. By the time you read this we will both know. But whether it was
+  right or wrong was never the thing I most wanted you to see.
+
+  What I wanted you to see is this: you can have an idea in a quiet
+  moment, and you can honour it by doing the work carefully, telling the
+  truth about what you find, and refusing to cheat even when no one is
+  watching and cheating would be easier. That is what integrity is. It
+  is not a thing you say. It is a thing you do when it costs you
+  something.
+
+  I hope you are well. I hope you are still curious enough to read the
+  source. And I hope, whatever you are doing with your life, that you do
+  it honestly.
+
+  I love you.
+  - Dad
+  (written 26 June 2026)
+========================================================================
+-->
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WC 2026 · Squad Strength Model · 48 Teams</title>
@@ -860,8 +901,8 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v6.0.1";
-const BUILD_STAMP="2026-06-26 23:26 SAST";
+const BUILD_VERSION="v6.0.2";
+const BUILD_STAMP="2026-06-27 00:06 SAST";
 const CHANGELOG=[
   {v:"v6.0.1",d:"2026-06-26",items:[
     "Post-release deep audit and bug hunt after the v6.0.0 re-bake. Verified all 846 affecting player scores against an independent recomputation: ZERO mismatches - the Opta-extension bake is mathematically correct. Ran an exhaustive functional sweep (624 render combinations: 3 modes x 2 accuracy views x 13 group filters x 8 views), all 48 team pages, goalkeeper-present check in every team in every mode, Compare tool across changed-ranking pairs, and win-probability normalisation (every fixture sums to 1.0) - all clean.",
