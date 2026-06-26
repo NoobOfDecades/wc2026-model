@@ -512,16 +512,20 @@ function pscore(p,teamKey){
 function buildXI(teamKey){
   const players=S[teamKey].players;
   const avail=players.filter(p=>!p[7]&&!injOutForSelection(p));
+  // ALWAYS select a goalkeeper: the best available GK by model score (2nd-best automatically
+  // used if the best is injured/out, since injured GKs are filtered out of `avail`).
+  const availGKs=avail.filter(p=>p[1]==='GK').sort((a,b)=>pscore(b,teamKey)-pscore(a,teamKey));
+  const theGK=availGKs.length?availGKs[0]:null;
   let flagged=avail.filter(p=>p[6]);
-  // enforce exactly one GK among flagged starters (keep highest-scoring GK, demote extras)
-  const fgks=flagged.filter(p=>p[1]==='GK').sort((a,b)=>pscore(b,teamKey)-pscore(a,teamKey));
-  if(fgks.length>1){const keep=fgks[0];flagged=flagged.filter(p=>p[1]!=='GK'||p===keep);}
+  // enforce exactly one GK among flagged starters (keep the chosen best GK, demote extras)
+  flagged=flagged.filter(p=>p[1]!=='GK');
+  if(theGK)flagged.push(theGK);
   let xi=flagged.slice();
   if(xi.length>11){
-    // trim to 11 but never drop the only GK
-    const gk=xi.find(p=>p[1]==='GK');
+    // trim to 11 but ALWAYS keep the goalkeeper (drop weakest outfielders only)
+    const gk=theGK&&xi.includes(theGK)?theGK:xi.find(p=>p[1]==='GK');
     let outfield=xi.filter(p=>p!==gk).map(p=>[p,pscore(p,teamKey)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
-    xi=gk?[gk,...outfield].slice(0,11):outfield.slice(0,11);
+    xi=gk?[gk,...outfield.slice(0,10)]:outfield.slice(0,11);
     return xi;
   }
   let need=11-xi.length;
@@ -856,9 +860,12 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v5.6.0";
-const BUILD_STAMP="2026-06-26 11:02 SAST";
+const BUILD_VERSION="v5.6.1";
+const BUILD_STAMP="2026-06-26 17:14 SAST";
 const CHANGELOG=[
+  {v:"v5.6.1",d:"2026-06-26",items:[
+    "Fixed a real structural flaw: 12 of 48 teams (including France, England, Netherlands) were fielding a Starting XI with NO goalkeeper. The XI builder only included a GK if one happened to be flagged as a likely starter; for teams whose 11 flagged starters were all outfielders, the keeper was squeezed out entirely - nonsensical, since a poor or absent keeper materially changes a result. Now the best available goalkeeper by model score is ALWAYS force-included in the XI and Top 15 (the second-best is used automatically if the best is injured), displacing the weakest outfielder. Every team now fields exactly one keeper. Rankings shift only slightly; the model-vs-market comparison is essentially unchanged, since Top-15 mode already tended to include a keeper - the bug mainly hit the Starting XI view."
+  ]},
   {v:"v5.6.0",d:"2026-06-26",items:[
     "FULL market backfill - the model-vs-market comparison now covers every single group-stage game played (all 60), not a sub-sample. Each game has cross-verified pre-match 1X2 odds (bet365, FanDuel, oddschecker, VegasInsider, CBS/SportsLine consensus), converted to fair de-vigged probabilities, with the source shown per game. Sources used: bet365 and FanDuel primarily, cross-checked against oddschecker/VegasInsider/CBS.",
     "The honest full-sample verdict: across all 60 games the betting market is still ahead on average (mean Brier 0.51 vs our 0.56) - expected, because the market is razor-sharp on the many one-sided favourite games. BUT the model beats the market outright in 18 of 60 games, ties 7, and - crucially - its wins are almost entirely the draws and upsets where the market was overconfident on a favourite (Brazil-Morocco draw, Spain-Cape Verde draw, Ecuador 2-1 Germany, South Africa 1-0 South Korea, Türkiye 3-2 USA, and more). That is exactly the behaviour this model was built for: realistic credit to sides the market dismisses.",
