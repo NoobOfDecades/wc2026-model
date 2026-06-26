@@ -765,7 +765,7 @@ function modeTag(){return modeName();}
 function nav(view,opts={}){
   STATE={...STATE,view,...opts};render();
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,model:6};
+  const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,results:6,model:7};
   if(map[view]!==undefined)document.querySelectorAll('.nb')[map[view]].classList.add('on');
   window.scrollTo(0,0);
 }
@@ -800,9 +800,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v5.4.1";
-const BUILD_STAMP="2026-06-26 08:34 SAST";
+const BUILD_VERSION="v5.4.2";
+const BUILD_STAMP="2026-06-26 08:54 SAST";
 const CHANGELOG=[
+  {v:"v5.4.2",d:"2026-06-26",items:[
+    "Fixed a misleading visual in the model-vs-market box: the Brier bars were drawn so the WORSE score looked longer, making it appear the model had beaten the market when it had not. Bars are now inverted so the better (lower-Brier) score is the fuller bar, with a 'longer bar = better' label and a '✓ better' tag on whichever side is actually ahead. For the record: across the 4 sourced games so far the market is ahead (Brier 0.20 vs our 0.40) - the model has not yet beaten the market on this small, favourite-heavy sample.",
+    "Fixed the navigation highlight: opening the Model tab was lighting up the Results tab button at the top. The tab-index map had not been updated when the Results tab was inserted; now every tab highlights itself correctly."
+  ]},
   {v:"v5.4.1",d:"2026-06-26",items:[
     "Accuracy tab - upgraded the model-vs-market comparison into a proper showcase box: a 🥇/✓/✗ medal scoreboard, a visual head-to-head Brier bar (our calibration vs the bookmakers, side by side), a game-by-game medal strip you can scroll, an honest verdict line, and a clear reward-tier legend (🥇 beat the market by 0.03+ Brier, ✓ matched within 0.03, ✗ market sharper). Uses the Accuracy tab's extra space to actually explain the comparison rather than just state a number."
   ]},
@@ -1852,10 +1856,13 @@ function renderAccuracy(){
         if(agg.n===0)return '<div style="padding:16px;font-size:10.5px;color:var(--mut);line-height:1.6">No market-odds comparison available yet. Cross-verified pre-match bookmaker odds are being added in batches — see the Model tab for the full, honest explanation.</div>';
         var ourWon=agg.ourMean<agg.mktMean;
         var medals=marketMedals();
-        // visual head-to-head bar (our Brier vs market Brier, scaled to the worse of the two)
-        var maxB=Math.max(agg.ourMean,agg.mktMean,0.01);
-        var ourPct=Math.round(100*agg.ourMean/maxB);
-        var mktPct=Math.round(100*agg.mktMean/maxB);
+        // visual head-to-head bar. IMPORTANT: lower Brier = better, so we invert —
+        // the BETTER (lower-Brier) score must show as the FULLER bar, or it reads backwards.
+        // Fill = accuracy-style score 100*(1-Brier/2): lower Brier -> higher fill -> longer bar = winner.
+        var ourFill=Math.max(4,Math.round(100*(1-agg.ourMean/2)));
+        var mktFill=Math.max(4,Math.round(100*(1-agg.mktMean/2)));
+        var ourPct=ourFill;
+        var mktPct=mktFill;
         // medal strip
         var strip=medals.map(function(m){
           var ic=m.verdict==='win'?'🥇':m.verdict==='close'?'✓':'✗';
@@ -1874,9 +1881,9 @@ function renderAccuracy(){
             '<div style="flex:1;background:rgba(120,120,120,.07);border:1px solid var(--bdr);border-radius:9px;padding:11px 6px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--dim);line-height:1">'+agg.loss+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">✗ market won</div></div>'+
           '</div>'+
           // head-to-head Brier bars
-          '<div style="margin-bottom:6px;font-size:9.5px;font-weight:700;letter-spacing:.5px;color:var(--mut);text-transform:uppercase">Mean Brier · head to head ('+agg.n+' game'+(agg.n===1?'':'s')+')</div>'+
-          '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:'+(ourWon?'var(--grn)':'var(--txt)')+';font-weight:700">Our model</span><span style="font-family:monospace;color:'+(ourWon?'var(--grn)':'var(--txt)')+';font-weight:700">'+agg.ourMean.toFixed(3)+'</span></div><div style="height:9px;background:var(--card2);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+ourPct+'%;background:'+(ourWon?'linear-gradient(90deg,var(--grn),#16a34a)':'linear-gradient(90deg,var(--gold),#a87f2e)')+';border-radius:5px"></div></div></div>'+
-          '<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:'+(ourWon?'var(--txt)':'var(--gold)')+';font-weight:700">Betting market</span><span style="font-family:monospace;color:'+(ourWon?'var(--txt)':'var(--gold)')+';font-weight:700">'+agg.mktMean.toFixed(3)+'</span></div><div style="height:9px;background:var(--card2);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+mktPct+'%;background:'+(ourWon?'linear-gradient(90deg,var(--dim),#555)':'linear-gradient(90deg,var(--gold),#a87f2e)')+';border-radius:5px"></div></div></div>'+
+          '<div style="margin-bottom:6px;font-size:9.5px;font-weight:700;letter-spacing:.5px;color:var(--mut);text-transform:uppercase">Mean Brier · head to head ('+agg.n+' game'+(agg.n===1?'':'s')+') · longer bar = better</div>'+
+          '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:'+(ourWon?'var(--grn)':'var(--txt)')+';font-weight:700">Our model'+(ourWon?' <span style="color:var(--grn);font-size:9px">✓ better</span>':'')+'</span><span style="font-family:monospace;color:'+(ourWon?'var(--grn)':'var(--txt)')+';font-weight:700">'+agg.ourMean.toFixed(3)+'</span></div><div style="height:9px;background:var(--card2);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+ourPct+'%;background:'+(ourWon?'linear-gradient(90deg,var(--grn),#16a34a)':'linear-gradient(90deg,var(--gold),#a87f2e)')+';border-radius:5px"></div></div></div>'+
+          '<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:'+(ourWon?'var(--txt)':'var(--gold)')+';font-weight:700">Betting market'+(ourWon?'':' <span style="color:var(--gold);font-size:9px">✓ better</span>')+'</span><span style="font-family:monospace;color:'+(ourWon?'var(--txt)':'var(--gold)')+';font-weight:700">'+agg.mktMean.toFixed(3)+'</span></div><div style="height:9px;background:var(--card2);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+mktPct+'%;background:'+(ourWon?'linear-gradient(90deg,var(--dim),#555)':'linear-gradient(90deg,var(--gold),#a87f2e)')+';border-radius:5px"></div></div></div>'+
           // verdict line
           '<div style="font-size:10.5px;line-height:1.6;padding:10px 12px;background:var(--card2);border-radius:8px;color:var(--mut);border-left:3px solid '+(ourWon?'var(--grn)':'var(--gold)')+'">'+(ourWon?'<b style="color:var(--grn)">The model is edging the market</b> across this sample — our probabilities have been better calibrated than the bookmakers on these games.':'<b style="color:var(--gold)">The market leads this small sample so far.</b> Expected: the first batch is weighted to clear favourites, which bookmakers price extremely tightly and which duly won. This is a sampling quirk, not a model weakness — the picture broadens as more games (especially upsets the model called well) are added each update.')+'</div>'+
           // medal strip
