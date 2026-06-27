@@ -1,0 +1,151 @@
+league_key,season,rank_in_league,club_name,club_domestic_league,club_association,club_rating,computed_top5_avg,stored_top5_avg,avg_match,source_url
+EPL,2022-23,1,Manchester City,Premier League,England,100.0,94.1355,94.1355,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2022-23,2,Liverpool,Premier League,England,94.2396,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2022-23,3,Arsenal,Premier League,England,93.1293,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2022-23,4,Manchester United,Premier League,England,92.4783,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2022-23,5,Newcastle United,Premier League,England,90.8305,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2022-23,1,Real Madrid,Primera División,Spain,93.2529,90.5153,90.5153,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2022-23,2,Barcelona,Primera División,Spain,91.7798,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2022-23,3,Atlético Madrid,Primera División,Spain,91.2632,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2022-23,4,Real Sociedad,Primera División,Spain,88.6973,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2022-23,5,Villarreal,Primera División,Spain,87.5836,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2022-23,1,Internazionale,Serie A,Italy,93.4327,90.7238,90.7238,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2022-23,2,Napoli,Serie A,Italy,93.3193,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2022-23,3,Milan,Serie A,Italy,89.4821,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2022-23,4,Juventus,Serie A,Italy,89.0874,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2022-23,5,Lazio,Serie A,Italy,88.2977,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2022-23,1,Al Ahly,Premier League,Egypt,78.8198,73.9687,73.9687,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2022-23,2,Pyramids,Premier League,Egypt,77.1009,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2022-23,3,Zamalek,Premier League,Egypt,73.2471,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2022-23,4,Future,Premier League,Egypt,71.531,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2022-23,5,Al Masry,Premier League,Egypt,69.145,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2022-23,1,Maccabi Haifa,Ligat Ha\'al,Israel,84.0835,78.8648,78.8648,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2022-23,2,Maccabi Tel Aviv,Ligat Ha\'al,Israel,83.3885,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2022-23,3,Hapoel Be\'er Sheva,Ligat Ha\'al,Israel,80.6484,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2022-23,4,Maccabi Netanya,Ligat Ha\'al,Israel,73.6403,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2022-23,5,Hapoel Jerusalem,Ligat Ha\'al,Israel,72.5631,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2022-23,1,Astana,Premier League,Kazakhstan,74.8521,72.3736,72.3736,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2022-23,2,Ordabasy,Premier League,Kazakhstan,73.1424,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2022-23,3,Aktobe,Premier League,Kazakhstan,72.4292,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2022-23,4,Kairat,Premier League,Kazakhstan,70.7599,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2022-23,5,Tobol,Premier League,Kazakhstan,70.6844,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2022-23,1,Al Ittihad,Saudi League,Saudi Arabia,79.212,76.7727,76.7727,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2022-23,2,Al Hilal,Saudi League,Saudi Arabia,79.0279,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2022-23,3,Al Nassr,Saudi League,Saudi Arabia,78.1094,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2022-23,4,Al Shabab,Saudi League,Saudi Arabia,74.752,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2022-23,5,Al Taawon,Saudi League,Saudi Arabia,72.7621,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2022-23,1,Celtic,Premiership,Scotland,82.4886,73.5872,73.5872,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2022-23,2,Rangers,Premiership,Scotland,80.3427,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2022-23,3,Hearts,Premiership,Scotland,69.1925,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2022-23,4,Aberdeen,Premiership,Scotland,68.5573,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2022-23,5,Hibernian,Premiership,Scotland,67.3547,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2022-23,1,Union Saint-Gilloise,First Division A,Belgium,84.926,83.3859,83.3859,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2022-23,2,Antwerp,First Division A,Belgium,83.8932,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2022-23,3,Gent,First Division A,Belgium,83.8657,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2022-23,4,Genk,First Division A,Belgium,82.3955,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2022-23,5,Club Brugge,First Division A,Belgium,81.8493,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2022-23,1,Middlesbrough,Championship,England,81.1242,79.5291,79.5291,OK,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2022-23,2,Leicester City,Championship,England,80.2304,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2022-23,3,Coventry City,Championship,England,78.9198,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2022-23,4,Southampton,Championship,England,78.7949,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2022-23,5,Leeds United,Championship,England,78.5762,,,,https://web.archive.org/web/20230810142522/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2023-24,1,Manchester City,Premier League,England,100.0,93.4973,93.4973,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2023-24,2,Arsenal,Premier League,England,95.1717,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2023-24,3,Liverpool,Premier League,England,93.7826,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2023-24,4,Chelsea,Premier League,England,89.4823,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2023-24,5,Newcastle United,Premier League,England,89.05,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2023-24,1,Real Madrid,Primera División,Spain,99.1598,92.6914,92.6914,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2023-24,2,Barcelona,Primera División,Spain,93.7941,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2023-24,3,Atlético Madrid,Primera División,Spain,91.3545,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2023-24,4,Girona,Primera División,Spain,89.9488,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+LA_LIGA,2023-24,5,Athletic Club,Primera División,Spain,89.1998,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2023-24,1,Internazionale,Serie A,Italy,97.4649,92.2867,92.2867,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2023-24,2,Atalanta,Serie A,Italy,92.8744,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2023-24,3,Juventus,Serie A,Italy,91.2457,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2023-24,4,Milan,Serie A,Italy,90.2334,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SERIE_A,2023-24,5,Roma,Serie A,Italy,89.6149,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2023-24,1,Al Ahly,Premier League,Egypt,80.8875,74.5201,74.5201,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2023-24,2,Pyramids,Premier League,Egypt,76.8661,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2023-24,3,Zamalek,Premier League,Egypt,74.1069,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2023-24,4,Modern Future,Premier League,Egypt,70.9632,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EGYPTIAN,2023-24,5,Al Masry,Premier League,Egypt,69.7767,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2023-24,1,Maccabi Tel Aviv,Ligat Ha\'al,Israel,83.7372,76.9289,76.9289,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2023-24,2,Maccabi Haifa,Ligat Ha\'al,Israel,81.5861,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2023-24,3,Hapoel Be\'er Sheva,Ligat Ha\'al,Israel,75.3577,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2023-24,4,Hapoel Haifa,Ligat Ha\'al,Israel,72.906,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+ISRAELI,2023-24,5,Bnei Sakhnin,Ligat Ha\'al,Israel,71.0574,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2023-24,1,Ordabasy,Premier League,Kazakhstan,71.0987,69.4616,69.4616,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2023-24,2,Aktobe,Premier League,Kazakhstan,70.9956,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2023-24,3,Astana,Premier League,Kazakhstan,69.5983,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2023-24,4,Kairat,Premier League,Kazakhstan,68.2031,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+KAZAKH,2023-24,5,Tobol,Premier League,Kazakhstan,67.4124,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2023-24,1,Al Hilal,Saudi League,Saudi Arabia,87.0068,79.0882,79.0882,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2023-24,2,Al Nassr,Saudi League,Saudi Arabia,83.0684,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2023-24,3,Al-Taawoun,Saudi League,Saudi Arabia,75.6776,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2023-24,4,Al Ahli,Saudi League,Saudi Arabia,75.262,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SPL,2023-24,5,Al Ittihad,Saudi League,Saudi Arabia,74.4261,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2023-24,1,Celtic,Premiership,Scotland,83.169,75.9947,75.9947,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2023-24,2,Rangers,Premiership,Scotland,82.0808,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2023-24,3,Hearts,Premiership,Scotland,73.7129,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2023-24,4,Kilmarnock,Premiership,Scotland,70.6553,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+SCOTTISH,2023-24,5,Aberdeen,Premiership,Scotland,70.3553,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2023-24,1,Club Brugge,First Division A,Belgium,87.8928,84.3006,84.3006,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2023-24,2,Union Saint-Gilloise,First Division A,Belgium,86.4547,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2023-24,3,Anderlecht,First Division A,Belgium,83.3955,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2023-24,4,Gent,First Division A,Belgium,83.389,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+BELGIAN,2023-24,5,Cercle Brugge,First Division A,Belgium,80.3708,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2023-24,1,Leeds United,Championship,England,79.8925,77.8409,77.8409,OK,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2023-24,2,Middlesbrough,Championship,England,77.8408,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2023-24,3,Burnley,Championship,England,77.269,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2023-24,4,West Bromwich Albion,Championship,England,77.1225,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+CHAMPIONSHIP,2023-24,5,Luton Town,Championship,England,77.0798,,,,https://web.archive.org/web/20240628010648/https://dataviz.theanalyst.com/opta-power-rankings/bundle.js
+EPL,2024-25,1,Liverpool,Premier League,England,100.0,97.7999,97.7999,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EPL,2024-25,2,Arsenal,Premier League,England,99.5006,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EPL,2024-25,3,Manchester City,Premier League,England,98.6709,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EPL,2024-25,4,Aston Villa,Premier League,England,95.4349,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EPL,2024-25,5,Newcastle United,Premier League,England,95.3931,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+LA_LIGA,2024-25,1,Barcelona,Primera División,Spain,97.4644,93.2422,93.2422,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+LA_LIGA,2024-25,2,Real Madrid,Primera División,Spain,96.0073,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+LA_LIGA,2024-25,3,Atlético de Madrid,Primera División,Spain,92.9272,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+LA_LIGA,2024-25,4,Villarreal,Primera División,Spain,90.1292,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+LA_LIGA,2024-25,5,Athletic Club,Primera División,Spain,89.683,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SERIE_A,2024-25,1,Internazionale,Serie A,Italy,95.2937,92.5299,92.5299,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SERIE_A,2024-25,2,Napoli,Serie A,Italy,92.3801,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SERIE_A,2024-25,3,Atalanta,Serie A,Italy,92.2004,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SERIE_A,2024-25,4,Roma,Serie A,Italy,91.6392,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SERIE_A,2024-25,5,Juventus,Serie A,Italy,91.1361,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EGYPTIAN,2024-25,1,Al Ahly,Premier League,Egypt,83.5105,78.8602,78.8602,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EGYPTIAN,2024-25,2,Pyramids,Premier League,Egypt,82.1289,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EGYPTIAN,2024-25,3,Zamalek,Premier League,Egypt,78.392,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EGYPTIAN,2024-25,4,Al Masry,Premier League,Egypt,75.1957,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+EGYPTIAN,2024-25,5,Ceramica Cleopatra,Premier League,Egypt,75.0737,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+ISRAELI,2024-25,1,Maccabi Tel Aviv,Ligat Ha'al,Israel,83.3568,78.1867,78.1867,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+ISRAELI,2024-25,2,Hapoel Be'er Sheva,Ligat Ha'al,Israel,81.5313,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+ISRAELI,2024-25,3,Maccabi Haifa,Ligat Ha'al,Israel,77.4502,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+ISRAELI,2024-25,4,Hapoel Haifa,Ligat Ha'al,Israel,74.4473,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+ISRAELI,2024-25,5,Beitar Jerusalem,Ligat Ha'al,Israel,74.1479,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+KAZAKH,2024-25,1,Astana,Premier League,Kazakhstan,75.453,73.2265,73.2265,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+KAZAKH,2024-25,2,Kairat,Premier League,Kazakhstan,74.4836,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+KAZAKH,2024-25,3,Aktobe,Premier League,Kazakhstan,72.8297,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+KAZAKH,2024-25,4,Tobol Kostanay,Premier League,Kazakhstan,72.7163,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+KAZAKH,2024-25,5,Ordabasy,Premier League,Kazakhstan,70.6499,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SPL,2024-25,1,Al Hilal,Saudi League,Saudi Arabia,85.8664,82.5928,82.5928,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SPL,2024-25,2,Al Nassr,Saudi League,Saudi Arabia,83.4164,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SPL,2024-25,3,Al Ittihad,Saudi League,Saudi Arabia,82.5989,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SPL,2024-25,4,Al Ahli,Saudi League,Saudi Arabia,82.348,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SPL,2024-25,5,Al Shabab,Saudi League,Saudi Arabia,78.7342,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SCOTTISH,2024-25,1,Celtic,Premiership,Scotland,86.8163,79.3733,79.3733,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SCOTTISH,2024-25,2,Rangers,Premiership,Scotland,83.5274,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SCOTTISH,2024-25,3,Hibernian,Premiership,Scotland,76.8532,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SCOTTISH,2024-25,4,Hearts,Premiership,Scotland,75.6434,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+SCOTTISH,2024-25,5,St. Mirren,Premiership,Scotland,74.0263,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+BELGIAN,2024-25,1,Club Brugge,First Division A,Belgium,90.9326,86.4288,86.4288,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+BELGIAN,2024-25,2,Union Saint-Gilloise,First Division A,Belgium,90.5174,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+BELGIAN,2024-25,3,Genk,First Division A,Belgium,85.7689,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+BELGIAN,2024-25,4,Anderlecht,First Division A,Belgium,83.5685,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+BELGIAN,2024-25,5,Antwerp,First Division A,Belgium,81.3564,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+CHAMPIONSHIP,2024-25,1,Sheffield United,Championship,England,88.3509,85.7127,85.7127,OK,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+CHAMPIONSHIP,2024-25,2,Coventry City,Championship,England,85.5874,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+CHAMPIONSHIP,2024-25,3,Ipswich Town,Championship,England,84.9439,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+CHAMPIONSHIP,2024-25,4,Leicester City,Championship,England,84.9426,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
+CHAMPIONSHIP,2024-25,5,West Bromwich Albion,Championship,England,84.7385,,,,https://web.archive.org/web/20250701200002/https://dataviz.theanalyst.com/opta-power-rankings/index.js
