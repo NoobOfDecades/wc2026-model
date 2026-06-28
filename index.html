@@ -989,9 +989,12 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.2.0";
-const BUILD_STAMP="2026-06-28 09:03 SAST";
+const BUILD_VERSION="v7.2.1";
+const BUILD_STAMP="2026-06-28 09:29 SAST";
 const CHANGELOG=[
+  {v:"v7.2.1",d:"2026-06-28",items:[
+    "HOTFIX: tapping a fixture's down-arrow to open the betting view did nothing - a regression from the v7.2.0 collapse-bug fix. The fix had wrapped the tap handler's argument in double quotes inside an already double-quoted HTML attribute, which truncated the attribute so the click fired nothing. Reverted that argument to single quotes. The v7.2.0 behaviour (opening one fixture collapses the others, scrolls to the right card) is fully retained - both work now."
+  ]},
   {v:"v7.2.0",d:"2026-06-28",items:[
     "GROUP STAGE COMPLETE - baked the final 6 group results (Colombia 0-0 Portugal, DR Congo 3-1 Uzbekistan, England 2-0 Panama, Croatia 2-1 Ghana, Jordan 1-3 Argentina, Algeria 3-3 Austria). All 72 group matches now scored.",
     "KNOCKOUT PRE-REGISTRATION: added all 16 Round-of-32 fixtures with the model's predictions locked in BEFORE a ball was kicked in the knockouts, alongside pre-game market odds captured in advance (FanDuel 3-way moneylines, de-vigged to 100%, recorded per game). This is the heart of the experiment: the knockouts are the genuine out-of-sample test, and the model's R32 calls are now timestamped against reality before the games. Two notable disagreements with the market: the model picks South Africa over Canada and Ecuador over Mexico, where the market favours the other side. Everywhere else the model agrees on the favourite but is consistently less extreme.",
@@ -1816,7 +1819,7 @@ function fixtureCard(f,st,expandable){
     : (doneNoScore
         ? `<div class="fxc-cta fxc-pendingnote">⏳ FULL TIME · score not yet recorded · ${venue}</div>`
         : `<div class="fxc-cta fxc-ft">FULL TIME · ${venue}</div>`);
-  const _fixArg = open ? 'null' : ('"' + fxKey.replace(/"/g,'') + '"');
+  const _fixArg = open ? 'null' : ("'" + fxKey.replace(/'/g,'') + "'"); // single quotes: the onclick attr is double-quoted, so double quotes here would truncate it
   const head=`<div class="fxc-head${live?' fxc-head-live':''}" onclick="toggleFix(${_fixArg})">
     <div class="fxc-meta"><span class="fxc-grp">GRP ${grp}</span>${live?'<span class="fxc-livebadge"><span class="fxc-livedot"></span>LIVE NOW</span>':`<span class="fxc-when">${fmtKick(iso)}${st==='upcoming'?' · '+daysAway(iso):''}</span>`}</div>
     <div class="fxc-teams">
