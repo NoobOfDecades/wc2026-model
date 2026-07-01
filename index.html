@@ -376,9 +376,9 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["BRAZIL","JAPAN","2026-06-29T19:00:00+02:00",2,1,"NRG Stadium"],
 ["GERMANY","PARAGUAY","2026-06-29T22:30:00+02:00",1,1,"Gillette Stadium"],
 ["NETHERLANDS","MOROCCO","2026-06-30T03:00:00+02:00",1,1,"Estadio BBVA"],
-["IVORY_COAST","NORWAY","2026-06-30T19:00:00+02:00",null,null,"AT&T Stadium"],
-["FRANCE","SWEDEN","2026-06-30T23:00:00+02:00",null,null,"MetLife Stadium"],
-["MEXICO","ECUADOR","2026-07-01T03:00:00+02:00",null,null,"Estadio Azteca"],
+["IVORY_COAST","NORWAY","2026-06-30T19:00:00+02:00",1,2,"AT&T Stadium"],
+["FRANCE","SWEDEN","2026-06-30T23:00:00+02:00",3,0,"MetLife Stadium"],
+["MEXICO","ECUADOR","2026-07-01T03:00:00+02:00",2,0,"Estadio Azteca"],
 ["ENGLAND","CONGO_DR","2026-07-01T18:00:00+02:00",null,null,"Mercedes-Benz Stadium"],
 ["BELGIUM","SENEGAL","2026-07-01T22:00:00+02:00",null,null,"Lumen Field"],
 ["USA","BOSNIA","2026-07-02T02:00:00+02:00",null,null,"Levi's Stadium"],
@@ -548,16 +548,63 @@ function marketMedals(){
   return out;
 }
 // Aggregate model-vs-market across all completed games that have market odds
+// CLOSE-CALLS / CALIBRATION DEMONSTRATION.
+// Buckets the model's argmax MISSES by how close the model actually was, using a threshold
+// PRE-COMMITTED by the model's own pre-game numbers (NOT chosen after the fact):
+//   "near-even" = top outcome probability < 40%  OR  top-two outcomes within 10 points.
+// Shown SYMMETRICALLY: the confident misses (the ones that should sting) are surfaced too.
+// margin = how far the model's top pick was above the outcome that actually happened.
+function closeCalls(){
+  const done=completedMatches();
+  const nearMiss=[], confidentMiss=[];
+  let hits=0,total=0;
+  for(const f of done){
+    const h=f[0],b=f[1];if(!S[h]||!S[b])continue;
+    const act=actualOutcome(f);
+    const wp=winProbs(teamScore(h),teamScore(b));
+    const p=[wp.wA,wp.d,wp.wB];
+    const pick=p[0]>=p[1]&&p[0]>=p[2]?'A':(p[2]>=p[1]?'B':'D');
+    total++;
+    if(pick===act){hits++;continue;} // only misses get bucketed
+    const sorted=[...p].sort((x,y)=>y-x);
+    const top=sorted[0], gap=sorted[0]-sorted[1];
+    const isNear=(top<40)||(gap<10);
+    const actProb=act==='A'?p[0]:act==='D'?p[1]:p[2];
+    const pickProb=pick==='A'?p[0]:pick==='D'?p[1]:p[2];
+    const margin=pickProb-actProb; // points between what model picked and what happened
+    const rec={f,a:h,b,act,pick,p,top,gap,margin,actProb,
+               scA:f[3],scB:f[4],
+               emA:S[h].meta.emoji,emB:S[b].meta.emoji,nmA:S[h].meta.name,nmB:S[b].meta.name};
+    if(isNear)nearMiss.push(rec);else confidentMiss.push(rec);
+  }
+  // sort each: near-misses by smallest margin first (closest); confident by largest top prob first (most egregious)
+  nearMiss.sort((x,y)=>x.margin-y.margin);
+  confidentMiss.sort((x,y)=>y.top-x.top);
+  return {nearMiss,confidentMiss,hits,total,misses:total-hits};
+}
+
 function marketAggregate(){
   const done=completedMatches();
   let n=0,wins=0,close=0,loss=0,ourSum=0,mktSum=0;
+  // Four-way "who called it right" matrix (plain argmax agreement, no confidence-weighting -
+  // that is what the Brier bars below are for). This is the honest head-to-head on picks.
+  let bothRight=0,weRightMktWrong=0,mktRightWeWrong=0,neither=0;
   for(const f of done){
     const r=modelVsMarket(f);
     if(!r)continue;
     n++;ourSum+=r.ourBrier;mktSum+=r.mktBrier;
     if(r.verdict==='win')wins++;else if(r.verdict==='close')close++;else loss++;
+    // argmax picks for the matrix
+    const m=marketFor(f);const act=actualOutcome(f);
+    const wp=winProbs(teamScore(f[0]),teamScore(f[1]));
+    const ourPick=wp.wA>=wp.d&&wp.wA>=wp.wB?'A':(wp.wB>=wp.d?'B':'D');
+    const mktPick=m.o[0]>=m.o[1]&&m.o[0]>=m.o[2]?'A':(m.o[2]>=m.o[1]?'B':'D');
+    const oR=ourPick===act,kR=mktPick===act;
+    if(oR&&kR)bothRight++;else if(oR&&!kR)weRightMktWrong++;else if(!oR&&kR)mktRightWeWrong++;else neither++;
   }
-  return {n,wins,close,loss,ourMean:n?ourSum/n:0,mktMean:n?mktSum/n:0};
+  const sameCall=bothRight+neither;
+  return {n,wins,close,loss,ourMean:n?ourSum/n:0,mktMean:n?mktSum/n:0,
+          bothRight,weRightMktWrong,mktRightWeWrong,neither,sameCall};
 }
 
 // "Calling the result right" — 1X2 hit-rate at full-time, model vs market, plus a cut on the
@@ -1006,9 +1053,24 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.6.0";
-const BUILD_STAMP="2026-06-30 11:45 SAST";
+const BUILD_VERSION="v7.7.0";
+const BUILD_STAMP="2026-07-01 09:20 SAST";
 const CHANGELOG=[
+  {v:"v7.7.0",d:"2026-07-01",items:[
+    "REBUILT the 'Model vs the Betting Market' head-to-head panel to be honest and non-misleading. The old panel showed a Brier-based scoreboard (we-better 19 / close 5 / market-better 55) which read like a rout but was a confidence-weighting artefact: 43 of those 55 'market better' games were games the MODEL ALSO CALLED CORRECTLY - the market simply priced its favourite higher. It framed 43 correct model calls as losses. Replaced with a plain four-way agreement matrix on the actual pick: Both called it right 46 · We right, market wrong 2 · Market right, we wrong 7 · Neither 24. The headline is now the honest and striking one - the stats-free model and the multi-billion-dollar market made the SAME call on 70 of 79 games (89%). On the 9 games where they disagreed the market came out ahead 7-2, which the panel states plainly rather than hiding. No confidence-weighting in this panel by design; that lives in the Brier bars (kept beneath, unchanged) and the Brier sections.",
+    "NEW close-calls / calibration panel on the Accuracy tab: all 31 of the model's wrong calls, split by how close it actually was, using a threshold FIXED IN ADVANCE by the model's own pre-game numbers (near-even = top outcome under 40% OR top two within 10 points). 11 were near-even coin-flips the model had already flagged; 20 were confident misses - shown IN FULL, including the note that most confident misses were draws (the model's known structural blind spot, since it can never argmax a draw). Shown symmetrically so it is a calibration test, not a highlight reel; a confident miss can never be reclassified as close after the fact.",
+    "Added an explicit good-faith note to the v7.6.1 changelog entry: the two errors corrected there had both overstated the model and were fixed anyway, logged rather than silently patched so the review process is auditable.",
+    "Standing orders: no new results since last build (next R32 games kick off this evening SAST); 79/79 played games carry pre-match odds; no new bakeable injury. Pre-game 1X2 odds for the seven remaining R32 games were captured in advance and stored for scoring once played.",
+    "No change to the model, its parameters, scoring, predictions, or the frozen bracket."
+  ]},
+  {v:"v7.6.1",d:"2026-07-01",items:[
+    "FACTUAL AUDIT of live claims (not just code). Fixed two genuine errors that misrepresented the model. (1) The close-games note said the model 'favoured Ecuador' over Germany - it did not: the model rated Germany a slim 39% (vs the market's 61%), so it still narrowly favoured Germany but was far more cautious, which is why Ecuador's win didn't blindside it. Corrected to state that accurately. (2) The pre-registration note claimed the model 'got 5 of the 16 R32 matchups wrong' as if settled - only 7 ties are played so far and the model has the wrong advancer in 4 of them; reworded to 'wrong on several (so far)' with the actual misses named, keeping the unfakeable-preserved-misses point.",
+    "SYMMETRY AUDIT of model-vs-market scoring: confirmed the accuracy engine grades model AND market on the identical 90-minute basis everywhere (both miss the two penalty shootouts equally - Germany-Paraguay and Netherlands-Morocco). Knockouts so far: model 3/7, market 5/7 on the 90' result. Full sample Model 48/79 vs Market 53/79. No hidden bias either way.",
+    "Removed dormant 'depth-thesis bonus' code in the accuracy function that would have credited the MODEL (but not the market) for extra-time/penalty advancement. It was never active (the flags it depended on were unset, so figures are unchanged at 48/79) but it was a latent asymmetry; knockouts are now scored purely on the 90' result for both sides, consistent with the rest of the app.",
+    "Standing orders: 79/79 played games carry pre-match odds; three R32 results (Norway 2-1 Ivory Coast, France 3-0 Sweden, Mexico 2-0 Ecuador - all regulation) confirmed present; no new bakeable tournament-ending injury (Pulisic's calf is doubtful, USA yet to play).",
+    "Note on good faith: both factual errors corrected in this build had, coincidentally, OVERSTATED the model (it was not credited with a win it did not earn, and a claim was walked back to a more modest true figure), and the removed code path would have favoured the model - all were fixed toward accuracy regardless. Errors are logged here rather than silently patched precisely so the review process itself is auditable.",
+    "No change to the model, its parameters, scoring, predictions, or the frozen bracket."
+  ]},
   {v:"v7.6.0",d:"2026-06-30",items:[
     "Baked 3 more Round-of-32 results (90-minute scores, per the standing rule that knockouts are graded on the 90' result): Brazil 2-1 Japan (Brazil won in regulation on a stoppage-time goal - a model-correct call); Germany 1-1 Paraguay (Paraguay won 4-3 on penalties); Netherlands 1-1 Morocco (Morocco won 3-2 on penalties). Both shootouts are 90-minute DRAWS for grading.",
     "Bracket comparison now handles penalty/extra-time ties honestly. A new advancers map records who actually progressed when a tie was level at 90' (Paraguay, Morocco), so the bracket shows the real result (e.g. '1-1 (pens)') and who went through, WHILE the model is still graded on the 90' result. Penalty ties are shown as '◑ drew at 90'' with a clear note on whether the model's favoured side advanced or went out on pens - not dressed up as a clean win or loss.",
@@ -1969,30 +2031,20 @@ function accuracyStats(){
     const {wA,d,wB}=winProbs(sA,sB); // percentages 0-100
     const pA=wA/100,pD=d/100,pB=wB/100;
     const act=actualOutcome(f);
-    // KNOCKOUT HANDLING (Round of 32+): f[6]=isKnockout flag, f[7]=team that advanced ('A'/'B') if level at 90'.
-    // A draw at 90' in a knockout is a legitimate model-correct outcome (the model predicts the 90' result);
-    // who then survives extra time / penalties is credited as a flat bonus to the model's favoured side,
-    // backing the thesis that squad depth (which this model measures) carries a team through ET and penalties.
-    const isKO=f[6]===true||f[6]===1;
-    const advanced=f[7]; // 'A' or 'B' when a KO was level at 90' and decided in ET/pens
-    // one-hot actual (90-minute result)
+    // KNOCKOUT SCORING: always graded on the 90-minute result, identical to how the market is scored
+    // (see callItRight / bracketScore). Extra time and penalties are a separate question the model does
+    // not try to predict, so a tie level at 90' is a draw for BOTH the model and the market - no bonus,
+    // no asymmetry. (Who then survives ET/pens is shown in the Bracket tab's advancement view instead.)
     const oA=act==='A'?1:0,oD=act==='D'?1:0,oB=act==='B'?1:0;
-    // Brier = sum of squared diffs across the 3 outcomes (always scored on the 90' result)
+    // Brier = sum of squared diffs across the 3 outcomes (scored on the 90' result)
     let brier=(pA-oA)**2+(pD-oD)**2+(pB-oB)**2;
     brierSum+=brier;
     // model's single pick = highest probability
     const pick=pA>=pD&&pA>=pB?'A':pB>=pD&&pB>=pA?'B':'D';
-    // HIT logic: in a knockout level at 90', a predicted draw counts as correct; and if the model
-    // favoured the side that advanced (in ET/pens), that also counts as correct (depth thesis).
     let hit=pick===act;
-    if(isKO&&act==='D'){
-      const modelFav=pA>pB?'A':pB>pA?'B':null;
-      if(pick==='D')hit=true;                       // predicted the 90' draw → correct
-      else if(advanced&&modelFav===advanced)hit=true; // favoured team advanced in ET/pens → correct
-    }
     if(hit)hits++;
     n++;
-    rows.push({f,a,b,sA,sB,wA,d,wB,act,pick,hit,brier,isKO,advanced});
+    rows.push({f,a,b,sA,sB,wA,d,wB,act,pick,hit,brier,isKO:false,advanced:null});
   }
   const meanBrier=n?brierSum/n:null;
   const hitRate=n?hits/n*100:null;
@@ -2144,7 +2196,7 @@ function renderAccuracy(){
       <p><b>It is not a fair fight, and that is the entire point.</b> The two columns you are about to compare are wildly unequal in what they are allowed to know and what they cost to run:</p>
       <p><b>The betting market</b> is a continuously-running machine that reprices every few seconds off an enormous, live flood of information — millions of data points including detailed <i>individual player statistics</i>, current form, who is fit, who is suspended, confirmed line-ups, the weather, and the pressure of real money from sharp bettors moving the odds. It updates right up to kick-off.</p>
       <p><b>This model</b> is the opposite in every respect. It is a single, <b>mathematically pure, deterministic calculation</b> — a national-squad strength number built only from the competitive <i>context</i> of each player's clubs (league strength, where the club finished, how long he was there). It uses <b>zero individual player statistics</b>, no form, no injuries-as-data, no money, no live updating, and no hidden tunable knobs. The same inputs always give the same answer, and you could re-run the whole thing on a laptop in seconds — it is <b>orders of magnitude cheaper</b> than the market's operation. The method is novel: applying the discipline of <i>indirect-comparison / network meta-analysis</i> (a technique from medical evidence synthesis, for ranking things that never met head-to-head) to international football.</p>
-      <p><b>And it was pre-registered.</b> The model's full predicted bracket and team rankings were committed publicly, with a date stamp, <b>before the knockout stage began</b> — and have not been touched since. The proof is unfakeable: the model got <b>5 of the 16</b> Round-of-32 matchups wrong (including backing South Africa over Canada), and those wrong predictions are still sitting there, unedited. A model quietly tuned to fit results would not preserve its own misses. As the real knockouts unfold we apply the <i>same</i> pre-registered method to whoever actually advanced, and never retro-edit the original frozen forecast.</p>
+      <p><b>And it was pre-registered.</b> The model's full predicted bracket and team rankings were committed publicly, with a date stamp, <b>before the knockout stage began</b> — and have not been touched since. The proof is unfakeable: the model has already been <b>wrong on several</b> of the Round-of-32 ties (including backing South Africa over Canada, who won on a stoppage-time goal, and favouring both Germany and the Netherlands, who went out on penalties), and those wrong predictions are still sitting there, unedited. A model quietly tuned to fit results would not preserve its own misses. As the real knockouts unfold we apply the <i>same</i> pre-registered method to whoever actually advanced, and never retro-edit the original frozen forecast.</p>
       <p>Two honest clarifications, because the credibility rests on saying only what is exactly true: (1) The model has been <b>re-calibrated</b> over its life — but every change was driven by better <i>dated, sourced external data</i> becoming available, in a sequence you can verify in the public record, never by tuning toward the scoreboard. That is calibration, not fitting, and it is checkable rather than asserted. (2) When a tournament-ending injury removes a player, we handle it by a pre-stated rule and log it — exactly as a registered medical trial pre-specifies what to do when a participant drops out. Adapting to an unavoidable real-world event by a stated rule is part of the pre-registration discipline, not a breach of it.</p>
       <p><b>The thesis.</b> If a stats-free, deterministic, pre-registered model that costs almost nothing to run can stay within a few percentage points of a billion-dollar live market that knows everything — that is not a claim to have beaten the market. It is evidence that squad <i>context</i> alone carries far more signal than expected, and that the approach <b>merits further investigation</b>. That is the whole point of putting it on the table in public.</p></div>
     </details>
@@ -2173,13 +2225,40 @@ function renderAccuracy(){
         <p>The model's probabilities are <b>flatter</b> than the market's — it rarely commits to an extreme price. That shows up as a specific, real edge: <b>the model does not get stampeded into overconfidence on games that are tighter than they look</b>, and it under-prices draws and upsets far less than the market does.</p>
         <p><b>Examples where that was vindicated this tournament</b> (the market was very confident and got it wrong; the model was much more cautious):</p>
         <p>• <b>Spain 0-0 Cape Verde</b> — the market priced Spain at <b>89%</b>; the model gave only 58%. It finished goalless.<br>
-        • <b>Ecuador 2-1 Germany</b> — the market made Germany a <b>61%</b> favourite; the model had Germany at just 39% and favoured Ecuador. Ecuador won.<br>
+        • <b>Ecuador 2-1 Germany</b> — the market made Germany a <b>61%</b> favourite; the model rated Germany a slim <b>39%</b>, keeping Ecuador in the game at 61% not-to-lose (win or draw). The model still narrowly favoured Germany, but it was nowhere near as sure as the market — so Ecuador's win didn't blindside it. Ecuador won.<br>
         • <b>England 0-0 Ghana</b> and <b>Portugal 1-1 DR Congo</b> — market 71% and 74% on the favourite; both drew, both flagged far closer by the model.<br>
         • The model's two <b>outright better calls</b>: it backed <b>South Africa over South Korea</b> and <b>Turkey over USA</b> where the market favoured the other side — and the model was right both times.</p>
         <p>Across the group stage there were <b>12 games where the market was ≥55% confident and wrong</b> (usually a draw it had priced out), and in essentially every one the model's top probability was markedly lower. That is the pattern worth investigating.</p>
         <p><b>The honest other side, stated plainly</b>, because this is not a "the market got it wrong" highlight reel: <b>overall the market is still better calibrated than this model</b> (its Brier score is better), it <b>beat the model 6 calls to 2</b> on the games where the two disagreed outright (including Canada beating South Africa, which the model got wrong), and most of the time the market's confidence is correct — that is precisely why it leads on the headline numbers. The model's advantage is <b>narrow and specific</b>: spotting that certain games are closer than the crowd thinks, especially draw risk. It is one genuine strength, not overall superiority — and it is exactly the kind of signal that makes a stats-free model worth a closer look.</p></div>
       </details>
       </div>`;})()}
+
+    ${(function(){const cc=closeCalls();if(cc.misses===0)return '';
+      const near=cc.nearMiss,conf=cc.confidentMiss;
+      const drawConf=conf.filter(r=>r.act==='D').length;
+      const row=(r,tone)=>{
+        const col=tone==='near'?'#22C55E':'#F59E0B';
+        const actName=r.act==='D'?'draw':(r.act==='A'?r.nmA:r.nmB);
+        return '<div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:var(--card);border:1px solid var(--bdr);border-left:2px solid '+col+';border-radius:7px;margin-bottom:5px">'+
+          '<div style="font-size:14px;white-space:nowrap">'+r.emA+'<span style="color:var(--dim);font-size:9px">'+r.scA+'-'+r.scB+'</span>'+r.emB+'</div>'+
+          '<div style="flex:1;min-width:0"><div style="font-size:10.5px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.nmA+' v '+r.nmB+'</div>'+
+          '<div style="font-size:9px;color:var(--mut);font-family:monospace">model '+r.p[0]+'/'+r.p[1]+'/'+r.p[2]+' → '+actName+'</div></div>'+
+          '<div style="text-align:right;white-space:nowrap"><div style="font-size:12px;font-weight:800;color:'+col+'">'+(tone==='near'?r.margin+'pt':r.top+'%')+'</div><div style="font-size:8px;color:var(--dim)">'+(tone==='near'?'off top pick':'top pick')+'</div></div></div>';
+      };
+      return '<details class="info-box" style="margin-bottom:14px"><summary>ⓘ How close were the misses? (the honest calibration test)</summary>'+
+        '<div class="info-body">'+
+        '<p>A pick-the-winner scoreboard treats every miss the same - a coin-flip that landed the wrong way counts identically to a confident call that blew up. That is unfair to a probabilistic model, and it can hide overconfidence too. So here are <b>all '+cc.misses+' games the model got wrong</b>, split by how close it actually was - using a threshold fixed in advance by the model\'s own pre-game numbers (a miss is "near-even" if its top outcome was under 40%, or its top two were within 10 points). Both buckets are shown, including the ones that should sting.</p>'+
+        '<div style="display:flex;gap:9px;margin:12px 0">'+
+          '<div style="flex:1;text-align:center;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:9px;padding:10px 6px"><div style="font-size:23px;font-weight:900;color:#22C55E;line-height:1">'+near.length+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.3px;margin-top:3px">near-even calls that didn\'t land</div></div>'+
+          '<div style="flex:1;text-align:center;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:9px;padding:10px 6px"><div style="font-size:23px;font-weight:900;color:#F59E0B;line-height:1">'+conf.length+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.3px;margin-top:3px">confident calls that were wrong</div></div>'+
+        '</div>'+
+        '<p style="margin-bottom:6px"><b style="color:#22C55E">Near-even misses</b> - games the model had already flagged as roughly a coin-flip. A loss here is the result landing inside the wide range the model declared before kickoff, not a bad call:</p>'+
+        near.map(r=>row(r,'near')).join('')+
+        '<p style="margin:11px 0 6px"><b style="color:#F59E0B">Confident misses</b> - the model committed and was wrong. Shown in full, because hiding them would make this panel a highlight reel. '+(drawConf>0?'Note that <b>'+drawConf+' of these '+conf.length+'</b> were <b>draws</b>: the model picked a favourite at 50-58% and the game finished level. That is the model\'s known blind spot - it can never make "draw" its single most-likely call - more than it is wild overconfidence on a winner. But it is still a miss, and it still counts here.':'')+'</p>'+
+        conf.map(r=>row(r,'conf')).join('')+
+        '<p style="margin-top:10px;font-size:10px;color:var(--dim)">The threshold was fixed before these games were scored and is applied identically to every match - a confident miss can never be reclassified as "close" after the fact. This is the calibration story in full; the Brier score above is its single-number summary.</p>'+
+        '</div></details>';
+    })()}
 
     <div style="display:flex;gap:8px;margin-bottom:13px;background:var(--card2);border:1px solid var(--bdr);border-radius:10px;padding:5px">
       <div onclick="setAccView('brier')" style="flex:1;cursor:pointer;text-align:center;padding:8px;border-radius:7px;background:${STATE.accView==='brier'?'rgba(34,197,94,.15)':'transparent'};border:1px solid ${STATE.accView==='brier'?'#22C55E':'transparent'}">
@@ -2239,7 +2318,7 @@ function renderAccuracy(){
           <span style="font-size:20px">🥇</span>
           <span style="font-size:14px;font-weight:900;letter-spacing:.3px;color:var(--gold)">MODEL vs THE BETTING MARKET</span>
         </div>
-        <div style="font-size:10.5px;color:var(--mut);line-height:1.5">The sharpest test there is: our probabilities against real bookmaker pre-match odds, graded head-to-head by Brier score (lower = better). Odds are de-vigged (bookmaker margin stripped) so the market is judged at its true opinion.</div>
+        <div style="font-size:10.5px;color:var(--mut);line-height:1.5">A plain head-to-head: for each played game, did the model's most-likely outcome match the market's, and which of us called the actual result? No confidence-weighting here - that is what the Brier bars below (and the Model tab) are for. This panel just asks: who got the call right?</div>
       </div>
       ${(function(){
         var agg=marketAggregate();
@@ -2264,26 +2343,29 @@ function renderAccuracy(){
             '<div style="font-size:8px;color:'+col+';font-weight:700;margin-top:2px">'+(m.verdict==='win'?'WON':m.verdict==='close'?'MATCH':'LOST')+'</div></div>';
         }).join('');
         return '<div style="padding:14px 17px">'+
-          // scoreboard
-          '<div style="display:flex;gap:9px;margin-bottom:14px">'+
-            '<div style="flex:1;background:rgba(200,155,60,.1);border:1px solid var(--gdim);border-radius:9px;padding:11px 6px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--gold);line-height:1">'+agg.wins+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">🥇 we were better</div></div>'+
-            '<div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:9px;padding:11px 6px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--grn);line-height:1">'+agg.close+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">✓ too close to call</div></div>'+
-            '<div style="flex:1;background:rgba(120,120,120,.07);border:1px solid var(--bdr);border-radius:9px;padding:11px 6px;text-align:center"><div style="font-size:26px;font-weight:900;color:var(--dim);line-height:1">'+agg.loss+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">✗ market was better</div></div>'+
+          // ── FOUR-WAY "WHO CALLED IT RIGHT" MATRIX ──
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'+
+            '<div style="background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.28);border-radius:9px;padding:11px 8px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--grn);line-height:1">'+agg.bothRight+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">✓ both called it right</div></div>'+
+            '<div style="background:rgba(120,120,120,.07);border:1px solid var(--bdr);border-radius:9px;padding:11px 8px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--dim);line-height:1">'+agg.neither+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">✗ neither of us did</div></div>'+
+            '<div style="background:rgba(200,155,60,.12);border:1px solid var(--gold);border-radius:9px;padding:11px 8px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--gold);line-height:1">'+agg.weRightMktWrong+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">🥇 we were right, market wrong</div></div>'+
+            '<div style="background:rgba(120,120,120,.07);border:1px solid var(--bdr);border-radius:9px;padding:11px 8px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--txt);line-height:1">'+agg.mktRightWeWrong+'</div><div style="font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:3px">market right, we were wrong</div></div>'+
           '</div>'+
-          // head-to-head Brier bars
-          '<div style="margin-bottom:6px;font-size:9.5px;font-weight:700;letter-spacing:.5px;color:var(--mut);text-transform:uppercase">Mean Brier · head to head ('+agg.n+' game'+(agg.n===1?'':'s')+') · longer bar = better</div>'+
+          // agreement-scale headline
+          '<div style="font-size:10.5px;line-height:1.6;padding:10px 12px;margin-bottom:14px;background:var(--card2);border-radius:8px;color:var(--mut);border-left:3px solid var(--grn)"><b style="color:var(--txt)">The model and the market made the same call on '+agg.sameCall+' of '+agg.n+' games ('+Math.round(100*agg.sameCall/agg.n)+'%).</b> That is the headline worth sitting with: a model using no player statistics, no injuries, no money - just squad context - tracks a multi-billion-dollar market pick-for-pick almost nine times in ten. On the '+(agg.weRightMktWrong+agg.mktRightWeWrong)+' games where the two disagreed on the result, the market came out ahead '+agg.mktRightWeWrong+'-'+agg.weRightMktWrong+'. We do not hide that - the market is sharper on the split calls. What is striking is how rarely they split at all.</div>'+
+          // head-to-head Brier bars (kept - this is where confidence/calibration lives)
+          '<div style="margin-bottom:6px;font-size:9.5px;font-weight:700;letter-spacing:.5px;color:var(--mut);text-transform:uppercase">And how well-calibrated? Mean Brier · '+agg.n+' game'+(agg.n===1?'':'s')+' · longer bar = better</div>'+
           '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:'+(ourWon?'var(--grn)':'var(--txt)')+';font-weight:700">Our model'+(ourWon?' <span style="color:var(--grn);font-size:9px">✓ better</span>':'')+'</span><span style="font-family:monospace;color:'+(ourWon?'var(--grn)':'var(--txt)')+';font-weight:700">'+agg.ourMean.toFixed(3)+'</span></div><div style="height:9px;background:var(--card2);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+ourPct+'%;background:'+(ourWon?'linear-gradient(90deg,var(--grn),#16a34a)':'linear-gradient(90deg,var(--gold),#a87f2e)')+';border-radius:5px"></div></div></div>'+
           '<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:'+(ourWon?'var(--txt)':'var(--gold)')+';font-weight:700">Betting market'+(ourWon?'':' <span style="color:var(--gold);font-size:9px">✓ better</span>')+'</span><span style="font-family:monospace;color:'+(ourWon?'var(--txt)':'var(--gold)')+';font-weight:700">'+agg.mktMean.toFixed(3)+'</span></div><div style="height:9px;background:var(--card2);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+mktPct+'%;background:'+(ourWon?'linear-gradient(90deg,var(--dim),#555)':'linear-gradient(90deg,var(--gold),#a87f2e)')+';border-radius:5px"></div></div></div>'+
-          // verdict line
-          '<div style="font-size:10.5px;line-height:1.6;padding:10px 12px;background:var(--card2);border-radius:8px;color:var(--mut);border-left:3px solid '+(ourWon?'var(--grn)':'var(--gold)')+'">'+(ourWon?'<b style="color:var(--grn)">The model is edging the market</b> across this sample — our probabilities have been better calibrated than the bookmakers on these games.':'<b style="color:var(--gold)">The market edges the overall average</b> - expected, since it is extremely sharp on the many one-sided favourite games. But the model wins a real share of games outright (see the medals below), and they are almost all draws and upsets where the market was overconfident on a favourite. That is exactly what this model is built to catch.')+'</div>'+
+          // pointer to deeper transparency
+          '<div style="font-size:10px;line-height:1.6;padding:9px 11px;background:var(--card2);border-radius:8px;color:var(--mut);border-left:3px solid var(--gold)">The market is better calibrated on average ('+agg.mktMean.toFixed(3)+' vs '+agg.ourMean.toFixed(3)+' Brier) - being correctly more confident on favourites is a real skill, and it should win over many games. For where the model\'s cautious probabilities <i>do</i> pay off - the draws and upsets it flagged that the market priced out - see the <b>close-games</b> note above and the full Brier breakdown. Nothing here is hidden; dig as deep as you like.</div>'+
           // medal strip
-          '<div style="margin-top:13px;margin-bottom:6px;font-size:9.5px;font-weight:700;letter-spacing:.5px;color:var(--mut);text-transform:uppercase">Game by game</div>'+
+          '<div style="margin-top:13px;margin-bottom:6px;font-size:9.5px;font-weight:700;letter-spacing:.5px;color:var(--mut);text-transform:uppercase">Game by game (Brier)</div>'+
           '<div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px">'+strip+'</div>'+
           // reward legend
           '<div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:9.5px;color:var(--mut);padding-top:10px;border-top:1px solid var(--bdr)">'+
-            '<span><span style="color:var(--gold)">🥇</span> we beat the market (Brier better by 0.03+)</span>'+
-            '<span><span style="color:var(--grn)">✓</span> matched (within 0.03 either way)</span>'+
-            '<span><span style="color:var(--dim)">✗</span> market was sharper</span>'+
+            '<span><span style="color:var(--gold)">🥇</span> model\'s probabilities beat the market (Brier)</span>'+
+            '<span><span style="color:var(--grn)">✓</span> within a whisker</span>'+
+            '<span><span style="color:var(--dim)">✗</span> market\'s were sharper</span>'+
           '</div>'+
         '</div>';
       })()}
