@@ -62,7 +62,18 @@ a{color:inherit;text-decoration:none}
 .toggle{display:flex;background:var(--card2);border:1px solid var(--bdr);border-radius:20px;padding:3px;gap:2px}
 .toggle button{padding:5px 12px;font-size:11px;font-weight:700;border-radius:16px;color:var(--mut);transition:all .15s;white-space:nowrap}
 .toggle button.on{background:var(--gold);color:#07111A}
-.nav{display:flex;gap:2px;padding-top:6px;overflow-x:auto}
+.nav-wrap{position:relative}
+.nav{display:flex;gap:2px;padding-top:6px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--gdim) transparent}
+.nav::-webkit-scrollbar{height:3px}
+.nav::-webkit-scrollbar-thumb{background:var(--gdim);border-radius:3px}
+.nav::-webkit-scrollbar-track{background:transparent}
+.nav .nb{scroll-snap-align:center}
+/* Right/left edge fades: the clearest signal on mobile that the bar keeps going. */
+.nav-wrap::after,.nav-wrap::before{content:"";position:absolute;top:6px;bottom:0;width:26px;pointer-events:none;z-index:2;transition:opacity .2s}
+.nav-wrap::after{right:0;background:linear-gradient(90deg,transparent,var(--bg))}
+.nav-wrap::before{left:0;background:linear-gradient(270deg,transparent,var(--bg));opacity:0}
+.nav-wrap.scrolled::before{opacity:1}
+.nav-wrap.at-end::after{opacity:0}
 .nb{padding:7px 13px;font-size:12px;font-weight:500;color:var(--mut);border-radius:5px 5px 0 0;border-bottom:2px solid transparent;white-space:nowrap}
 .nb:hover{color:var(--text)}
 .nb.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
@@ -334,6 +345,7 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 </div>
+<div class="nav-wrap">
 <nav class="nav">
   <button class="nb on" onclick="nav('home')">⚽ All Teams</button>
   <button class="nb" onclick="nav('rank')">🏆 Rankings</button>
@@ -344,7 +356,7 @@ a{color:inherit;text-decoration:none}
   <button class="nb" onclick="nav('results')">📋 Results</button>
   <button class="nb" onclick="nav('model')">🔢 Model</button>
 </nav>
-</div></header>
+</div></div></header>
 <main class="content" id="root"></main>
 <div class="footer" id="footer"></div>
 <div id="teamReviewModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);padding:16px;overflow-y:auto" onclick="if(event.target===this)closeTeamReview()">
@@ -1033,7 +1045,17 @@ function nav(view,opts={}){
   STATE={...STATE,view,...opts};render();
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,results:6,model:7};
-  if(map[view]!==undefined)document.querySelectorAll('.nb')[map[view]].classList.add('on');
+  if(map[view]!==undefined){
+    const btn=document.querySelectorAll('.nb')[map[view]];
+    btn.classList.add('on');
+    // Mobile discoverability: slide the active tab toward the centre so the tabs on
+    // either side peek in, making it obvious the bar scrolls to more options.
+    const bar=document.querySelector('.nav');
+    if(bar&&btn){
+      const target=btn.offsetLeft-(bar.clientWidth/2)+(btn.offsetWidth/2);
+      bar.scrollTo({left:Math.max(0,target),behavior:'smooth'});
+    }
+  }
   window.scrollTo(0,0);
 }
 function mbar(v,max,col){const pct=Math.min(100,(v/max)*100).toFixed(1);return`<span class="mini-bar"><span class="mini-fill" style="width:${pct}%;background:${col}"></span></span>`;}
@@ -1066,9 +1088,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.9.0";
-const BUILD_STAMP="2026-07-02 08:37 SAST";
+const BUILD_VERSION="v7.9.1";
+const BUILD_STAMP="2026-07-02 11:54 SAST";
 const CHANGELOG=[
+  {v:"v7.9.1",d:"2026-07-02",items:[
+    "Mobile navigation fix (visual only): the tab bar scrolls horizontally but on a phone there was no sign the extra tabs existed. Three cues added - (1) tapping a tab now smoothly slides it toward the centre so the tabs on either side peek into view; (2) a soft fade on the right edge (and left, once scrolled) signals the bar continues; (3) a slim scrollbar and gentle scroll-snap. No change to which tabs exist or what they show.",
+    "No change to the model, its data, scoring, predictions, or any accuracy figure."
+  ]},
   {v:"v7.9.0",d:"2026-07-02",items:[
     "ENDPOINT RE-DESIGNATION, argued by the designer and adopted after analysis: for knockout ties, WHO ADVANCES (extra time and penalties included) is now the model's PRIMARY scored endpoint, with the 90-minute 1X2 co-reported as the uniform market-comparison basis. The case: (1) the pre-tournament frozen bracket is itself an advancement forecast - a bracket has no draws - so advancement was always the model's native pre-registered object; (2) the squad-depth thesis (a deeper squad is likelier to prevail however long a tie takes) was on the public record BEFORE the knockouts, in this app's own shipped code and the locked build spec; (3) the 90-minute constraint was inherited from the betting derivative, because 1X2 odds settle at 90 minutes.",
     "Outcome-switching risk addressed head-on, because re-designating an endpoint mid-tournament is exactly what a hostile reviewer should probe: the designation date is disclosed (2 Jul, before any Round-of-16 game); at the moment of the switch it was VERDICT-NEUTRAL - on the 10 decided ties the model went 5/10 to 6/10 and the market 7/10 to 8/10, both gaining exactly one tie (Belgium) with the two-tie gap unchanged; both endpoints are permanently co-reported with one identical rule for model and market; and the dated v7.8.0/v7.8.1 entries below, written under the previous designation, stand unedited as the historical record.",
@@ -3106,6 +3132,19 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
 // ════════════ BOOT ════════════
 recompute();
 render();
+
+// Mobile nav discoverability: toggle edge-fade cues as the tab bar scrolls.
+(function(){
+  const bar=document.querySelector('.nav'), wrap=document.querySelector('.nav-wrap');
+  if(!bar||!wrap)return;
+  function upd(){
+    wrap.classList.toggle('scrolled',bar.scrollLeft>4);
+    wrap.classList.toggle('at-end',bar.scrollLeft+bar.clientWidth>=bar.scrollWidth-4);
+  }
+  bar.addEventListener('scroll',upd,{passive:true});
+  window.addEventListener('resize',upd);
+  upd();
+})();
 </script>
 </body>
 </html>
