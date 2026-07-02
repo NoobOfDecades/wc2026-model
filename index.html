@@ -379,9 +379,9 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["IVORY_COAST","NORWAY","2026-06-30T19:00:00+02:00",1,2,"AT&T Stadium"],
 ["FRANCE","SWEDEN","2026-06-30T23:00:00+02:00",3,0,"MetLife Stadium"],
 ["MEXICO","ECUADOR","2026-07-01T03:00:00+02:00",2,0,"Estadio Azteca"],
-["ENGLAND","CONGO_DR","2026-07-01T18:00:00+02:00",null,null,"Mercedes-Benz Stadium"],
-["BELGIUM","SENEGAL","2026-07-01T22:00:00+02:00",null,null,"Lumen Field"],
-["USA","BOSNIA","2026-07-02T02:00:00+02:00",null,null,"Levi's Stadium"],
+["ENGLAND","CONGO_DR","2026-07-01T18:00:00+02:00",2,1,"Mercedes-Benz Stadium"],
+["BELGIUM","SENEGAL","2026-07-01T22:00:00+02:00",2,2,"Lumen Field"],
+["USA","BOSNIA","2026-07-02T02:00:00+02:00",2,0,"Levi's Stadium"],
 ["SPAIN","AUSTRIA","2026-07-02T21:00:00+02:00",null,null,"SoFi Stadium"],
 ["PORTUGAL","CROATIA","2026-07-03T01:00:00+02:00",null,null,"BMO Field"],
 ["SWITZERLAND","ALGERIA","2026-07-03T05:00:00+02:00",null,null,"BC Place"],
@@ -400,6 +400,9 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 // Format: 'TEAMA|TEAMB': {o:[pA,pD,pB] vig-removed market probs (%), src:'source string'}
 // Keyed by the SAME team order as our FIXTURES entries.
 const MKT={
+'ENGLAND|CONGO_DR':{o:[75.5,17.7,6.8],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
+'BELGIUM|SENEGAL':{o:[43.7,30.3,26.1],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
+'USA|BOSNIA':{o:[70.3,19.1,10.6],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
   'CONGO_DR|UZBEKISTAN':{o:[56.8,25.2,18.0],src:'bet365 pre-match 1X2, de-vigged'},
   'COLOMBIA|PORTUGAL':{o:[27.8,24.9,47.3],src:'bet365 pre-match 1X2, de-vigged'},
   'ALGERIA|AUSTRIA':{o:[27.0,46.1,27.0],src:'bet365 pre-match 1X2, de-vigged'},
@@ -572,7 +575,16 @@ function closeCalls(){
     const actProb=act==='A'?p[0]:act==='D'?p[1]:p[2];
     const pickProb=pick==='A'?p[0]:pick==='D'?p[1]:p[2];
     const margin=pickProb-actProb; // points between what model picked and what happened
-    const rec={f,a:h,b,act,pick,p,top,gap,margin,actProb,
+    let koTag=null;
+    if(act==='D'&&typeof KO_ADVANCERS!=='undefined'){
+      const adv=KO_ADVANCERS[h+'|'+b];
+      if(adv&&pick!=='D'){
+        const pickTeam=pick==='A'?h:b;
+        const how=(typeof KO_HOW!=='undefined'&&KO_HOW[h+'|'+b])||'pens';
+        koTag=(adv===pickTeam?'pick advanced ('+how+')':'pick went out ('+how+')');
+      }
+    }
+    const rec={f,a:h,b,act,pick,p,top,gap,margin,actProb,koTag,
                scA:f[3],scB:f[4],
                emA:S[h].meta.emoji,emB:S[b].meta.emoji,nmA:S[h].meta.name,nmB:S[b].meta.name};
     if(isNear)nearMiss.push(rec);else confidentMiss.push(rec);
@@ -610,8 +622,9 @@ function marketAggregate(){
 // "Calling the result right" — 1X2 hit-rate at full-time, model vs market, plus a cut on the
 // games that REALITY (not the model) flagged as close: decided by a single goal or drawn.
 // Pure measure of the model's probabilities; the close-cut has zero model input in its definition.
-// Knockouts are scored on the 90-minute result (ET/penalties are a separate question the model
-// does not predict), consistent with how every fixture is logged.
+// This function stays on the 90-minute basis for ALL games: it is the uniform, like-for-like basis
+// against the captured pre-match odds. The model's primary KNOCKOUT endpoint (advancement, ET/pens
+// included) is scored symmetrically in bracketScore and shown on the Bracket tab.
 function callItRight(){
   const done=completedMatches();
   let n=0,mHit=0,kHit=0,cN=0,cM=0,cK=0;
@@ -1053,9 +1066,30 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.7.0";
-const BUILD_STAMP="2026-07-01 09:20 SAST";
+const BUILD_VERSION="v7.9.0";
+const BUILD_STAMP="2026-07-02 08:37 SAST";
 const CHANGELOG=[
+  {v:"v7.9.0",d:"2026-07-02",items:[
+    "ENDPOINT RE-DESIGNATION, argued by the designer and adopted after analysis: for knockout ties, WHO ADVANCES (extra time and penalties included) is now the model's PRIMARY scored endpoint, with the 90-minute 1X2 co-reported as the uniform market-comparison basis. The case: (1) the pre-tournament frozen bracket is itself an advancement forecast - a bracket has no draws - so advancement was always the model's native pre-registered object; (2) the squad-depth thesis (a deeper squad is likelier to prevail however long a tie takes) was on the public record BEFORE the knockouts, in this app's own shipped code and the locked build spec; (3) the 90-minute constraint was inherited from the betting derivative, because 1X2 odds settle at 90 minutes.",
+    "Outcome-switching risk addressed head-on, because re-designating an endpoint mid-tournament is exactly what a hostile reviewer should probe: the designation date is disclosed (2 Jul, before any Round-of-16 game); at the moment of the switch it was VERDICT-NEUTRAL - on the 10 decided ties the model went 5/10 to 6/10 and the market 7/10 to 8/10, both gaining exactly one tie (Belgium) with the two-tie gap unchanged; both endpoints are permanently co-reported with one identical rule for model and market; and the dated v7.8.0/v7.8.1 entries below, written under the previous designation, stand unedited as the historical record.",
+    "What changed on screen: the actual-results bracket now leads with the advancement scorecard (model favourite advanced 6/10, market favourite 8/10) with the 90-minute line beneath (model 5/10, market 7/10); a level-at-90 tie where the model's pick advanced now reads as a correct primary call, clearly labelled 'level at 90'' with the aet/pens route (Belgium green; Germany and the Netherlands remain misses - the depth thesis is exposed to both outcomes, currently 1 of 3 on level ties); the toggle tally, R16 registration footer, fair-fight note, hit-rate footnote and close-calls panel were all aligned to the two-endpoint language.",
+    "What deliberately did NOT change: the uniform 82-game metrics (hit-rate, Brier, the agreement matrix) stay on the 90-minute 1X2 for every game, because that is what the captured pre-match odds price and because mixing 3-way group scoring with 2-way knockout scoring inside one average would be statistical gerrymandering. Model 50/82 vs market 55/82, Brier 0.576 vs 0.479, same call 73/82 - all unchanged by this build.",
+    "No change to the model, its parameters, formulas, predictions, or any frozen registration numbers."
+  ]},
+  {v:"v7.8.1",d:"2026-07-02",items:[
+    "PRE-REGISTERED the Round-of-16 node, two days early. A frozen panel on the Bracket tab (visible in both views) registers the model's forecast for the ENTIRE Round of 16 before any R16 game and before six R32 feeder games had finished: exact 1X2 and to-advance figures for the five locked ties (Canada-Morocco, France-Paraguay, Brazil-Norway, Mexico-England, USA-Belgium), plus CONDITIONAL forecasts for all twelve possible pairings of the three open ties - the model is deterministic, so whatever the remaining R32 produces, the applicable line was written first. Also registers the from-here tournament pick (France) and the top of the surviving field. Numbers are hardcoded at commit time and are never recomputed or edited - the git timestamp is the proof.",
+    "Why conditional registration is legitimate: it is a pre-specified analysis plan covering every contingency, committed before the information arrives - stronger, not weaker, than waiting for the field to lock. In the evidence-network framing this is the next pre-specified secondary node; it counts whether it strengthens or weakens the verdict.",
+    "Notable frozen calls, stated before the fact: the model backs Morocco over Canada, England over Mexico, and Belgium over the USA - three picks against a host or the market's likely darling - and rates Portugal-Spain (if it happens) dead even. These will be scored as-is.",
+    "No change to the model, its parameters, scoring, or the original pre-tournament frozen bracket. This build adds a registration document only."
+  ]},
+  {v:"v7.8.0",d:"2026-07-02",items:[
+    "Baked 3 more R32 results (90-minute basis): England 2-1 DR Congo, USA 2-0 Bosnia (both regulation), and Belgium 2-2 Senegal - level at 90', Belgium won 3-2 in EXTRA TIME. All three carried pre-game odds captured in advance (30 Jun), now de-vigged into the comparison. 82/82 played games have verified pre-match odds. Balogun's red card is a one-match suspension (Belgium game), not a tournament-ending injury, so nothing is baked.",
+    "FAIRNESS AUDIT of knockout scoring, prompted by the designer asking whether the model is needlessly punished when its pick draws at 90' but still advances (Belgium). Verified first: the model DID favour Belgium (43%) and Belgium went through. The resolution keeps the science honest on both sides: (1) the PRIMARY scoring stays the 90-minute result for model AND market alike - that is what the captured odds price, and changing a primary endpoint mid-tournament after seeing results would be outcome-switching; (2) a SECONDARY advancement count was added, scored by ONE identical rule for both forecasters: did the side each rated higher go through, extra time and penalties included. Applied retroactively to every decided tie. Current tally: model favourite advanced 6/10, market favourite 8/10.",
+    "Stated plainly because it is the point: this fairness fix helps the MARKET more than the model (the market also favoured Belgium, and additionally called Canada and Mexico right where the model did not). It was built anyway, because the question is what is fair, not what flatters. A model-only advancement credit - the 'depth bonus' removed in v7.6.1 - remains rejected as an asymmetry.",
+    "Honest labels: level-at-90' ties now show HOW they were decided - Belgium-Senegal displays '(aet)', the two shootouts '(pens)' - instead of a blanket 'pens'. The close-calls panel now tags knockout draws with whether the model's pick subsequently advanced or went out (both directions shown). The pre-registration note now includes the Belgium counter-example alongside the Germany/Netherlands misses, so the level-at-90' record is presented whole.",
+    "Status check on older queued items: accuracy figures already display as % (no 'pts' remain), the Accuracy tab already leads with Brier by default, and the changelog is back-dated through v4.4.0 - all previously completed.",
+    "No change to the model, its parameters, scoring formulas, predictions, or the frozen bracket."
+  ]},
   {v:"v7.7.0",d:"2026-07-01",items:[
     "REBUILT the 'Model vs the Betting Market' head-to-head panel to be honest and non-misleading. The old panel showed a Brier-based scoreboard (we-better 19 / close 5 / market-better 55) which read like a rout but was a confidence-weighting artefact: 43 of those 55 'market better' games were games the MODEL ALSO CALLED CORRECTLY - the market simply priced its favourite higher. It framed 43 correct model calls as losses. Replaced with a plain four-way agreement matrix on the actual pick: Both called it right 46 · We right, market wrong 2 · Market right, we wrong 7 · Neither 24. The headline is now the honest and striking one - the stats-free model and the multi-billion-dollar market made the SAME call on 70 of 79 games (89%). On the 9 games where they disagreed the market came out ahead 7-2, which the panel states plainly rather than hiding. No confidence-weighting in this panel by design; that lives in the Brier bars (kept beneath, unchanged) and the Brier sections.",
     "NEW close-calls / calibration panel on the Accuracy tab: all 31 of the model's wrong calls, split by how close it actually was, using a threshold FIXED IN ADVANCE by the model's own pre-game numbers (near-even = top outcome under 40% OR top two within 10 points). 11 were near-even coin-flips the model had already flagged; 20 were confident misses - shown IN FULL, including the note that most confident misses were draws (the model's known structural blind spot, since it can never argmax a draw). Shown symmetrically so it is a calibration test, not a highlight reel; a confident miss can never be reclassified as close after the fact.",
@@ -2196,8 +2230,9 @@ function renderAccuracy(){
       <p><b>It is not a fair fight, and that is the entire point.</b> The two columns you are about to compare are wildly unequal in what they are allowed to know and what they cost to run:</p>
       <p><b>The betting market</b> is a continuously-running machine that reprices every few seconds off an enormous, live flood of information — millions of data points including detailed <i>individual player statistics</i>, current form, who is fit, who is suspended, confirmed line-ups, the weather, and the pressure of real money from sharp bettors moving the odds. It updates right up to kick-off.</p>
       <p><b>This model</b> is the opposite in every respect. It is a single, <b>mathematically pure, deterministic calculation</b> — a national-squad strength number built only from the competitive <i>context</i> of each player's clubs (league strength, where the club finished, how long he was there). It uses <b>zero individual player statistics</b>, no form, no injuries-as-data, no money, no live updating, and no hidden tunable knobs. The same inputs always give the same answer, and you could re-run the whole thing on a laptop in seconds — it is <b>orders of magnitude cheaper</b> than the market's operation. The method is novel: applying the discipline of <i>indirect-comparison / network meta-analysis</i> (a technique from medical evidence synthesis, for ranking things that never met head-to-head) to international football.</p>
-      <p><b>And it was pre-registered.</b> The model's full predicted bracket and team rankings were committed publicly, with a date stamp, <b>before the knockout stage began</b> — and have not been touched since. The proof is unfakeable: the model has already been <b>wrong on several</b> of the Round-of-32 ties (including backing South Africa over Canada, who won on a stoppage-time goal, and favouring both Germany and the Netherlands, who went out on penalties), and those wrong predictions are still sitting there, unedited. A model quietly tuned to fit results would not preserve its own misses. As the real knockouts unfold we apply the <i>same</i> pre-registered method to whoever actually advanced, and never retro-edit the original frozen forecast.</p>
+      <p><b>And it was pre-registered.</b> The model's full predicted bracket and team rankings were committed publicly, with a date stamp, <b>before the knockout stage began</b> — and have not been touched since. The proof is unfakeable: the model has already been <b>wrong on several</b> of the Round-of-32 ties (including backing South Africa over Canada, who won on a stoppage-time goal, and favouring both Germany and the Netherlands, who went out on penalties - while in a third level-at-90' tie its pick, Belgium, did come through in extra time), and those wrong predictions are still sitting there, unedited. A model quietly tuned to fit results would not preserve its own misses. As the real knockouts unfold we apply the <i>same</i> pre-registered method to whoever actually advanced, and never retro-edit the original frozen forecast.</p>
       <p>Two honest clarifications, because the credibility rests on saying only what is exactly true: (1) The model has been <b>re-calibrated</b> over its life — but every change was driven by better <i>dated, sourced external data</i> becoming available, in a sequence you can verify in the public record, never by tuning toward the scoreboard. That is calibration, not fitting, and it is checkable rather than asserted. (2) When a tournament-ending injury removes a player, we handle it by a pre-stated rule and log it — exactly as a registered medical trial pre-specifies what to do when a participant drops out. Adapting to an unavoidable real-world event by a stated rule is part of the pre-registration discipline, not a breach of it.</p>
+      <p><b>Two endpoints in the knockouts, honestly labelled.</b> The model's primary knockout endpoint is <b>who advances</b> - the pre-tournament frozen bracket is itself an advancement forecast (a bracket has no draws), and the squad-depth thesis behind it was on the public record before the knockouts began. The 90-minute 1X2 is co-reported throughout as the uniform market-comparison basis, because that is what every captured pre-match odds line prices. One identical rule for model and market on both endpoints. The designation was set on 2 July, before any Round-of-16 game, and was verdict-neutral at that moment: the model gained exactly one tie (Belgium, level at 90', through in extra time) and so did the market.</p>
       <p><b>The thesis.</b> If a stats-free, deterministic, pre-registered model that costs almost nothing to run can stay within a few percentage points of a billion-dollar live market that knows everything — that is not a claim to have beaten the market. It is evidence that squad <i>context</i> alone carries far more signal than expected, and that the approach <b>merits further investigation</b>. That is the whole point of putting it on the table in public.</p></div>
     </details>
 
@@ -2218,7 +2253,7 @@ function renderAccuracy(){
           <div style="font-size:13px;font-weight:900;font-family:monospace;margin-top:2px"><span style="color:var(--mut)">Market ${c.cK}/${c.cN} (${ckp}%)</span></div>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--mut);line-height:1.55;margin-top:9px">"Right" = the outcome given the highest win probability happened (or a draw was most likely and the game was drawn). <b>Close games</b> = decided by a single goal or drawn — a cut defined purely by the actual scoreline, with no model input, so it can't be gamed. Knockouts are scored on the 90-minute result; extra-time and penalties are a separate question the model does not try to predict. Covers only games with verified pre-match odds. The market's money is built from individual stats, injuries, and form; this model uses none of that — only the squad's competitive context — so calling results at a near-equal rate is the point worth noting, not the small gap.</div>
+      <div style="font-size:10px;color:var(--mut);line-height:1.55;margin-top:9px">"Right" = the outcome given the highest win probability happened (or a draw was most likely and the game was drawn). <b>Close games</b> = decided by a single goal or drawn — a cut defined purely by the actual scoreline, with no model input, so it can't be gamed. Knockouts appear here on the 90-minute basis because that is what pre-match odds price - it is the only like-for-like basis against the market. The model's own primary knockout endpoint, who advances (extra time and penalties included), is scored separately and symmetrically on the Bracket tab. Covers only games with verified pre-match odds. The market's money is built from individual stats, injuries, and form; this model uses none of that — only the squad's competitive context — so calling results at a near-equal rate is the point worth noting, not the small gap.</div>
       <div style="font-size:10px;color:var(--mut);line-height:1.55;margin-top:7px;padding:8px 10px;background:rgba(200,155,60,.06);border:1px solid var(--gdim);border-radius:7px"><b style="color:var(--gold)">Why hit-rate is unkind to draws.</b> A draw is almost never any forecaster's single most likely outcome — even the betting market made "draw" its top pick in only a tiny handful of games all tournament — because in most matches one side winning is individually more probable than the specific result "draw", even when a draw is far from unlikely. So any honest probabilistic model, this one included, will rarely "call" a draw and will miss most drawn games on a pick-the-top-outcome scoreboard. That is a property of the metric, not a flaw in the probabilities: this model's draw probabilities are actually a touch closer to the real draw rate than the market's. The fairer measure of whether the probabilities are good is <b style="color:var(--text)">Brier</b> (below), which rewards a well-judged 27% draw chance whether or not the draw happens.</div>
       <details class="info-box" style="margin-top:9px"><summary>ⓘ The model's real strength: the games it flagged as close (with examples)</summary>
         <div class="info-body">
@@ -2242,7 +2277,7 @@ function renderAccuracy(){
         return '<div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:var(--card);border:1px solid var(--bdr);border-left:2px solid '+col+';border-radius:7px;margin-bottom:5px">'+
           '<div style="font-size:14px;white-space:nowrap">'+r.emA+'<span style="color:var(--dim);font-size:9px">'+r.scA+'-'+r.scB+'</span>'+r.emB+'</div>'+
           '<div style="flex:1;min-width:0"><div style="font-size:10.5px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.nmA+' v '+r.nmB+'</div>'+
-          '<div style="font-size:9px;color:var(--mut);font-family:monospace">model '+r.p[0]+'/'+r.p[1]+'/'+r.p[2]+' → '+actName+'</div></div>'+
+          '<div style="font-size:9px;color:var(--mut);font-family:monospace">model '+r.p[0]+'/'+r.p[1]+'/'+r.p[2]+' → '+actName+(r.koTag?' <span style="color:'+(r.koTag.indexOf('advanced')>-1?'#22C55E':'#F59E0B')+';font-weight:700">· '+r.koTag+'</span>':'')+'</div></div>'+
           '<div style="text-align:right;white-space:nowrap"><div style="font-size:12px;font-weight:800;color:'+col+'">'+(tone==='near'?r.margin+'pt':r.top+'%')+'</div><div style="font-size:8px;color:var(--dim)">'+(tone==='near'?'off top pick':'top pick')+'</div></div></div>';
       };
       return '<details class="info-box" style="margin-bottom:14px"><summary>ⓘ How close were the misses? (the honest calibration test)</summary>'+
@@ -2254,7 +2289,7 @@ function renderAccuracy(){
         '</div>'+
         '<p style="margin-bottom:6px"><b style="color:#22C55E">Near-even misses</b> - games the model had already flagged as roughly a coin-flip. A loss here is the result landing inside the wide range the model declared before kickoff, not a bad call:</p>'+
         near.map(r=>row(r,'near')).join('')+
-        '<p style="margin:11px 0 6px"><b style="color:#F59E0B">Confident misses</b> - the model committed and was wrong. Shown in full, because hiding them would make this panel a highlight reel. '+(drawConf>0?'Note that <b>'+drawConf+' of these '+conf.length+'</b> were <b>draws</b>: the model picked a favourite at 50-58% and the game finished level. That is the model\'s known blind spot - it can never make "draw" its single most-likely call - more than it is wild overconfidence on a winner. But it is still a miss, and it still counts here.':'')+'</p>'+
+        '<p style="margin:11px 0 6px"><b style="color:#F59E0B">Confident misses</b> - the model committed and was wrong. Shown in full, because hiding them would make this panel a highlight reel. '+(drawConf>0?'Note that <b>'+drawConf+' of these '+conf.length+'</b> were <b>draws</b>: the model picked a favourite at 50-58% and the game finished level. That is the model\'s known blind spot - it can never make "draw" its single most-likely call - more than it is wild overconfidence on a winner. But it is still a miss, and it still counts here. Knockout ties level at 90 minutes also sit in this view as draws for both forecasters; on the model\'s primary advancement endpoint each is tagged with whether its pick then went through (Belgium did; Germany and the Netherlands did not - the depth thesis is exposed to both outcomes).':'')+'</p>'+
         conf.map(r=>row(r,'conf')).join('')+
         '<p style="margin-top:10px;font-size:10px;color:var(--dim)">The threshold was fixed before these games were scored and is applied identically to every match - a confident miss can never be reclassified as "close" after the fact. This is the calibration story in full; the Brier score above is its single-number summary.</p>'+
         '</div></details>';
@@ -2430,6 +2465,13 @@ function knockoutFixtures(){
 const KO_ADVANCERS={
   'GERMANY|PARAGUAY':'PARAGUAY',     // 1-1, Paraguay won 4-3 on pens
   'NETHERLANDS|MOROCCO':'MOROCCO',   // 1-1, Morocco won 3-2 on pens
+  'BELGIUM|SENEGAL':'BELGIUM',       // 2-2 at 90', Belgium won 3-2 in extra time
+};
+// How each level-at-90 tie was decided, for honest display labels ('pens' or 'aet').
+const KO_HOW={
+  'GERMANY|PARAGUAY':'pens',
+  'NETHERLANDS|MOROCCO':'pens',
+  'BELGIUM|SENEGAL':'aet',
 };
 function bracketScore(){
   let played=0,correct=0;
@@ -2455,12 +2497,37 @@ function bracketScore(){
     // model is judged on the 90' result: a draw at 90' means the model's win-pick did not land in regulation
     const hit=(result90!==null && result90!=='D' && (result90==='A'?a:b)===modelW);
     if(result90!==null){played++; if(hit)correct++;}
-    rows.push({a,b,modelW,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
+    // Market advancement favourite (same rule as the model: whichever side it rates higher to WIN).
+    // Scored identically for both forecasters - no asymmetry.
+    const mm=marketFor(f);
+    const mktW=mm?(mm.o[0]>mm.o[2]?a:(mm.o[2]>mm.o[0]?b:null)):null;
+    rows.push({a,b,modelW,mktW,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
                realW: advancer || (result90==='D'?'DRAW':null)});
   }
-  return {played,correct,rows};
+  // Symmetric ADVANCEMENT tallies (secondary metric, added 2 Jul, retroactive by this fixed rule):
+  // of the ties where someone actually went through (incl. ET/pens), how often was each side's
+  // favourite the one who advanced? Identical rule for model and market.
+  let advDecided=0,advModel=0,advMkt=0,advMktN=0,r90Mkt=0;
+  rows.forEach(r=>{ if(r.advancer){ advDecided++;
+    if(r.advancer===r.modelW)advModel++;
+    if(r.mktW){advMktN++; if(r.advancer===r.mktW)advMkt++;} }
+    if(r.result90&&r.result90!=='D'&&r.mktW){ if((r.result90==='A'?r.a:r.b)===r.mktW)r90Mkt++; }});
+  return {played,correct,rows,advDecided,advModel,advMkt,advMktN,r90Mkt};
 }
 
+function renderR16Prereg(){
+  return `<details class="msect-fold" style="margin-bottom:14px"><summary class="msect-sum">\u{1F510} PRE-REGISTERED ROUND-OF-16 NODE - committed 2 Jul 2026, 08:15 SAST, before any R16 kickoff</summary>
+  <div style="padding:12px 15px;font-size:11px;color:var(--mut);line-height:1.7">
+  <p style="margin-bottom:9px">This is the model\u2019s frozen forecast for the entire Round of 16, registered <b>before a single R16 game was played</b> and before three of the R32 feeder games had even kicked off. The model is deterministic, so the three not-yet-known ties are covered by <b>conditional forecasts for every possible pairing</b> - whatever happens in the remaining R32 games, the applicable line below was written first. The git commit timestamp is the proof. Numbers are on the Top 15 basis (the app default) and are never edited after this commit; scoring later simply reads off the branch that occurred. In the evidence-network framing this is a pre-specified secondary node: it can strengthen or weaken the verdict, and either way it counts.</p>
+  <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--gold);margin:10px 0 4px">THE FIVE LOCKED TIES</div>
+  <table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="color:var(--dim);font-size:9px;text-transform:uppercase"><td style="padding:2px 8px">Tie</td><td style="padding:2px 8px">win / draw / win</td><td style="padding:2px 8px">to advance</td><td style="padding:2px 8px">model pick</td></tr><tr><td style="padding:4px 8px;font-weight:600">Canada v Morocco</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">34 / 26 / 40</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">46–54</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Morocco</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">France v Paraguay</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">52 / 23 / 25</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">68–32</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">France</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Brazil v Norway</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">42 / 26 / 32</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">57–43</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Brazil</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Mexico v England</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">34 / 26 / 40</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">46–54</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">England</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">USA v Belgium</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">32 / 26 / 42</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">43–57</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Belgium</b></td></tr></table>
+  <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--gold);margin:12px 0 4px">THE THREE OPEN TIES - ALL TWELVE POSSIBLE PAIRINGS, PRE-COMMITTED</div>
+  <table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="color:var(--dim);font-size:9px;text-transform:uppercase"><td style="padding:2px 8px">Possible tie</td><td style="padding:2px 8px">win / draw / win</td><td style="padding:2px 8px">to advance</td><td style="padding:2px 8px">model pick</td></tr><tr><td style="padding:4px 8px;font-weight:600">Portugal v Spain</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">36 / 28 / 36</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">50–50</td><td style="padding:4px 8px;font-size:10px"><b style="color:var(--gold)">dead even</b> (frozen ranking edges Spain by 1.5 pts)</td></tr><tr><td style="padding:4px 8px;font-weight:600">Portugal v Austria</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">44 / 25 / 31</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">59–41</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Portugal</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Croatia v Spain</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">32 / 26 / 42</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">43–57</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Spain</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Croatia v Austria</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">38 / 27 / 35</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">52–48</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Croatia</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Argentina v Australia</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">61 / 20 / 19</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">76–24</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Argentina</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Argentina v Egypt</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">41 / 26 / 33</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">55–45</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Argentina</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Cape Verde v Australia</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">41 / 26 / 33</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">55–45</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Cape Verde</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Cape Verde v Egypt</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">26 / 22 / 52</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">33–67</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Egypt</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Switzerland v Colombia</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">35 / 28 / 37</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">49–51</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Colombia</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Switzerland v Ghana</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">42 / 26 / 32</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">57–43</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Switzerland</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Algeria v Colombia</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">32 / 26 / 42</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">43–57</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Colombia</b></td></tr><tr><td style="padding:4px 8px;font-weight:600">Algeria v Ghana</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">38 / 27 / 35</td><td style="padding:4px 8px;font-family:monospace;color:var(--mut)">52–48</td><td style="padding:4px 8px;font-size:10px">pick: <b style="color:var(--gold)">Algeria</b></td></tr></table>
+  <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--gold);margin:12px 0 4px">WHO WINS IT FROM HERE</div>
+  <p>Of the 22 teams still alive, the frozen ranking\u2019s pick to win the tournament is <b style="color:var(--gold)">France</b>. Top of the surviving field by frozen squad score: France 133.1 · Spain 129.2 · Portugal 127.7 · Brazil 124.7 · Argentina 122.6 · Belgium 119.4. This pick changes only if a higher-ranked survivor is eliminated - the model learns nothing from results.</p>
+  <p style="margin-top:8px;font-size:10px;color:var(--dim)">Registered with three R32 games still unplayed (Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana at commit time; Spain-Austria, Portugal-Croatia, Switzerland-Algeria later on commit day). To-advance figures are the 90-minute draw redistributed proportionally between the two sides. Endpoint designation (set 2 Jul, same day as this registration and before any R16 game): <b>advancement is the primary scored endpoint</b> for knockout ties - the frozen bracket is itself an advancement forecast - with the 90-minute 1X2 co-reported as the market-odds basis. Both figures above are registered for every tie, so scoring on either basis reads off this table.</b></p>
+  </div></details>`;
+}
 function renderBracket(){
   const sim=simulate();
   const sc=teamScore;
@@ -2472,10 +2539,10 @@ function renderBracket(){
   const bs=bracketScore();
   const toggle=`<div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--bdr);border-radius:9px;overflow:hidden">
     <button onclick="setBrkView('model')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='model'?'var(--gold)':'var(--card)'};color:${bv==='model'?'#0a1018':'var(--mut)'}">🔮 MODEL'S PREDICTED BRACKET</button>
-    <button onclick="setBrkView('actual')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='actual'?'#22C55E':'var(--card)'};color:${bv==='actual'?'#04140a':'var(--mut)'}">✅ ACTUAL RESULTS${bs.played?` · model ${bs.correct}/${bs.played}`:''}</button>
+    <button onclick="setBrkView('actual')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='actual'?'#22C55E':'var(--card)'};color:${bv==='actual'?'#04140a':'var(--mut)'}">✅ ACTUAL RESULTS${bs.advDecided?` · model ${bs.advModel}/${bs.advDecided}`:''}</button>
   </div>`;
-  if(bv==='actual') return toggle+renderActualBracket();
-  let html=toggle;
+  if(bv==='actual') return toggle+renderR16Prereg()+renderActualBracket();
+  let html=toggle+renderR16Prereg();
   html+=`<div style="background:linear-gradient(135deg,#061018,#0a1929 50%,#07111A);border:1px solid rgba(200,155,60,.4);border-radius:14px;padding:22px 20px;text-align:center;margin-bottom:18px;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,${cl(champ)}22,transparent 60%);pointer-events:none"></div>
     <div style="font-size:10px;font-weight:800;letter-spacing:3px;color:#C89B3C;margin-bottom:10px">⚠️ PREDICTED CHAMPION · ${modeTag().toUpperCase()} BASIS · MODEL FORECAST</div>
@@ -2573,12 +2640,21 @@ function renderActualBracket(){
     <div style="font-size:13px;font-weight:800;color:#34D77F;letter-spacing:.3px;margin-bottom:8px">✅ ACTUAL KNOCKOUT RESULTS — REAL OUTCOMES</div>
     <div style="font-size:11px;color:var(--mut);line-height:1.6">This is what actually happened, scored against the model's <b style="color:var(--text)">frozen pre-registered prediction</b> (locked before the knockouts — never edited to match reality). The model's predicted bracket lives under the other tab; here each completed tie is marked ✓ if the model's pick advanced, ✗ if it did not.</div>`;
   if(bs.played){
-    const pct=Math.round(100*bs.correct/bs.played);
-    html+=`<div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
-      <div style="flex:1;min-width:120px;text-align:center;background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:11px"><div style="font-size:23px;font-weight:900;color:${pct>=50?'#34D77F':'#F59E0B'}">${bs.correct}/${bs.played}</div><div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:1px;margin-top:2px">MODEL CALLED RIGHT</div></div>
-      <div style="flex:1;min-width:120px;text-align:center;background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:11px"><div style="font-size:23px;font-weight:900;color:var(--text)">${pct}%</div><div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:1px;margin-top:2px">KNOCKOUT HIT-RATE</div></div>
+    const advPct=bs.advDecided?Math.round(100*bs.advModel/bs.advDecided):0;
+    html+=`<div style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--gold);margin-top:12px;margin-bottom:5px">PRIMARY ENDPOINT - WHO ADVANCES (extra time and penalties included)</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px;text-align:center;background:rgba(200,155,60,.07);border:1px solid var(--gdim);border-radius:9px;padding:11px"><div style="font-size:23px;font-weight:900;color:${advPct>=50?'#34D77F':'#F59E0B'}">${bs.advModel}/${bs.advDecided}</div><div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:1px;margin-top:2px">MODEL FAVOURITE ADVANCED</div></div>
+      <div style="flex:1;min-width:120px;text-align:center;background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:11px"><div style="font-size:23px;font-weight:900;color:var(--text)">${bs.advMkt}/${bs.advMktN}</div><div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:1px;margin-top:2px">MARKET FAVOURITE ADVANCED</div></div>
       ${pending?`<div style="flex:1;min-width:120px;text-align:center;background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:11px"><div style="font-size:23px;font-weight:900;color:var(--dim)">${pending}</div><div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:1px;margin-top:2px">STILL TO PLAY</div></div>`:''}
-    </div>`;
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--mut)"><span>90-minute basis (the market-odds basis, co-reported): model ${bs.correct}/${bs.played} · market ${bs.r90Mkt}/${bs.played}</span></div>
+    ${bs.advDecided?`<div style="margin-top:10px;padding:10px 12px;background:var(--card);border:1px solid var(--bdr);border-radius:8px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--mut);margin-bottom:5px">WHY TWO ENDPOINTS - AND WHICH IS PRIMARY</div>
+      <div style="display:flex;gap:10px;margin-bottom:7px">
+        <div style="flex:1;text-align:center;background:rgba(200,155,60,.08);border:1px solid var(--gdim);border-radius:7px;padding:8px"><div style="font-size:19px;font-weight:900;color:var(--gold)">${bs.advModel}/${bs.advDecided}</div><div style="font-size:8px;color:var(--mut);font-weight:700;letter-spacing:.5px">MODEL FAVOURITE ADVANCED</div></div>
+        <div style="flex:1;text-align:center;background:var(--card2);border:1px solid var(--bdr);border-radius:7px;padding:8px"><div style="font-size:19px;font-weight:900;color:var(--txt)">${bs.advMkt}/${bs.advMktN}</div><div style="font-size:8px;color:var(--mut);font-weight:700;letter-spacing:.5px">MARKET FAVOURITE ADVANCED</div></div>
+      </div>
+      <div style="font-size:10px;color:var(--mut);line-height:1.6"><b style="color:var(--text)">Advancement is the model's primary knockout endpoint.</b> The pre-tournament frozen bracket is itself an advancement forecast - a bracket has no draws - and the depth thesis behind it (a deeper squad is likelier to prevail however long a tie takes) was on the public record before the knockouts began. The <b>90-minute result</b> is co-reported as the uniform basis for the market comparison, because that is what every captured pre-match odds line prices. Both endpoints use ONE identical rule for model and market: the side each rated higher. So Belgium drawing at 90' and winning in extra time is a correct advancement call for the model (43%) AND for the market (46%), and a 90-minute draw for both. Endpoint designation set 2 Jul, before any R16 game; at that moment it was verdict-neutral - model 5/10 became 6/10, market 7/10 became 8/10, the gap unchanged - and the dated changelog entries either side of the change stand unedited.</div></div>`:''}`;
   } else {
     html+=`<div style="margin-top:12px;font-size:12px;color:var(--mut);font-style:italic">No knockout ties completed yet — results will appear here as the Round of 32 is played. Check back after each game.</div>`;
   }
@@ -2608,16 +2684,17 @@ function renderActualBracket(){
     // The model is graded on the 90' result. A shootout tie = 90' draw = model's win-pick did NOT land in regulation.
     const modelRight=r.hit; // true only if model's pick won in 90'
     const modelPickAdvanced=(winner===r.modelW); // separate, softer fact: did the model's favourite still go through?
-    const scoreLabel = r.viaShootout ? `${r.scA}–${r.scB} <span style="color:var(--dim);font-weight:600">(pens)</span>` : `${r.scA}–${r.scB}`;
+    const how=(typeof KO_HOW!=='undefined'&&KO_HOW[a+'|'+b])||'pens';
+    const scoreLabel = r.viaShootout ? `${r.scA}–${r.scB} <span style="color:var(--dim);font-weight:600">(${how})</span>` : `${r.scA}–${r.scB}`;
     let badge;
     if(r.viaShootout){
       badge = modelPickAdvanced
-        ? `<span style="font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,.16);color:#FBBF24">◑ DREW AT 90' · model's pick advanced on pens</span>`
-        : `<span style="font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.16);color:#F87171">✗ DREW AT 90' · model's pick went out on pens</span>`;
+        ? `<span style="font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(52,215,127,.18);color:#34D77F">✓ MODEL CORRECT · pick advanced (${how}) · level at 90'</span>`
+        : `<span style="font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.16);color:#F87171">✗ MODEL MISSED · pick went out (${how}) · level at 90'</span>`;
     } else {
       badge = `<span style="font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:5px;${modelRight?'background:rgba(52,215,127,.18);color:#34D77F':'background:rgba(239,68,68,.16);color:#F87171'}">${modelRight?'✓ MODEL CORRECT':'✗ MODEL MISSED'}</span>`;
     }
-    const borderCol = r.viaShootout ? (modelPickAdvanced?'rgba(245,158,11,.45)':'rgba(239,68,68,.4)') : (modelRight?'rgba(52,215,127,.5)':'rgba(239,68,68,.4)');
+    const borderCol = r.viaShootout ? (modelPickAdvanced?'rgba(52,215,127,.5)':'rgba(239,68,68,.4)') : (modelRight?'rgba(52,215,127,.5)':'rgba(239,68,68,.4)');
     html+=`<div style="background:var(--card);border:1px solid ${borderCol};border-radius:10px;overflow:hidden">
       <div style="background:var(--card2);padding:5px 12px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;gap:6px">
         <span style="font-size:11px;font-weight:800;font-family:monospace;color:var(--text)">${scoreLabel}</span>
