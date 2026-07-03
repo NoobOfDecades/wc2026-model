@@ -394,9 +394,9 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["ENGLAND","CONGO_DR","2026-07-01T18:00:00+02:00",2,1,"Mercedes-Benz Stadium"],
 ["BELGIUM","SENEGAL","2026-07-01T22:00:00+02:00",2,2,"Lumen Field"],
 ["USA","BOSNIA","2026-07-02T02:00:00+02:00",2,0,"Levi's Stadium"],
-["SPAIN","AUSTRIA","2026-07-02T21:00:00+02:00",null,null,"SoFi Stadium"],
-["PORTUGAL","CROATIA","2026-07-03T01:00:00+02:00",null,null,"BMO Field"],
-["SWITZERLAND","ALGERIA","2026-07-03T05:00:00+02:00",null,null,"BC Place"],
+["SPAIN","AUSTRIA","2026-07-02T21:00:00+02:00",3,0,"SoFi Stadium"],
+["PORTUGAL","CROATIA","2026-07-03T01:00:00+02:00",2,1,"BMO Field"],
+["SWITZERLAND","ALGERIA","2026-07-03T05:00:00+02:00",2,0,"BC Place"],
 ["AUSTRALIA","EGYPT","2026-07-03T20:00:00+02:00",null,null,"AT&T Stadium"],
 ["ARGENTINA","CAPE_VERDE","2026-07-04T00:00:00+02:00",null,null,"Hard Rock Stadium"],
 ["COLOMBIA","GHANA","2026-07-04T03:30:00+02:00",null,null,"Arrowhead Stadium"]];
@@ -1088,9 +1088,15 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.9.1";
-const BUILD_STAMP="2026-07-02 11:54 SAST";
+const BUILD_VERSION="v7.9.2";
+const BUILD_STAMP="2026-07-03 09:18 SAST";
 const CHANGELOG=[
+  {v:"v7.9.2",d:"2026-07-02",items:[
+    "Baked 3 more R32 results, all in regulation and ALL CALLED CORRECTLY by the model: Spain 3-0 Austria, Portugal 2-1 Croatia, Switzerland 2-0 Algeria. Each carried pre-game odds captured in advance, now de-vigged into the comparison. 85/85 played games have verified pre-match odds. The Round of 32 is now 13 of 16 played (Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana remain, all 3 July).",
+    "This locks the Round-of-16 tie Portugal v Spain - which was already PRE-REGISTERED as one of the twelve conditional branches committed in v7.8.1 (registered dead even, 36/28/36, the frozen ranking edging Spain by 1.5 pts). No new prediction was made; the tie simply resolves to its pre-committed line. That is the conditional registration working as designed: the forecast existed, timestamped, before the matchup was known.",
+    "Updated tallies (live): uniform 90-minute basis - Model 53/85 (62%) vs Market 58/85 (68%); agreement matrix 51 both-right / 2 we-only / 7 market-only / 25 neither, same call on 76/85; mean Brier 0.573 vs 0.471. Primary knockout advancement endpoint: model favourite advanced 9/13, market favourite 11/13. Model had a clean sweep on the day (3/3).",
+    "No change to the model, its parameters, formulas, predictions, or any frozen registration numbers."
+  ]},
   {v:"v7.9.1",d:"2026-07-02",items:[
     "Mobile navigation fix (visual only): the tab bar scrolls horizontally but on a phone there was no sign the extra tabs existed. Three cues added - (1) tapping a tab now smoothly slides it toward the centre so the tabs on either side peek into view; (2) a soft fade on the right edge (and left, once scrolled) signals the bar continues; (3) a slim scrollbar and gentle scroll-snap. No change to which tabs exist or what they show.",
     "No change to the model, its data, scoring, predictions, or any accuracy figure."
