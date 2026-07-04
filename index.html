@@ -397,9 +397,17 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["SPAIN","AUSTRIA","2026-07-02T21:00:00+02:00",3,0,"SoFi Stadium"],
 ["PORTUGAL","CROATIA","2026-07-03T01:00:00+02:00",2,1,"BMO Field"],
 ["SWITZERLAND","ALGERIA","2026-07-03T05:00:00+02:00",2,0,"BC Place"],
-["AUSTRALIA","EGYPT","2026-07-03T20:00:00+02:00",null,null,"AT&T Stadium"],
-["ARGENTINA","CAPE_VERDE","2026-07-04T00:00:00+02:00",null,null,"Hard Rock Stadium"],
-["COLOMBIA","GHANA","2026-07-04T03:30:00+02:00",null,null,"Arrowhead Stadium"]];
+["AUSTRALIA","EGYPT","2026-07-03T20:00:00+02:00",1,1,"AT&T Stadium"],
+["ARGENTINA","CAPE_VERDE","2026-07-04T00:00:00+02:00",1,1,"Hard Rock Stadium"],
+["COLOMBIA","GHANA","2026-07-04T03:30:00+02:00",1,0,"Arrowhead Stadium"],
+["CANADA","MOROCCO","2026-07-04T19:00:00+02:00",null,null,"NRG Stadium"],
+["FRANCE","PARAGUAY","2026-07-04T23:00:00+02:00",null,null,"Lincoln Financial Field"],
+["BRAZIL","NORWAY","2026-07-05T22:00:00+02:00",null,null,"MetLife Stadium"],
+["MEXICO","ENGLAND","2026-07-06T02:00:00+02:00",null,null,"Estadio Azteca"],
+["PORTUGAL","SPAIN","2026-07-06T21:00:00+02:00",null,null,"AT&T Stadium"],
+["USA","BELGIUM","2026-07-07T02:00:00+02:00",null,null,"Lumen Field"],
+["ARGENTINA","EGYPT","2026-07-07T18:00:00+02:00",null,null,"Mercedes-Benz Stadium"],
+["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",null,null,"BC Place"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
 // This feature was added after the model was already live. The ideal single-source benchmark
@@ -412,6 +420,17 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 // Format: 'TEAMA|TEAMB': {o:[pA,pD,pB] vig-removed market probs (%), src:'source string'}
 // Keyed by the SAME team order as our FIXTURES entries.
 const MKT={
+ 'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
+ 'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
+ 'COLOMBIA|GHANA':{o:[63.1,24.3,12.6],src:'FanDuel via FOX, capt. 1 Jul pre-game'},
+ 'CANADA|MOROCCO':{o:[19.9,29.0,51.1],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+ 'FRANCE|PARAGUAY':{o:[81.6,13.6,4.8],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+ 'BRAZIL|NORWAY':{o:[52.9,26.4,20.7],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+ 'MEXICO|ENGLAND':{o:[30.4,30.4,39.2],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+ 'PORTUGAL|SPAIN':{o:[23.1,26.3,50.6],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+ 'USA|BELGIUM':{o:[35.9,28.8,35.2],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+ 'ARGENTINA|EGYPT':{o:[70.6,19.4,10.0],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
+
 'ENGLAND|CONGO_DR':{o:[75.5,17.7,6.8],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
 'BELGIUM|SENEGAL':{o:[43.7,30.3,26.1],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
 'USA|BOSNIA':{o:[70.3,19.1,10.6],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
@@ -1088,9 +1107,17 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.9.2";
-const BUILD_STAMP="2026-07-03 09:18 SAST";
+const BUILD_VERSION="v7.10.0";
+const BUILD_STAMP="2026-07-04 08:38 SAST";
 const CHANGELOG=[
+  {v:"v7.10.0",d:"2026-07-04",items:[
+    "ROUND OF 32 COMPLETE. Baked the last three results: Australia 1-1 Egypt (Egypt won 4-2 on pens - Salah converted), Argentina 1-1 Cape Verde at 90' (Argentina won 3-2 in extra time), Colombia 1-0 Ghana. On the primary advancement endpoint the model called Egypt, Argentina and Colombia through - 3/3 on the day - closing the R32 at model 12/16 vs market 14/16. On the 90-minute basis both forecasters missed the two draws. Final R32 note: every level-at-90 tie's advancer is labelled with its route (aet/pens).",
+    "All EIGHT Round-of-16 fixtures added with kickoff times (SAST) and venues, with per-round stage tagging throughout the knockout engine - the actual-results bracket now renders a section per round with its own advancement tally, satisfying the standing per-stage hit-rate order.",
+    "REGISTERED: the full forward path from the ACTUAL 16 (frozen panel on the Bracket tab, committed this morning before Canada-Morocco). Every R16 pick, the implied quarter-finals, semi-finals, final, champion (France over Brazil) and the implied finishing order of all 16 - hardcoded, never recomputed, there to be scored. This is the R16-field assessment point in the per-stage study design.",
+    "NEW MODEL TAB SECTION: 'One frozen ranking, read out at every stage' - plain-language explanation of the multiple-studies-per-stage design: what each assessment point is, why a frozen deterministic model cannot cheat, why these are called multiple pre-registered assessment points within one tournament rather than independent replications, and the bonus science (does a context-only signal decay as the field concentrates).",
+    "ODDS: pre-game 1X2 captured and de-vigged for the three final R32 games (banked in advance) and SEVEN of the eight R16 ties. Odds coverage 88/88 played games. Honest sourcing note: Polymarket was tried first per the designer's preference - it lists per-match R16 markets but per-match 1X2 prices were not extractable at capture time (only tournament futures were), so FanDuel lines (via FOX, captured 4 Jul pre-game) are used, same source as the whole knockout stage. Switzerland v Colombia's line was not yet published at capture - flagged for capture before its 7 Jul kickoff.",
+    "Updated tallies (live, 90-minute uniform basis): Model 54/88 (61%) vs Market 59/88 (67%); agreement matrix 52/2/7/27, same call 79/88; Brier 0.581 vs 0.482. Advancement (primary): model 12/16, market 14/16. No change to the model, parameters, formulas, or any frozen registration."
+  ]},
   {v:"v7.9.2",d:"2026-07-02",items:[
     "Baked 3 more R32 results, all in regulation and ALL CALLED CORRECTLY by the model: Spain 3-0 Austria, Portugal 2-1 Croatia, Switzerland 2-0 Algeria. Each carried pre-game odds captured in advance, now de-vigged into the comparison. 85/85 played games have verified pre-match odds. The Round of 32 is now 13 of 16 played (Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana remain, all 3 July).",
     "This locks the Round-of-16 tie Portugal v Spain - which was already PRE-REGISTERED as one of the twelve conditional branches committed in v7.8.1 (registered dead even, 36/28/36, the frozen ranking edging Spain by 1.5 pts). No new prediction was made; the tie simply resolves to its pre-committed line. That is the conditional registration working as designed: the forecast existed, timestamped, before the matchup was known.",
@@ -2498,13 +2525,18 @@ const KO_ADVANCERS={
   'GERMANY|PARAGUAY':'PARAGUAY',     // 1-1, Paraguay won 4-3 on pens
   'NETHERLANDS|MOROCCO':'MOROCCO',   // 1-1, Morocco won 3-2 on pens
   'BELGIUM|SENEGAL':'BELGIUM',       // 2-2 at 90', Belgium won 3-2 in extra time
+  'AUSTRALIA|EGYPT':'EGYPT',         // 1-1, Egypt won 4-2 on pens
+  'ARGENTINA|CAPE_VERDE':'ARGENTINA',// 1-1 at 90', Argentina won 3-2 in extra time
 };
 // How each level-at-90 tie was decided, for honest display labels ('pens' or 'aet').
 const KO_HOW={
   'GERMANY|PARAGUAY':'pens',
   'NETHERLANDS|MOROCCO':'pens',
   'BELGIUM|SENEGAL':'aet',
+  'AUSTRALIA|EGYPT':'pens',
+  'ARGENTINA|CAPE_VERDE':'aet',
 };
+const R16_KEYS={'CANADA|MOROCCO':1,'FRANCE|PARAGUAY':1,'BRAZIL|NORWAY':1,'MEXICO|ENGLAND':1,'PORTUGAL|SPAIN':1,'USA|BELGIUM':1,'ARGENTINA|EGYPT':1,'SWITZERLAND|COLOMBIA':1};
 function bracketScore(){
   let played=0,correct=0;
   const rows=[];
@@ -2534,6 +2566,7 @@ function bracketScore(){
     const mm=marketFor(f);
     const mktW=mm?(mm.o[0]>mm.o[2]?a:(mm.o[2]>mm.o[0]?b:null)):null;
     rows.push({a,b,modelW,mktW,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
+               stage:(R16_KEYS[a+'|'+b]?'R16':'R32'),
                realW: advancer || (result90==='D'?'DRAW':null)});
   }
   // Symmetric ADVANCEMENT tallies (secondary metric, added 2 Jul, retroactive by this fixed rule):
@@ -2544,9 +2577,35 @@ function bracketScore(){
     if(r.advancer===r.modelW)advModel++;
     if(r.mktW){advMktN++; if(r.advancer===r.mktW)advMkt++;} }
     if(r.result90&&r.result90!=='D'&&r.mktW){ if((r.result90==='A'?r.a:r.b)===r.mktW)r90Mkt++; }});
-  return {played,correct,rows,advDecided,advModel,advMkt,advMktN,r90Mkt};
+  // Per-stage split (standing order: per-round hit-rates)
+  const perStage={};
+  rows.forEach(r=>{ const s=perStage[r.stage]||(perStage[r.stage]={advD:0,advM:0,advK:0,advKN:0});
+    if(r.advancer){ s.advD++; if(r.advancer===r.modelW)s.advM++;
+      if(r.mktW){s.advKN++; if(r.advancer===r.mktW)s.advK++;} }});
+  return {played,correct,rows,advDecided,advModel,advMkt,advMktN,r90Mkt,perStage};
 }
 
+function renderR16Forward(){
+  // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 16 (committed 4 Jul 2026, morning SAST, before Canada-Morocco kicked off) ══
+  // Study node: the R16-field assessment point. Same frozen ranking, read out against the real surviving field
+  // through the REAL bracket structure. Hardcoded; never recomputed. Frozen Top-15 scores in brackets.
+  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px" open>
+  <summary style="padding:11px 14px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold)">🧊 REGISTERED 4 JUL — FULL FORWARD PATH FROM THE ACTUAL 16</summary>
+  <div style="padding:2px 14px 13px;font-size:11px;color:var(--mut);line-height:1.65">
+    <p style="margin:6px 0">All sixteen Round-of-16 places are now decided by results on the pitch. This panel commits the frozen model's complete forward read of that actual field — every pick, through to the champion — before any Round-of-16 game kicks off. Higher frozen Top-15 score advances at each node of the real bracket. These lines never change; they are here to be scored.</p>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">ROUND OF 16 PICKS (frozen scores)</div>
+    <div>Morocco (104.8) over Canada (94.1) · France (133.1) over Paraguay (81.4) · Brazil (124.7) over Norway (105.8) · England (118.2) over Mexico (105.1) · Belgium (119.4) over USA (98.5) · Spain (129.2) over Portugal (127.7) · Argentina (122.6) over Egypt (105.4) · Colombia (101.4) over Switzerland (97.3)</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED QUARTER-FINALS → PICKS</div>
+    <div>France v Morocco → FRANCE · Spain v Belgium → SPAIN · Brazil v England → BRAZIL · Argentina v Colombia → ARGENTINA</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED SEMI-FINALS → PICKS</div>
+    <div>France v Spain → FRANCE · Brazil v Argentina → BRAZIL</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINAL → CHAMPION</div>
+    <div>France v Brazil → <b style="color:var(--gold)">FRANCE</b></div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 16 (tier = predicted exit round; ordered by frozen score within tier)</div>
+    <div>1 France · 2 Brazil · 3 Spain · 4 Argentina · 5 Belgium · 6 England · 7 Morocco · 8 Colombia · 9 Portugal · 10 Norway · 11 Egypt · 12 Mexico · 13 USA · 14 Switzerland · 15 Canada · 16 Paraguay</div>
+    <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">One of the tournament's pre-registered assessment points (see the Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end. Ties within a tier share a predicted exit round - the order inside a tier is the frozen score, stated for completeness.</p>
+  </div></details>`;
+}
 function renderR16Prereg(){
   return `<details class="msect-fold" style="margin-bottom:14px"><summary class="msect-sum">\u{1F510} PRE-REGISTERED ROUND-OF-16 NODE - committed 2 Jul 2026, 08:15 SAST, before any R16 kickoff</summary>
   <div style="padding:12px 15px;font-size:11px;color:var(--mut);line-height:1.7">
@@ -2573,8 +2632,8 @@ function renderBracket(){
     <button onclick="setBrkView('model')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='model'?'var(--gold)':'var(--card)'};color:${bv==='model'?'#0a1018':'var(--mut)'}">🔮 MODEL'S PREDICTED BRACKET</button>
     <button onclick="setBrkView('actual')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='actual'?'#22C55E':'var(--card)'};color:${bv==='actual'?'#04140a':'var(--mut)'}">✅ ACTUAL RESULTS${bs.advDecided?` · model ${bs.advModel}/${bs.advDecided}`:''}</button>
   </div>`;
-  if(bv==='actual') return toggle+renderR16Prereg()+renderActualBracket();
-  let html=toggle+renderR16Prereg();
+  if(bv==='actual') return toggle+renderR16Prereg()+renderR16Forward()+renderActualBracket();
+  let html=toggle+renderR16Prereg()+renderR16Forward();
   html+=`<div style="background:linear-gradient(135deg,#061018,#0a1929 50%,#07111A);border:1px solid rgba(200,155,60,.4);border-radius:14px;padding:22px 20px;text-align:center;margin-bottom:18px;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,${cl(champ)}22,transparent 60%);pointer-events:none"></div>
     <div style="font-size:10px;font-weight:800;letter-spacing:3px;color:#C89B3C;margin-bottom:10px">⚠️ PREDICTED CHAMPION · ${modeTag().toUpperCase()} BASIS · MODEL FORECAST</div>
@@ -2694,9 +2753,17 @@ function renderActualBracket(){
   // Round of 32 results grid
   html+=`<div style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
     <div style="width:3px;height:20px;background:#22C55E;border-radius:2px"></div>
-    <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#22C55E">ROUND OF 32 — RESULTS</div></div>`;
-  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px">';
+    <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#22C55E">KNOCKOUT RESULTS — BY ROUND</div></div>`;
+  let curStage=null;
   for(const r of bs.rows){
+    if(r.stage!==curStage){
+      if(curStage!==null)html+='</div>';
+      curStage=r.stage;
+      const ps=bs.perStage[curStage]||{advD:0,advM:0,advK:0,advKN:0};
+      const label=curStage==='R16'?'ROUND OF 16':'ROUND OF 32';
+      html+=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:${curStage==='R16'?'16px':'0'} 0 8px">${label}${ps.advD?` · model ${ps.advM}/${ps.advD} advanced · market ${ps.advK}/${ps.advKN}`:''}</div>`;
+      html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px">';
+    }
     const a=r.a,b=r.b;
     const decided=(r.advancer); // someone progressed (regulation or shootout)
     const isDraw90=(r.result90==='D');
@@ -2927,6 +2994,12 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
   <div class="msect"><h3>KNOCKOUT SIMULATION (BRACKET TAB)</h3>
     <p>The bracket is a deterministic forecast: at every stage the team with the higher model score advances, with no randomness. Group order and the eight best third-placed teams resolve the same way, and the bracket follows the official FIFA 2026 Round-of-32 structure. Because it is deterministic, switching the calculation basis is what surfaces alternative outcomes — Starting XI, Top 15 and Whole Squad can each crown a different champion. The Fixtures tab is a separate, read-only layer and never feeds back into this simulation. The bracket is clearly a prediction, shown so the model's accuracy can be weighed against real results.</p></div>
   <div class="mgroup-hd"><span>⑤ HOW IT MEASURES UP</span></div>
+  <details class="msect"><summary>One frozen ranking, read out at every stage</summary><div class="msect-bd">
+    <p>Most public prediction models quietly re-rank teams as results come in, so by the end nobody can say what they "predicted" - the prediction moved with the scoreboard. This model does the opposite, and it is the project's defining design choice: <b>the ranking froze before the first ball and never changes.</b> What happens instead is that the same frozen ranking is <b>read out at every stage of the tournament</b>, and each readout is its own pre-registered assessment point:</p>
+    <p>the pre-tournament bracket (the purest, fully blind test) → the actual 32 who reached the knockouts → the actual 16 → the actual 8 → the actual 4 → the final two. Each node is committed <b>before that round kicks off</b> (the git history supplies the timestamp), forecasts the field that <b>reality</b> selected - not the field the model guessed - and every node is reported, flattering or not.</p>
+    <p><b>Why this is honest rather than clever:</b> a frozen, deterministic model cannot learn from results, so it cannot cheat. Each stage node is a mechanical readout of the same committed function against whoever is still standing; the registrations exist so anyone can audit that, without trusting us. In the language of evidence synthesis these are <b>multiple pre-registered assessment points within one tournament</b> - deliberately NOT called independent replications, because later nodes share downstream games with earlier ones. The evidence accumulates, but honestly labelled.</p>
+    <p><b>The bonus science:</b> each successive stage is an all-stronger, more concentrated field with tighter score gaps - the hardest possible test of a context-only signal. The per-stage results therefore measure whether the model's predictive value holds or decays as easy mismatches disappear. That measurement is only possible because of this design.</p>
+  </div></details>
   <div class="msect"><h3>🥇 HOW WE COMPARE TO THE BETTING MARKET (an honest note)</h3>
     <p>This comparison was added <b>later</b>, well after the model was already built and live. The idea: a model is only as impressive as the benchmark it is measured against, and the sharpest benchmark in football is the betting market - so we test our probabilities against it, game by game, both scored by Brier.</p>
     <p>We wanted to use a single gold-standard source (the kind of prediction-market price that serious forecasters respect). <b>That turned out to be impossible to gather honestly for past games.</b> Prediction markets like Polymarket, and the sharpest bookmaker (Pinnacle), hide their historical pre-match prices behind live JavaScript - there is no reliable way to retrieve "what the price was at kickoff" for a game already played. Inventing or approximating those numbers would betray the entire point of this model, which only ever uses verifiable facts.</p>
