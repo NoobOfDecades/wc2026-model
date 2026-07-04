@@ -1107,9 +1107,18 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.10.1";
-const BUILD_STAMP="2026-07-04 12:24 SAST";
+const BUILD_VERSION="v7.10.3";
+const BUILD_STAMP="2026-07-04 16:45 SAST";
 const CHANGELOG=[
+  {v:"v7.10.3",d:"2026-07-04",items:[
+    "Targeted sentence-level read of every visible line on the Results and Accuracy tabs against the current two-endpoint state, at the designer's demand. Verdict: all wording, scoring language and figures current (all numbers live-computed); ONE fossil found - the market-comparison empty-state fallback still said odds were 'being added in batches' (unreachable at 88/88 coverage, but wrong if ever shown). Reworded. No other change."
+  ]},
+  {v:"v7.10.2",d:"2026-07-04",items:[
+    "FULL ADVERSARIAL CONSISTENCY AUDIT of every display surface, requested by the designer as the project nears completion: automated sweep of all prose for stale language, double-speak and endpoint fossils; every number appearing in prose cross-checked against the code constants and live recomputation; Model tab claims verified line by line (recency weights 0.70/0.85/1.00, probability slope, draw curve, data counts - all match the code exactly); section ordering reviewed (the six-group Model tab structure with history quarantined in group ⑥ and the changelog last is confirmed sound; the Accuracy tab leads with Brier as mandated).",
+    "CLEAN FINDINGS worth stating: zero hardcoded live tallies exist anywhere in prose outside the dated changelog - every current figure on every tab is computed at render time, so displays cannot silently go stale between bakes. Dated changelog entries containing period figures (e.g. 53/85 in the v7.9.2 entry) are historical records and are deliberately untouched.",
+    "FOUR FOSSILS FOUND AND FIXED, all from the project's display evolution: (1) a code comment still calling advancement the 'secondary metric'; (2) a comment claiming 'the model only predicts 90 minutes' - contradicting the primary endpoint designation; (3) FUNCTIONAL: the model-view bracket overlay could not resolve ties level at 90 ('we don't have that' - we do), so shootout advancers never resolved in that overlay - now reads the ET/pens record; (4) verified the graded-table and Results-card fixes from v7.10.1 hold everywhere. No aggregate number changed.",
+    "The stale-language sweep (banned-phrase list + prose/constant cross-check) is now a standing part of every build's audit suite going forward."
+  ]},
   {v:"v7.10.1",d:"2026-07-04",items:[
     "DOCUMENTED CORRECTION (an AI implementation error, stated plainly so the record cannot be read as endpoint games): when advancement was designated the primary knockout endpoint (v7.9.0, 2 Jul, disclosed and verdict-neutral), the AI aligned the Bracket tab but FAILED to propagate the designation to the Results tab match cards and the Accuracy tab graded-match table. Those surfaces went on grading level-at-90 knockout ties as plain misses ('Missed the winner', red ✗) even where the model's pick ADVANCED - underselling the model on its own registered primary endpoint (Egypt and Argentina both advanced as picked) and creating an inconsistent-endpoint appearance across tabs. The designer caught it from the live app. A latent related bug was found in the same sweep: the match-verdict builder read the advancer from an empty legacy field, so its advancement wiring had never worked.",
     "THE FIX, applied identically everywhere: knockout ties level at 90 minutes are now graded on the primary endpoint on every surface - match cards read 'Correct on the primary endpoint - favoured X and they advanced (aet/pens)' or 'Missed - pick went out', the graded table shows the advancement tick with 'draw at 90' noted beneath, and each card co-reports the 90-minute read in the same breath. NOTHING in the aggregates changed: the uniform hit-rate/Brier/matrix stay on the 90-minute market basis (54/88 vs 59/88; 0.581 vs 0.482) exactly as before, and the advancement tallies (12/16 vs 14/16) were already computed and displayed on the Bracket tab before this fix. This build moved zero numbers; it aligned per-game presentation with the endpoint designation already in force.",
@@ -2433,7 +2442,7 @@ function renderAccuracy(){
       </div>
       ${(function(){
         var agg=marketAggregate();
-        if(agg.n===0)return '<div style="padding:16px;font-size:10.5px;color:var(--mut);line-height:1.6">No market-odds comparison available yet. Cross-verified pre-match bookmaker odds are being added in batches — see the Model tab for the full, honest explanation.</div>';
+        if(agg.n===0)return '<div style="padding:16px;font-size:10.5px;color:var(--mut);line-height:1.6">No completed matches with captured pre-match odds yet. Odds for every played game are captured before kickoff and de-vigged — sources per game in the Results tab.</div>';
         var ourWon=agg.ourMean<agg.mktMean;
         var medals=marketMedals();
         // visual head-to-head bar. IMPORTANT: lower Brier = better, so we invert —
@@ -2502,7 +2511,10 @@ function actualBracket(){
   const realWinner=(a,b)=>{
     const f=find(a,b); if(!f||f[3]===null||f[3]===undefined)return null;
     const o=actualOutcome(f); // 'A'/'B'/'D' relative to f orientation
-    if(o==='D')return 'DRAW'; // knockout draw => decided on ET/pens; we don't have that, treat as pending-detail
+    if(o==='D'){ // level at 90: resolve the real advancer from the ET/pens record
+      const adv=KO_ADVANCERS[f[0]+'|'+f[1]];
+      return adv||'DRAW';
+    }
     const homeWon=o==='A';
     return homeWon? f[0] : f[1];
   };
@@ -2537,8 +2549,8 @@ function knockoutFixtures(){
   });
 }
 // Who ACTUALLY advanced when a knockout tie was decided after 90 minutes (extra time / penalties).
-// The 90-minute result is still scored as a draw for accuracy (the model only predicts 90'),
-// but the bracket needs to know who really progressed. Key = "HOME|AWAY" in fixture orientation.
+// Advancement is the PRIMARY knockout endpoint (who goes through, ET/pens included); the 90-minute
+// result is co-reported as the uniform market-odds basis. Key = "HOME|AWAY" in fixture orientation.
 const KO_ADVANCERS={
   'GERMANY|PARAGUAY':'PARAGUAY',     // 1-1, Paraguay won 4-3 on pens
   'NETHERLANDS|MOROCCO':'MOROCCO',   // 1-1, Morocco won 3-2 on pens
@@ -2587,7 +2599,7 @@ function bracketScore(){
                stage:(R16_KEYS[a+'|'+b]?'R16':'R32'),
                realW: advancer || (result90==='D'?'DRAW':null)});
   }
-  // Symmetric ADVANCEMENT tallies (secondary metric, added 2 Jul, retroactive by this fixed rule):
+  // Symmetric ADVANCEMENT tallies - the PRIMARY knockout endpoint (designated 2 Jul, disclosed):
   // of the ties where someone actually went through (incl. ET/pens), how often was each side's
   // favourite the one who advanced? Identical rule for model and market.
   let advDecided=0,advModel=0,advMkt=0,advMktN=0,r90Mkt=0;
