@@ -1107,9 +1107,14 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.10.0";
-const BUILD_STAMP="2026-07-04 08:38 SAST";
+const BUILD_VERSION="v7.10.1";
+const BUILD_STAMP="2026-07-04 12:24 SAST";
 const CHANGELOG=[
+  {v:"v7.10.1",d:"2026-07-04",items:[
+    "DOCUMENTED CORRECTION (an AI implementation error, stated plainly so the record cannot be read as endpoint games): when advancement was designated the primary knockout endpoint (v7.9.0, 2 Jul, disclosed and verdict-neutral), the AI aligned the Bracket tab but FAILED to propagate the designation to the Results tab match cards and the Accuracy tab graded-match table. Those surfaces went on grading level-at-90 knockout ties as plain misses ('Missed the winner', red ✗) even where the model's pick ADVANCED - underselling the model on its own registered primary endpoint (Egypt and Argentina both advanced as picked) and creating an inconsistent-endpoint appearance across tabs. The designer caught it from the live app. A latent related bug was found in the same sweep: the match-verdict builder read the advancer from an empty legacy field, so its advancement wiring had never worked.",
+    "THE FIX, applied identically everywhere: knockout ties level at 90 minutes are now graded on the primary endpoint on every surface - match cards read 'Correct on the primary endpoint - favoured X and they advanced (aet/pens)' or 'Missed - pick went out', the graded table shows the advancement tick with 'draw at 90' noted beneath, and each card co-reports the 90-minute read in the same breath. NOTHING in the aggregates changed: the uniform hit-rate/Brier/matrix stay on the 90-minute market basis (54/88 vs 59/88; 0.581 vs 0.482) exactly as before, and the advancement tallies (12/16 vs 14/16) were already computed and displayed on the Bracket tab before this fix. This build moved zero numbers; it aligned per-game presentation with the endpoint designation already in force.",
+    "Why this entry is this explicit: a display that grades the primary endpoint one way on one tab and another way elsewhere is the kind of inconsistency a hostile reviewer reads as endpoint switching. The protection is the dated trail: thesis pre-stated before the knockouts, designation 2 Jul (verdict-neutral, disclosed), display lag caught and corrected 4 Jul, all entries standing unedited."
+  ]},
   {v:"v7.10.0",d:"2026-07-04",items:[
     "ROUND OF 32 COMPLETE. Baked the last three results: Australia 1-1 Egypt (Egypt won 4-2 on pens - Salah converted), Argentina 1-1 Cape Verde at 90' (Argentina won 3-2 in extra time), Colombia 1-0 Ghana. On the primary advancement endpoint the model called Egypt, Argentina and Colombia through - 3/3 on the day - closing the R32 at model 12/16 vs market 14/16. On the 90-minute basis both forecasters missed the two draws. Final R32 note: every level-at-90 tie's advancer is labelled with its route (aet/pens).",
     "All EIGHT Round-of-16 fixtures added with kickoff times (SAST) and venues, with per-round stage tagging throughout the knockout engine - the actual-results bracket now renders a section per round with its own advancement tally, satisfying the standing per-stage hit-rate order.",
@@ -2083,8 +2088,10 @@ function matchAnalysis(f){
   const pA=wA,pD=d,pB=wB; // percentages
   const act=actualOutcome(f); // 'A'/'B'/'D'
   const scA=f[3],scB=f[4];
-  const isKO=f[6]===true||f[6]===1;
-  const advanced=f[7];
+  const isKO=!!(S[a]&&S[b]&&S[a].meta.group&&S[b].meta.group&&S[a].meta.group!==S[b].meta.group);
+  const koKey=a+'|'+b;
+  const advanced=(act==='D'&&KO_ADVANCERS[koKey])?KO_ADVANCERS[koKey]:(act==='A'?a:act==='B'?b:null);
+  const advHow=KO_HOW[koKey]||null;
   const pick=pA>=pD&&pA>=pB?'A':pB>=pD&&pB>=pA?'B':'D';
   let hit=pick===act;
   if(isKO&&act==='D'){
@@ -2111,7 +2118,17 @@ function matchAnalysis(f){
     if(underdogFlag)verdict='Missed the winner, but the model had flagged a genuine chance here ('+underdogProb+'% for the underdog not to lose) where many would have written it off — '+resultStr+'.';
     else verdict='Wrong — the model favoured '+favName+' ('+favPct+'%) but '+resultStr+'.';
   }
-  return {a,b,nmA,nmB,scA,scB,act,pA,pD,pB,pick,hit,isKO,advanced,verdict,underdogFlag,iso:f[2]};
+  // PRIMARY KNOCKOUT ENDPOINT (who advances, ET/pens incl.) overrides the verdict for level-at-90 ties.
+  // The 90-minute read stays co-reported in the text - it is the uniform market-odds basis, never hidden.
+  let advHit=null;
+  if(isKO && act==='D' && advanced && pick!=='D'){
+    const pickTeam=(pick==='A'?a:b);
+    advHit=(advanced===pickTeam);
+    const how=advHow||'shootout';
+    if(advHit) verdict='Correct on the primary endpoint — the model favoured '+favName+' ('+favPct+'%) and they advanced ('+how+'). Level at 90 minutes, so the uniform 90-minute market basis co-reports this as a draw (a miss there for both forecasters).';
+    else verdict='Missed on the primary endpoint — the model favoured '+favName+' ('+favPct+'%) and they went out ('+how+'). Level at 90 minutes, a draw on the uniform 90-minute basis for both forecasters.';
+  }
+  return {a,b,nmA,nmB,scA,scB,act,pA,pD,pB,pick,hit,isKO,advanced,advHit,advHow,verdict,underdogFlag,iso:f[2]};
 }
 function accuracyStats(){
   const done=completedMatches();
@@ -2276,7 +2293,7 @@ function renderAccuracy(){
     return`<tr style="border-bottom:1px solid var(--bdr)">
       <td style="padding:8px 6px;font-size:11px"><div style="display:flex;align-items:center;gap:5px"><span>${mA.emoji}</span><span style="font-weight:600">${mA.name}</span><span style="color:var(--mut)">${r.f[3]}–${r.f[4]}</span><span style="font-weight:600">${mB.name}</span><span>${mB.emoji}</span></div></td>
       <td style="padding:8px 6px;text-align:center;font-size:10px;color:var(--mut)">${pickTxt}<br><span style="font-family:monospace">${conf}%</span></td>
-      <td style="padding:8px 6px;text-align:center;font-size:16px">${r.hit?'<span style="color:#22C55E">✓</span>':'<span style="color:#EF4444">✗</span>'}</td>
+      <td style="padding:8px 6px;text-align:center;font-size:16px">${(()=>{const kk=r.a+'|'+r.b;const kadv=(r.act==='D'&&KO_ADVANCERS[kk])?KO_ADVANCERS[kk]:null;if(kadv){const kp=r.pick==='A'?r.a:r.pick==='B'?r.b:null;return kadv===kp?'<span style="color:#22C55E">✓</span><div style="font-size:8px;color:var(--mut)">advanced · draw at 90</div>':'<span style="color:#EF4444">✗</span><div style="font-size:8px;color:var(--mut)">out · draw at 90</div>';}return r.hit?'<span style="color:#22C55E">✓</span>':'<span style="color:#EF4444">✗</span>';})()}</td>
     </tr>`;
   }).join('');
 
@@ -2470,7 +2487,8 @@ function renderAccuracy(){
     <table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:var(--card2)"><th style="padding:8px 6px;text-align:left;font-size:9px;color:var(--mut);letter-spacing:.5px">MATCH · RESULT</th><th style="padding:8px 6px;font-size:9px;color:var(--mut)">MODEL PICK</th><th style="padding:8px 6px;font-size:9px;color:var(--mut)">✓/✗</th></tr></thead>
       <tbody>${tableRows}</tbody>
-    </table></div>`;
+    </table></div>
+    <div style="font-size:9.5px;color:var(--dim);margin-top:6px;line-height:1.5">Knockout ties level at 90 minutes are graded here on the PRIMARY endpoint - who advanced (extra time and penalties included) - with the 90-minute draw noted beneath. The aggregate hit-rate above stays on the uniform 90-minute basis (what pre-match odds price), where such ties are a miss for both forecasters.</div>`;
 }
 
 // ════════════ BRACKET (live re-simulation) ════════════
@@ -2836,7 +2854,11 @@ function openTeamReview(key){
       const resWord=won?'W':(drew?'D':'L');
       // our predicted chance for THIS team
       const myProb=isHome?a.pA:a.pB;
-      const badge=a.hit
+      const badge=(a.advHit===true)
+        ? '<span style="background:rgba(34,197,94,.15);color:var(--grn);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800">✓ MODEL CORRECT · ADVANCED</span>'
+        : (a.advHit===false)
+        ? '<span style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800">✗ PICK OUT</span>'
+        : a.hit
         ? '<span style="background:rgba(34,197,94,.15);color:var(--grn);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800">✓ MODEL CORRECT</span>'
         : (a.underdogFlag
           ? '<span style="background:rgba(200,155,60,.15);color:var(--gold);border:1px solid var(--gdim);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800">◆ UNDERDOG CALL</span>'
@@ -2880,12 +2902,16 @@ function renderResults(){
   const rows=analyses.map((a,_ri)=>{
     const resStr=a.act==='A'?(a.nmA+' won'):a.act==='B'?(a.nmB+' won'):'Draw';
     const pickName=a.pick==='A'?a.nmA:a.pick==='B'?a.nmB:'Draw';
-    const badge=a.hit
+    const badge=(a.advHit===true)
+      ? '<span style="background:rgba(34,197,94,.15);color:var(--grn);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800;white-space:nowrap">✓ CORRECT · ADVANCED ('+(a.advHow||'')+')</span>'
+      : (a.advHit===false)
+      ? '<span style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800;white-space:nowrap">✗ PICK OUT ('+(a.advHow||'')+')</span>'
+      : a.hit
       ? '<span style="background:rgba(34,197,94,.15);color:var(--grn);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800;white-space:nowrap">✓ CORRECT</span>'
       : (a.underdogFlag
         ? '<span style="background:rgba(200,155,60,.15);color:var(--gold);border:1px solid var(--gdim);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800;white-space:nowrap">◆ UNDERDOG CALL</span>'
         : '<span style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:800;white-space:nowrap">✗ MISSED</span>');
-    return `<div style="background:var(--card);border:1px solid ${a.hit?'rgba(34,197,94,.25)':(a.underdogFlag?'var(--gdim)':'var(--bdr)')};border-radius:8px;padding:11px 13px;margin-bottom:8px">
+    return `<div style="background:var(--card);border:1px solid ${(a.hit||a.advHit===true)?'rgba(34,197,94,.25)':(a.advHit===false?'rgba(239,68,68,.3)':(a.underdogFlag?'var(--gdim)':'var(--bdr)'))};border-radius:8px;padding:11px 13px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
         <div style="font-weight:700;font-size:13px">${S[a.a].meta.emoji} ${a.nmA} <span style="color:var(--gold);font-family:monospace">${a.scA}–${a.scB}</span> ${a.nmB} ${S[a.b].meta.emoji}</div>
         ${badge}
