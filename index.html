@@ -400,8 +400,8 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["AUSTRALIA","EGYPT","2026-07-03T20:00:00+02:00",1,1,"AT&T Stadium"],
 ["ARGENTINA","CAPE_VERDE","2026-07-04T00:00:00+02:00",1,1,"Hard Rock Stadium"],
 ["COLOMBIA","GHANA","2026-07-04T03:30:00+02:00",1,0,"Arrowhead Stadium"],
-["CANADA","MOROCCO","2026-07-04T19:00:00+02:00",null,null,"NRG Stadium"],
-["FRANCE","PARAGUAY","2026-07-04T23:00:00+02:00",null,null,"Lincoln Financial Field"],
+["CANADA","MOROCCO","2026-07-04T19:00:00+02:00",0,3,"NRG Stadium"],
+["FRANCE","PARAGUAY","2026-07-04T23:00:00+02:00",1,0,"Lincoln Financial Field"],
 ["BRAZIL","NORWAY","2026-07-05T22:00:00+02:00",null,null,"MetLife Stadium"],
 ["MEXICO","ENGLAND","2026-07-06T02:00:00+02:00",null,null,"Estadio Azteca"],
 ["PORTUGAL","SPAIN","2026-07-06T21:00:00+02:00",null,null,"AT&T Stadium"],
@@ -1107,9 +1107,16 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.10.3";
-const BUILD_STAMP="2026-07-04 16:45 SAST";
+const BUILD_VERSION="v7.11.0";
+const BUILD_STAMP="2026-07-05 17:08 SAST (date web-verified)";
 const CHANGELOG=[
+  {v:"v7.11.0",d:"2026-07-05",items:[
+    "ROUND OF 16 OPENS 2-FOR-2 FOR THE MODEL: baked Morocco 3-0 Canada (Ounahi brace) and France 1-0 Paraguay (Mbappe penalty), both in regulation, both web-verified from multiple sources. The model's registered picks - Morocco (46-54 to advance) and France (68-32) - were correct on the primary endpoint and the 90-minute basis alike. The market was also 2/2. Both ties resolve pre-registered lines pushed on 2 July, before the matchups existed.",
+    "AI ERROR #8, DOCUMENTED (the designer caught it): between builds, the assistant treated the wall clock as frozen - continuing on 5 July to give deadline advice ('push before tonight's 19:00 kickoff') built on 4 July assumptions, without re-verifying the date. Both opening R16 games had already been played. The v7.10.x build stamps of 4 July appear genuine (corroborated by the designer's own dated screenshots); what failed was the assistant's time-awareness between messages, compounded by initially misdiagnosing it as a clock fault. Corrective rule now standing: every build stamp and every deadline claim is verified against a web-sourced current date, never an internal clock or an assumed continuous session.",
+    "Registration wording tightened to claim only what is provable: the forward-path panel now states its build stamp and defers to the git push timestamp as the public seal, noting the tie-level R16 lines were separately sealed 2 July. Nothing in the panel's frozen picks changed.",
+    "Injury/dropout sweep: Morocco's Ismael Saibari left the Canada tie injured (23', suspected hamstring) - NOT confirmed tournament-ending, so per the pre-stated dropout rule nothing is baked; monitor before the France QF. Spain's Nico Williams and Yeremy Pino remain monitor-only before Portugal-Spain (6 Jul). Canada's Ismael Kone (confirmed tournament-ending, group stage) is noted for the record as a dropout our earlier sweeps failed to flag; Canada's elimination makes it moot for future predictions. Switzerland-Colombia 1X2 still to capture before 7 Jul 22:00 SAST.",
+    "Live tallies: uniform 90-min Model 56/90 vs Market 61/90; advancement (primary) model 14/18, market 16/18; R16 stage so far 2/2 both. Next: Brazil-Norway tonight 22:00 SAST, Mexico-England 02:00 SAST; QF node registration from the actual 8 due before 9 Jul."
+  ]},
   {v:"v7.10.3",d:"2026-07-04",items:[
     "Targeted sentence-level read of every visible line on the Results and Accuracy tabs against the current two-endpoint state, at the designer's demand. Verdict: all wording, scoring language and figures current (all numbers live-computed); ONE fossil found - the market-comparison empty-state fallback still said odds were 'being added in batches' (unreachable at 88/88 coverage, but wrong if ever shown). Reworded. No other change."
   ]},
