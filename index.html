@@ -402,12 +402,14 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["COLOMBIA","GHANA","2026-07-04T03:30:00+02:00",1,0,"Arrowhead Stadium"],
 ["CANADA","MOROCCO","2026-07-04T19:00:00+02:00",0,3,"NRG Stadium"],
 ["FRANCE","PARAGUAY","2026-07-04T23:00:00+02:00",1,0,"Lincoln Financial Field"],
-["BRAZIL","NORWAY","2026-07-05T22:00:00+02:00",null,null,"MetLife Stadium"],
-["MEXICO","ENGLAND","2026-07-06T02:00:00+02:00",null,null,"Estadio Azteca"],
+["BRAZIL","NORWAY","2026-07-05T22:00:00+02:00",1,2,"MetLife Stadium"],
+["MEXICO","ENGLAND","2026-07-06T02:00:00+02:00",2,3,"Estadio Azteca"],
 ["PORTUGAL","SPAIN","2026-07-06T21:00:00+02:00",null,null,"AT&T Stadium"],
 ["USA","BELGIUM","2026-07-07T02:00:00+02:00",null,null,"Lumen Field"],
 ["ARGENTINA","EGYPT","2026-07-07T18:00:00+02:00",null,null,"Mercedes-Benz Stadium"],
-["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",null,null,"BC Place"],];
+["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",null,null,"BC Place"],
+["FRANCE","MOROCCO","2026-07-09T22:00:00+02:00",null,null,"Gillette Stadium"],
+["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",null,null,"Hard Rock Stadium"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
 // This feature was added after the model was already live. The ideal single-source benchmark
@@ -420,6 +422,12 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 // Format: 'TEAMA|TEAMB': {o:[pA,pD,pB] vig-removed market probs (%), src:'source string'}
 // Keyed by the SAME team order as our FIXTURES entries.
 const MKT={
+ // ── Polymarket per-match regulation 1X2, synced 5 Jul 2026 22:47 SAST (pre-game), via mirror ──
+ // PORTUGAL|SPAIN Polymarket: 22.0/26.5/51.5 (FanDuel 4 Jul entry below retained - registered first, never swapped)
+ // ARGENTINA|EGYPT Polymarket: 71.5/20.5/8.0 (FanDuel 4 Jul entry retained)
+ // USA|BELGIUM: FanDuel line moved to +155/+230/+180 on 6 Jul after Balogun reinstatement; 4 Jul capture retained
+ // QF FRANCE|MOROCCO Polymarket to-advance ~54/46 (2-way, banked 6 Jul; 1X2 to capture when posted)
+ 'SWITZERLAND|COLOMBIA':{o:[26.0,31.5,42.5],src:'Polymarket regulation 1X2, synced 5 Jul 22:47 SAST pre-game'},
  'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
  'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
  'COLOMBIA|GHANA':{o:[63.1,24.3,12.6],src:'FanDuel via FOX, capt. 1 Jul pre-game'},
@@ -1107,9 +1115,16 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.11.0";
-const BUILD_STAMP="2026-07-05 17:08 SAST (date web-verified)";
+const BUILD_VERSION="v7.12.0";
+const BUILD_STAMP="2026-07-06 16:55 SAST (date web-verified)";
 const CHANGELOG=[
+  {v:"v7.12.0",d:"2026-07-05",items:[
+    "Baked Sunday's results, web-verified from multiple sources against the standing date rule: Norway 2-1 Brazil (Haaland 79' and 90', Neymar stoppage-time penalty - the model's registered pick Brazil, 57-43, WRONG on both endpoints; the market's Brazil -125 equally wrong) and England 3-2 Mexico (Bellingham double, Kane penalty, ten-man England - registered pick England 46-54 CORRECT; market agreed). R16 stands 3 of 4 for the model, identical to the market. Brazil's exit is the forward-path registration's first broken branch: the registered champion France remains alive, but the registered runner-up is out - reported, not edited.",
+    "POLYMARKET, FINALLY: per-match regulation 1X2 proved extractable this run via a dated sync (5 Jul 22:47 SAST, pre-game). The missing Switzerland-Colombia line is filled FROM POLYMARKET (26.0/31.5/42.5) - the designer's preferred source, achieving 100% pre-game coverage for the Round of 16. Polymarket comparison lines for Portugal-Spain (22/26.5/51.5) and Argentina-Egypt (71.5/20.5/8) are banked as dated comments in the code; the already-registered 4 Jul FanDuel captures for those ties are RETAINED, never swapped - replacing a registered capture with a later one would be odds-switching. Noted in code: FanDuel's USA-Belgium line moved after FIFA rescinded Balogun's suspension (nothing was ever baked for that suspension - correct under the rules).",
+    "Quarter-final fixtures added as they lock, with stage tagging extended (QUARTER-FINALS section): France v Morocco (9 Jul 22:00 SAST, Foxborough) and Norway v England (11 Jul 23:00 SAST, Miami). The QF full-forward registration from the actual eight will be committed once the last two R16 ties resolve, before the first quarter-final.",
+    "Injury/dropout sweep: England's Jordan Henderson stretchered off at the Azteca with a wrist/arm injury and hospitalised - manager quoted saying it looks serious, but NO official tournament rule-out at press time, so per the pre-stated dropout rule nothing is baked; flagged for confirmation next run. Morocco's Saibari and Spain's wingers remain monitor-only.",
+    "Live tallies: 92/92 games with pre-game odds; uniform 90-min Model 57/92 vs Market 62/92; advancement (primary) model 15/20 vs market 17/20."
+  ]},
   {v:"v7.11.0",d:"2026-07-05",items:[
     "ROUND OF 16 OPENS 2-FOR-2 FOR THE MODEL: baked Morocco 3-0 Canada (Ounahi brace) and France 1-0 Paraguay (Mbappe penalty), both in regulation, both web-verified from multiple sources. The model's registered picks - Morocco (46-54 to advance) and France (68-32) - were correct on the primary endpoint and the 90-minute basis alike. The market was also 2/2. Both ties resolve pre-registered lines pushed on 2 July, before the matchups existed.",
     "AI ERROR #8, DOCUMENTED (the designer caught it): between builds, the assistant treated the wall clock as frozen - continuing on 5 July to give deadline advice ('push before tonight's 19:00 kickoff') built on 4 July assumptions, without re-verifying the date. Both opening R16 games had already been played. The v7.10.x build stamps of 4 July appear genuine (corroborated by the designer's own dated screenshots); what failed was the assistant's time-awareness between messages, compounded by initially misdiagnosing it as a clock fault. Corrective rule now standing: every build stamp and every deadline claim is verified against a web-sourced current date, never an internal clock or an assumed continuous session.",
@@ -2573,6 +2588,7 @@ const KO_HOW={
   'AUSTRALIA|EGYPT':'pens',
   'ARGENTINA|CAPE_VERDE':'aet',
 };
+const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1};
 const R16_KEYS={'CANADA|MOROCCO':1,'FRANCE|PARAGUAY':1,'BRAZIL|NORWAY':1,'MEXICO|ENGLAND':1,'PORTUGAL|SPAIN':1,'USA|BELGIUM':1,'ARGENTINA|EGYPT':1,'SWITZERLAND|COLOMBIA':1};
 function bracketScore(){
   let played=0,correct=0;
@@ -2603,7 +2619,7 @@ function bracketScore(){
     const mm=marketFor(f);
     const mktW=mm?(mm.o[0]>mm.o[2]?a:(mm.o[2]>mm.o[0]?b:null)):null;
     rows.push({a,b,modelW,mktW,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
-               stage:(R16_KEYS[a+'|'+b]?'R16':'R32'),
+               stage:(QF_KEYS[a+'|'+b]?'QF':(R16_KEYS[a+'|'+b]?'R16':'R32')),
                realW: advancer || (result90==='D'?'DRAW':null)});
   }
   // Symmetric ADVANCEMENT tallies - the PRIMARY knockout endpoint (designated 2 Jul, disclosed):
@@ -2797,7 +2813,7 @@ function renderActualBracket(){
       if(curStage!==null)html+='</div>';
       curStage=r.stage;
       const ps=bs.perStage[curStage]||{advD:0,advM:0,advK:0,advKN:0};
-      const label=curStage==='R16'?'ROUND OF 16':'ROUND OF 32';
+      const label=curStage==='QF'?'QUARTER-FINALS':(curStage==='R16'?'ROUND OF 16':'ROUND OF 32');
       html+=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:${curStage==='R16'?'16px':'0'} 0 8px">${label}${ps.advD?` · model ${ps.advM}/${ps.advD} advanced · market ${ps.advK}/${ps.advKN}`:''}</div>`;
       html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px">';
     }
