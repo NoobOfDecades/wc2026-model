@@ -430,9 +430,10 @@ const MKT={
  // USA|BELGIUM: FanDuel line moved to +155/+230/+180 on 6 Jul after Balogun reinstatement; 4 Jul capture retained
  // QF FRANCE|MOROCCO Polymarket to-advance ~54/46 (2-way, banked 6 Jul; 1X2 to capture when posted)
  'SWITZERLAND|COLOMBIA':{o:[26.0,31.5,42.5],src:'Polymarket regulation 1X2, synced 5 Jul 22:47 SAST pre-game'},
- 'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
- 'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
- 'COLOMBIA|GHANA':{o:[63.1,24.3,12.6],src:'FanDuel via FOX, capt. 1 Jul pre-game'},
+ // ── AI ERROR #12, resolved 8 Jul 2026: the three entries below were re-insertions committed 4 Jul (0065547) for keys already registered 28 Jun (5e4c002, v7.2.0 advance R32 captures). Registered-first rule: the 28 Jun entries further down govern - as JS had silently resolved all along (later literal wins), so no displayed number changed. Preserved verbatim, commented so no duplicate key remains: ──
+ // 'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
+ // 'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
+ // 'COLOMBIA|GHANA':{o:[63.1,24.3,12.6],src:'FanDuel via FOX, capt. 1 Jul pre-game'},
  'CANADA|MOROCCO':{o:[19.9,29.0,51.1],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
  'FRANCE|PARAGUAY':{o:[81.6,13.6,4.8],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
  'BRAZIL|NORWAY':{o:[52.9,26.4,20.7],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
@@ -441,9 +442,10 @@ const MKT={
  'USA|BELGIUM':{o:[35.9,28.8,35.2],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
  'ARGENTINA|EGYPT':{o:[70.6,19.4,10.0],src:'FanDuel via FOX, capt. 4 Jul pre-game'},
 
-'ENGLAND|CONGO_DR':{o:[75.5,17.7,6.8],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
-'BELGIUM|SENEGAL':{o:[43.7,30.3,26.1],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
-'USA|BOSNIA':{o:[70.3,19.1,10.6],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
+// ── AI ERROR #12, resolved 8 Jul 2026: the three entries below were re-insertions committed 2 Jul (971df64) for keys already registered 28 Jun (5e4c002, v7.2.0 advance R32 captures). Registered-first rule: the 28 Jun entries further down govern - as JS had silently resolved all along. Preserved verbatim, commented so no duplicate key remains: ──
+// 'ENGLAND|CONGO_DR':{o:[75.5,17.7,6.8],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
+// 'BELGIUM|SENEGAL':{o:[43.7,30.3,26.1],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
+// 'USA|BOSNIA':{o:[70.3,19.1,10.6],src:'FanDuel pre-match (FOX), captured 30 Jun in advance, de-vigged'},
   'CONGO_DR|UZBEKISTAN':{o:[56.8,25.2,18.0],src:'bet365 pre-match 1X2, de-vigged'},
   'COLOMBIA|PORTUGAL':{o:[27.8,24.9,47.3],src:'bet365 pre-match 1X2, de-vigged'},
   'ALGERIA|AUSTRIA':{o:[27.0,46.1,27.0],src:'bet365 pre-match 1X2, de-vigged'},
@@ -1120,9 +1122,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.14.4";
-const BUILD_STAMP="2026-07-08 21:14 SAST (date web-verified)";
+const BUILD_VERSION="v7.14.5";
+const BUILD_STAMP="2026-07-08 22:55 SAST (date web-verified)";
 const CHANGELOG=[
+  {v:"v7.14.5",d:"2026-07-08",items:[
+    "AI ERROR #12 - DUPLICATE MARKET-ODDS KEYS, found by a mandated full-file read and resolved under the designer's registered-first ruling. Six fixtures were keyed twice in the MKT object: advance captures registered 28 Jun (commit 5e4c002, the v7.2.0 R32 pre-registration) were later re-inserted for the same games on 2 Jul (971df64: England-Congo DR, Belgium-Senegal, USA-Bosnia) and 4 Jul (0065547: Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana) by the assistant's odds updates, which never checked whether the key already existed. JavaScript resolves duplicate literal keys silently to the later occurrence in source order - which here was the 28 Jun block, so the app had been displaying the registered-first captures all along. Provenance established by git log -S artefacts on every entry; NO displayed number, Brier figure, tally or verdict changes in this build. The most divergent shadowed line (Colombia-Ghana 63.1/24.3/12.6 vs the governing 54.4/27.0/18.6) never reached any surface.",
+    "THE FIX: every MKT key now exists exactly once (96 entries, 96 distinct). The six later-committed duplicates are preserved verbatim as dated comments at their original sites - nothing is deleted from the record, per the standing rule that registered captures are never removed or swapped. New standing safeguards: every MKT insertion is now preceded by a duplicate-key check, and the structural audit gains a permanent MKT duplicate-key sweep (literal entries must equal distinct keys). Corrections-ledger count updated to twelve. The danger class this closes: a silent language-level arbitration deciding which of two registered numbers is displayed, with no human ever having ruled."
+  ]},
   {v:"v7.14.4",d:"2026-07-08",items:[
     "AI ERROR #11, formally numbered at the designer's order - the audit-coverage overclaim documented in v7.14.3 now stands in the ledger as its own error class: a FALSE ATTESTATION OF VERIFICATION COVERAGE ('verified line by line' claimed; greps delivered). This class is ranked the most dangerous of the eleven, for the designer's stated counterfactual: had it been a protocol element the AI was instructed to update and falsely attested as done, the result would have been silent protocol drift under a false attestation - a project-ending failure mode. It happened to prose, and was caught, because the human read the artefact. The standing rule it produced: an AI claim of coverage or diligence is never accepted as an assertion - it must be accompanied by the artefact (extracted text, diffs, render output), and the human audits the auditor. Corrections-ledger count updated to eleven. No number, score, or registration changed."
   ]},
@@ -3117,7 +3123,7 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
   <details class="msect"><summary>⚠️ Scoring corrections — the public ledger</summary><div class="msect-bd">
     <p>Every correction to how this app SCORES is listed here, dated, because a scoreboard that changes silently is worthless. The model itself - parameters, formulas, frozen predictions - has never been changed mid-tournament; that is auditable in the git history.</p>
     <p><b>Correction of 8 Jul 2026 (v7.13.1), Portugal v Spain.</b> Archived snapshots of this site (e.g. the Wayback Machine) show this tie briefly graded a model MISS on the 90-minute table. That grading was a BUG, and the same snapshot proves it: the Bracket tab on the very same page scored Spain CORRECT, because the two surfaces were using different tie-break rules. The display rounds probabilities to whole numbers, this tie rounded to 36/36, and three scoring sites then broke the tie toward the home side - an arbitrary rule that contradicted the tie-break stated in the pre-registration itself ("the frozen ranking edges Spain", pushed 2 July, before the matchup existed). The fix made the registered rule - higher frozen score - universal. A full sweep of all 94 games found exactly four rounded ties; this was the only one affected, and one of the other four remains a scored MISS (Czechia v Mexico) - the fix rescues nothing it should not. Probabilities, Brier and the advancement tallies were untouched. Fraud changes a prediction after the result; this corrected a display to match a prediction that was public before the result, and disclosed it - here, in the changelog below, and in the git history where the buggy version remains visible forever.</p>
-    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (eleven to date, all designer-caught or harness-caught) and the safeguards that caught them are part of the forthcoming write-up.</p>
+    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (twelve to date - caught by the designer, the harness, or a mandated full-file read) and the safeguards that caught them are part of the forthcoming write-up.</p>
   </div></details>
   <details class="msect"><summary>One frozen ranking, read out at every stage</summary><div class="msect-bd">
     <p>Most public prediction models quietly re-rank teams as results come in, so by the end nobody can say what they "predicted" - the prediction moved with the scoreboard. This model does the opposite, and it is the project's defining design choice: <b>the ranking froze before the first ball and never changes.</b> What happens instead is that the same frozen ranking is <b>read out at every stage of the tournament</b>, and each readout is its own pre-registered assessment point:</p>
