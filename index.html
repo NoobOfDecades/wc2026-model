@@ -844,7 +844,7 @@ const ET_PENS_THRESHOLD=28; // internal 90' draw % at/above which we flag extra 
                             // 28% = the model's draw output for evenly-matched teams, so the flag
                             // fires only when the tie is near dead-even (rare, won't cry wolf).
 function advanceProbs(sA,sB){
-  const {wA,d,wB}=winProbs(sA,sB);
+  const wp=winProbs(sA,sB);const {wA,d,wB}=wp;
   // redistribute the draw proportionally onto the two sides by their 90' win shares
   const base=wA+wB;
   let advA,advB;
@@ -862,7 +862,7 @@ function etPensLikely(sA,sB){return advanceProbs(sA,sB).draw90>=ET_PENS_THRESHOL
 function bettingPlan(kA,kB){
   const nA=S[kA].meta.name,nB=S[kB].meta.name,eA=S[kA].meta.emoji,eB=S[kB].meta.emoji;
   const sA=TOTALS[kA],sB=TOTALS[kB];
-  const {wA,d,wB}=winProbs(sA,sB);
+  const wp=winProbs(sA,sB);const {wA,d,wB}=wp;
   const strong=sA>=sB?{k:kA,n:nA,e:eA,p:wA}:{k:kB,n:nB,e:eB,p:wB};
   const weak=sA>=sB?{k:kB,n:nB,e:eB,p:wB}:{k:kA,n:nA,e:eA,p:wA};
   const ratio=Math.max(sA,sB)/Math.max(0.01,Math.min(sA,sB));
@@ -1120,9 +1120,14 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.14.0";
-const BUILD_STAMP="2026-07-08 08:23 SAST (date web-verified)";
+const BUILD_VERSION="v7.14.1";
+const BUILD_STAMP="2026-07-08 09:24 SAST (date web-verified)";
 const CHANGELOG=[
+  {v:"v7.14.1",d:"2026-07-08",items:[
+    "HOTFIX - AI ERROR #10, and this one reached production: the v7.13.1 tie-break fix referenced a new field in five functions but its companion repair converted only ONE of the five matching destructure lines, leaving teamRecord() crashing with a ReferenceError - which broke the Home tab, the site's landing view, on the live deploy. The designer caught it from the browser console. Root cause, two layers: a single-occurrence text replace silently hit the wrong function, and the pre-ship harness rendered the Accuracy tab but never the Home tab, so a runtime crash on the default view sailed through a passing audit.",
+    "THE FIX: all five destructure sites converted uniformly (verified by pattern sweep - zero bare forms remain). NEW STANDING AUDIT STEP, effective every build from now on: a FULL RENDER SWEEP that executes every tab (Home, Rankings, Fixtures, Compare, Bracket in both views, Accuracy, Results, Model) and fails the build on any exception or empty output - a syntax check and aggregate verification are not enough; every surface must actually render before anything ships.",
+    "No scoring, probability, tally or registration is affected by this fix - the crash was in display plumbing only. Post-fix sweep confirms all nine surfaces render and all tallies are intact (advancement 18/24 vs 19/24; 96/96 odds coverage; QF node registration unchanged)."
+  ]},
   {v:"v7.14.0",d:"2026-07-08",items:[
     "ROUND OF 16 COMPLETE - AND IT IS THE MODEL'S FIRST STAGE WON OUTRIGHT AGAINST THE MARKET: baked Argentina 3-2 Egypt (three unanswered goals from the 79th minute, Messi's record 21st World Cup goal - registered pick Argentina CORRECT, market agreed) and Switzerland 0-0 Colombia with the Swiss through 4-3 on penalties (registered pick Colombia WRONG on the primary endpoint - and the market's Colombia lean equally wrong; the 90-minute draw is a miss for both on the uniform basis). R16 stage node final: MODEL 6/8 vs MARKET 5/8 - the model's registered picks beat the market's leans over a full pre-registered stage. Overall advancement: model 18/24 vs market 19/24; the gap remains one tie.",
     "REGISTERED: the full forward path from the ACTUAL 8 (frozen panel, Bracket tab, both views) - committed in this build before any quarter-final kicks off, with the git push as the public seal: France over Morocco, Spain over Belgium, England over Norway, Argentina over Switzerland; implied semis France-Spain and England-Argentina; implied final FRANCE over Argentina; implied finishing order 1 France, 2 Argentina, 3 Spain, 4 England, 5 Belgium, 6 Norway, 7 Morocco, 8 Switzerland. This is the QF-field assessment point in the per-stage study design.",
@@ -1993,7 +1998,7 @@ function renderFixtures(){
 function fixturePreview(a,b){
   const mA=S[a].meta,mB=S[b].meta;
   const sA=TOTALS[a],sB=TOTALS[b];
-  const {wA,d,wB}=winProbs(sA,sB);
+  const wp=winProbs(sA,sB);const {wA,d,wB}=wp;
   const ratio=Math.max(sA,sB)/Math.max(0.01,Math.min(sA,sB));
   const starA=activePlayers(a).map(p=>[p,pscore(p,a)]).sort((x,y)=>y[1]-x[1])[0];
   const starB=activePlayers(b).map(p=>[p,pscore(p,b)]).sort((x,y)=>y[1]-x[1])[0];
@@ -2138,7 +2143,7 @@ function matchAnalysis(f){
   const a=f[0],b=f[1];
   if(!S[a]||!S[b])return null;
   const sA=TOTALS[a],sB=TOTALS[b];
-  const {wA,d,wB}=winProbs(sA,sB);
+  const wp=winProbs(sA,sB);const {wA,d,wB}=wp;
   const pA=wA,pD=d,pB=wB; // percentages
   const act=actualOutcome(f); // 'A'/'B'/'D'
   const scA=f[3],scB=f[4];
@@ -2235,7 +2240,7 @@ function teamRecord(teamKey){
     played++;
     // model prediction for this match (current mode via TOTALS)
     const sA=TOTALS[f[0]],sB=TOTALS[f[1]];
-    const {wA,d,wB}=winProbs(sA,sB);
+    const wp=winProbs(sA,sB);const {wA,d,wB}=wp;
     const pA=wA/100,pD=d/100,pB=wB/100;
     const oA=act==='A'?1:0,oD=act==='D'?1:0,oB=act==='B'?1:0;
     brierSum+=(pA-oA)**2+(pD-oD)**2+(pB-oB)**2; // 0=perfect … 2=confident wrong
@@ -3100,7 +3105,7 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
   <details class="msect"><summary>⚠️ Scoring corrections — the public ledger</summary><div class="msect-bd">
     <p>Every correction to how this app SCORES is listed here, dated, because a scoreboard that changes silently is worthless. The model itself - parameters, formulas, frozen predictions - has never been changed mid-tournament; that is auditable in the git history.</p>
     <p><b>Correction of 8 Jul 2026 (v7.13.1), Portugal v Spain.</b> Archived snapshots of this site (e.g. the Wayback Machine) show this tie briefly graded a model MISS on the 90-minute table. That grading was a BUG, and the same snapshot proves it: the Bracket tab on the very same page scored Spain CORRECT, because the two surfaces were using different tie-break rules. The display rounds probabilities to whole numbers, this tie rounded to 36/36, and three scoring sites then broke the tie toward the home side - an arbitrary rule that contradicted the tie-break stated in the pre-registration itself ("the frozen ranking edges Spain", pushed 2 July, before the matchup existed). The fix made the registered rule - higher frozen score - universal. A full sweep of all 94 games found exactly four rounded ties; this was the only one affected, and one of the other four remains a scored MISS (Czechia v Mexico) - the fix rescues nothing it should not. Probabilities, Brier and the advancement tallies were untouched. Fraud changes a prediction after the result; this corrected a display to match a prediction that was public before the result, and disclosed it - here, in the changelog below, and in the git history where the buggy version remains visible forever.</p>
-    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (nine to date, all designer-caught or harness-caught) and the safeguards that caught them are part of the forthcoming write-up.</p>
+    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (ten to date, all designer-caught or harness-caught) and the safeguards that caught them are part of the forthcoming write-up.</p>
   </div></details>
   <details class="msect"><summary>One frozen ranking, read out at every stage</summary><div class="msect-bd">
     <p>Most public prediction models quietly re-rank teams as results come in, so by the end nobody can say what they "predicted" - the prediction moved with the scoreboard. This model does the opposite, and it is the project's defining design choice: <b>the ranking froze before the first ball and never changes.</b> What happens instead is that the same frozen ranking is <b>read out at every stage of the tournament</b>, and each readout is its own pre-registered assessment point:</p>
