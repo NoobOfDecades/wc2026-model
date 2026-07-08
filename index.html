@@ -1122,9 +1122,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.14.5";
-const BUILD_STAMP="2026-07-08 22:55 SAST (date web-verified)";
+const BUILD_VERSION="v7.14.6";
+const BUILD_STAMP="2026-07-08 23:30 SAST (date web-verified)";
 const CHANGELOG=[
+  {v:"v7.14.6",d:"2026-07-08",items:[
+    "TWO DISPLAY DEFECTS on the Fixtures & Bets tab, both caught by the designer, plus a third found in the audit he ordered. (1) The Knockouts sub-tab had been dead since June: it resolved teams through a QUALIFIED slot-map that no code ever populated, so every knockout tie - including ties played a week ago - showed placeholder text ('Winner Grp E', 'Winner M89') instead of the real teams, results and advancers the app has held all along. Rewritten to read the actual baked fixtures directly: played ties now show the score and who advanced (extra time and penalties included), confirmed upcoming ties open the betting comparison, and placeholders remain only for rounds whose field is genuinely undecided (currently SF onward, with the bracket halves stated). (2) Completed knockout ties level at 90 minutes showed only the bare score ('0-0 · FULL TIME') with no advancer - Switzerland-Colombia read as an unresolved draw. Fixture result cards now state who advanced and how, on penalties or in extra time, right on the card. (3) Found in the audit: every knockout fixture card was badged with a GROUP label (France v Morocco, a quarter-final, displayed as 'GRP D' - the home side's group). Knockout cards now carry their stage: ROUND OF 32 / 16, QUARTER-FINAL, and onward.",
+    "Same audit, prose fossils cleaned: the Fixtures tab intro still said 'Group matches are bettable now' and the Knockouts intro still said 'Group stage ends 27 Jun; these unlock from 28 Jun'; the actual-bracket footer said 'Round of 16 and beyond will populate here' below an R16 and QF grid already populated. All reworded to stage-neutral present truth. Stage classification is now one shared rule (koStageOf) used by the scorecard, the fixture cards and the knockout tab alike, pre-guarded for the SF, third-place and final keys so those rounds slot in without touching this logic again. Surfaces verified clean in the same audit, for the record: the actual-bracket view, the Accuracy graded table, the Results tab badges and the team-review popup all already reported advancers and pens/aet correctly. Display only - no score, probability, registration, market capture or graded number changed."
+  ]},
   {v:"v7.14.5",d:"2026-07-08",items:[
     "AI ERROR #12 - DUPLICATE MARKET-ODDS KEYS, found by a mandated full-file read and resolved under the designer's registered-first ruling. Six fixtures were keyed twice in the MKT object: advance captures registered 28 Jun (commit 5e4c002, the v7.2.0 R32 pre-registration) were later re-inserted for the same games on 2 Jul (971df64: England-Congo DR, Belgium-Senegal, USA-Bosnia) and 4 Jul (0065547: Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana) by the assistant's odds updates, which never checked whether the key already existed. JavaScript resolves duplicate literal keys silently to the later occurrence in source order - which here was the 28 Jun block, so the app had been displaying the registered-first captures all along. Provenance established by git log -S artefacts on every entry; NO displayed number, Brier figure, tally or verdict changes in this build. The most divergent shadowed line (Colombia-Ghana 63.1/24.3/12.6 vs the governing 54.4/27.0/18.6) never reached any surface.",
     "THE FIX: every MKT key now exists exactly once (96 entries, 96 distinct). The six later-committed duplicates are preserved verbatim as dated comments at their original sites - nothing is deleted from the record, per the standing rule that registered captures are never removed or swapped. New standing safeguards: every MKT insertion is now preceded by a duplicate-key check, and the structural audit gains a permanent MKT duplicate-key sweep (literal entries must equal distinct keys). Corrections-ledger count updated to twelve. The danger class this closes: a silent language-level arbitration deciding which of two registered numbers is displayed, with no human ever having ruled."
@@ -1952,7 +1956,9 @@ function daysAway(iso){
   if(h<24)return`in ${Math.round(h)}h`;
   return`in ${Math.round(h/24)}d`;
 }
-// Resolve a KO slot code to a team key via QUALIFIED (empty until known)
+// Resolve a KO slot code to a team key via QUALIFIED. NOTE (v7.14.6): QUALIFIED was never populated,
+// so this always returned null - the cause of the Knockouts tab showing placeholders for played ties.
+// The tab now reads the real baked FIXTURES directly; this remains only as a legacy no-op fallback.
 function resolveSlot(code){return QUALIFIED[code]||null;}
 function slotLabel(code){
   // human description for unresolved slots
@@ -2001,7 +2007,7 @@ function renderFixtures(){
   </div>`;
   let body='';
   if(tab==='upcoming'){
-    if(!up.length)body='<p style="color:var(--mut)">No upcoming group fixtures.</p>';
+    if(!up.length)body='<p style="color:var(--mut)">No upcoming fixtures with both teams confirmed.</p>';
     else body=up.map(x=>fixtureCard(x.f,x.st,true)).join('');
   } else if(tab==='done'){
     body=done.map(x=>fixtureCard(x.f,x.st,false)).join('');
@@ -2010,7 +2016,7 @@ function renderFixtures(){
   }
   return`<div class="sect-title">FIXTURES &amp; BETS · prioritised by date — next matches first · ${modeTag()} basis</div>
     <div style="font-size:11px;color:var(--mut);line-height:1.6;margin-bottom:14px;background:var(--card2);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px">
-    Real WC2026 schedule (times shown in <b>SAST</b>). This is a convenience finder for current bets — it shares the model's numbers but <b>does not change the Bracket simulation</b>. Group matches are bettable now; knockout ties unlock their betting the moment both teams are confirmed.</div>
+    Real WC2026 schedule (times shown in <b>SAST</b>). This is a convenience finder for current bets — it shares the model's numbers but <b>does not change the Bracket simulation</b>. Knockout ties unlock their betting view the moment both teams are confirmed by results.</div>
     ${tabs}${body}`;
 }
 function fixturePreview(a,b){
@@ -2088,20 +2094,30 @@ function fixtureCard(f,st,expandable){
   const fxKey=a+'|'+b+'|'+iso;                 // unique per fixture (iso alone is NOT unique - simultaneous kickoffs collide)
   const open=(STATE.fixOpen===fxKey);
   const grp=mA.group;
+  const isKO=(mA.group!==mB.group); // knockout ties pair different groups - same rule as knockoutFixtures()
+  const stageBadge=isKO?({R32:'ROUND OF 32',R16:'ROUND OF 16',QF:'QUARTER-FINAL',SF:'SEMI-FINAL','3P':'THIRD PLACE',FINAL:'FINAL'})[koStageOf(a,b)]:`GRP ${grp}`;
   const live=(st==='live');
   const hasScore=(scA!==null&&scA!==undefined&&scB!==null&&scB!==undefined);
   const doneNoScore=(st==='done'&&!hasScore); // kicked off long ago but score not entered yet
+  // Advancement on completed knockout ties: the 90' score alone hides who went through when level at 90
+  let advTeam=null,advKoHow=null;
+  if(isKO&&hasScore){
+    if(scA!==scB)advTeam=(scA>scB?a:b);
+    else{advTeam=KO_ADVANCERS[a+'|'+b]||null;advKoHow=advTeam?(KO_HOW[a+'|'+b]||'pens'):null;}
+  }
+  const advCentre=advKoHow?`<div style="font-size:8.5px;font-weight:800;color:var(--gold);margin-top:2px;white-space:nowrap">${S[advTeam].meta.name} adv · ${advKoHow}</div>`:'';
+  const advFoot=advTeam?` · ${S[advTeam].meta.name} advanced${advKoHow?(advKoHow==='pens'?' on penalties':' in extra time'):''}`:'';
   const centreCell = st==='done'
-    ? (hasScore?`<span class="fxc-score">${scA}–${scB}</span>`:`<span class="fxc-pending">result<br>pending</span>`)
+    ? (hasScore?`<span class="fxc-score">${scA}–${scB}</span>${advCentre}`:`<span class="fxc-pending">result<br>pending</span>`)
     : '<span class="fxc-v">v</span>';
   const footCell = st!=='done'
     ? `<div class="fxc-cta">${open?'▲ hide betting view':'▼ tap for betting view'}</div>`
     : (doneNoScore
         ? `<div class="fxc-cta fxc-pendingnote">⏳ FULL TIME · score not yet recorded · ${venue}</div>`
-        : `<div class="fxc-cta fxc-ft">FULL TIME · ${venue}</div>`);
+        : `<div class="fxc-cta fxc-ft">FULL TIME${advFoot} · ${venue}</div>`);
   const _fixArg = open ? 'null' : ("'" + fxKey.replace(/'/g,'') + "'"); // single quotes: the onclick attr is double-quoted, so double quotes here would truncate it
   const head=`<div class="fxc-head${live?' fxc-head-live':''}" onclick="toggleFix(${_fixArg})">
-    <div class="fxc-meta"><span class="fxc-grp">GRP ${grp}</span>${live?'<span class="fxc-livebadge"><span class="fxc-livedot"></span>LIVE NOW</span>':`<span class="fxc-when">${fmtKick(iso)}${st==='upcoming'?' · '+daysAway(iso):''}</span>`}</div>
+    <div class="fxc-meta"><span class="fxc-grp">${stageBadge}</span>${live?'<span class="fxc-livebadge"><span class="fxc-livedot"></span>LIVE NOW</span>':`<span class="fxc-when">${fmtKick(iso)}${st==='upcoming'?' · '+daysAway(iso):''}</span>`}</div>
     <div class="fxc-teams">
       <div class="fxc-side"><span class="fxc-fl brk-chip" onclick="event.stopPropagation();openTeamReview('${a}')" style="cursor:pointer">${mA.emoji}</span><span class="fxc-nm">${mA.name}</span></div>
       <div class="fxc-vs">${centreCell}</div>
@@ -2116,27 +2132,63 @@ function fixtureCard(f,st,expandable){
   return`<div class="fxcard${st==='done'?' fxcard-done':''}${live?' fxcard-live':''}" id="fxcard-${fxKey.replace(/[^A-Za-z0-9|_-]/g,'')}">${head}${preview}${body}</div>`;
 }
 function renderKnockoutSkeleton(){
-  const rounds={R32:'ROUND OF 32',R16:'ROUND OF 16',QF:'QUARTER-FINALS',SF:'SEMI-FINALS','3P':'THIRD PLACE',FINAL:'FINAL'};
-  let html='<div style="font-size:11px;color:var(--mut);margin-bottom:12px">Knockout ties show as dated placeholders until both teams qualify. The moment a slot resolves (we update results), it switches to the real matchup with full betting analysis. Group stage ends 27 Jun; these unlock from 28 Jun.</div>';
+  // REALITY-DRIVEN since v7.14.6: rounds render from the actual baked knockout FIXTURES (the single
+  // source of truth), with the result and the advancer (ET/pens included) on every played tie.
+  // KO_SKELETON placeholders appear ONLY for rounds whose field is genuinely still undecided.
+  // (The pre-v7.14.6 version resolved slots via the QUALIFIED map, which was never populated - so this
+  // tab showed June placeholders for ties played days earlier. Caught in the designer's 8 Jul audit.)
+  const rounds={R32:'ROUND OF 32',R16:'ROUND OF 16',QF:'QUARTER-FINALS',SF:'SEMI-FINALS','3P':'THIRD-PLACE PLAY-OFF',FINAL:'FINAL'};
+  const byStage={};
+  for(const f of knockoutFixtures()){const st=koStageOf(f[0],f[1]);(byStage[st]=byStage[st]||[]).push(f);}
+  const phLabel={SF:'Quarter-final winner','3P':'Semi-final loser',FINAL:'Semi-final winner'};
+  let html='<div style="font-size:11px;color:var(--mut);margin-bottom:12px">The full knockout road to the final. Played ties show the result and who advanced (extra time and penalties included). Upcoming ties with both teams confirmed open the betting comparison on tap. Rounds whose field is still being decided show placeholders until results confirm the matchups.</div>';
   for(const[rk,rlbl]of Object.entries(rounds)){
-    const slots=KO_SKELETON.filter(s=>s[0]===rk);
-    if(!slots.length)continue;
+    const real=(byStage[rk]||[]).slice().sort((x,y)=>fxDate(x[2])-fxDate(y[2]));
+    const slots=real.length?[]:KO_SKELETON.filter(s=>s[0]===rk);
+    if(!real.length&&!slots.length)continue;
     html+=`<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:8px">${rlbl}</div>`;
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px">';
+    for(const f of real){
+      const[a,b,iso,scA]=f,scB=f[4];
+      const mA=S[a].meta,mB=S[b].meta;
+      const played=(scA!==null&&scA!==undefined&&scB!==null&&scB!==undefined);
+      if(played){
+        let advTeam=null,how=null;
+        if(scA!==scB)advTeam=(scA>scB?a:b);
+        else{advTeam=KO_ADVANCERS[a+'|'+b]||null;how=advTeam?(KO_HOW[a+'|'+b]||'pens'):null;}
+        const advTxt=advTeam?`✓ ${S[advTeam].meta.name} advanced${how?(how==='pens'?' on penalties':' in extra time'):''}${how?' · level at 90 min':''}`:'full time';
+        html+=`<div class="kocard kocard-live" onclick="nav('compare',{cA:'${a}',cB:'${b}'})" style="cursor:pointer">
+          <div class="koc-when">${fmtKick(iso)}</div>
+          <div class="koc-tie"><span class="koc-real">${mA.emoji} ${mA.name}</span>
+            <span class="koc-v" style="font-weight:800;color:var(--text)">${scA}–${scB}</span>
+            <span class="koc-real">${mB.name} ${mB.emoji}</span></div>
+          <div class="koc-status" style="color:var(--gold)">${advTxt}</div>
+        </div>`;
+      } else {
+        html+=`<div class="kocard kocard-live" onclick="nav('compare',{cA:'${a}',cB:'${b}'})" style="cursor:pointer">
+          <div class="koc-when">${fmtKick(iso)}</div>
+          <div class="koc-tie"><span class="koc-real">${mA.emoji} ${mA.name}</span>
+            <span class="koc-v">v</span>
+            <span class="koc-real">${mB.name} ${mB.emoji}</span></div>
+          <div class="koc-status">✓ teams set · tap for betting view</div>
+        </div>`;
+      }
+    }
     for(const[,sA,sB,iso]of slots){
-      const tA=resolveSlot(sA),tB=resolveSlot(sB);
-      const resolved=tA&&tB;
-      const aLbl=tA?`${S[tA].meta.emoji} ${S[tA].meta.name}`:slotLabel(sA);
-      const bLbl=tB?`${S[tB].meta.emoji} ${S[tB].meta.name}`:slotLabel(sB);
-      html+=`<div class="kocard${resolved?' kocard-live':''}" ${resolved?`onclick="nav('compare',{cA:'${tA}',cB:'${tB}'})" style="cursor:pointer"`:''}>
+      const aLbl=phLabel[rk]||slotLabel(sA),bLbl=phLabel[rk]||slotLabel(sB);
+      html+=`<div class="kocard">
         <div class="koc-when">${fmtKick(iso)}</div>
-        <div class="koc-tie"><span class="${tA?'koc-real':'koc-slot'}">${aLbl}</span>
+        <div class="koc-tie"><span class="koc-slot">${aLbl}</span>
           <span class="koc-v">v</span>
-          <span class="${tB?'koc-real':'koc-slot'}">${bLbl}</span></div>
-        <div class="koc-status">${resolved?'✓ teams set · tap for betting view':'⏳ awaiting qualifiers · betting locked'}</div>
+          <span class="koc-slot">${bLbl}</span></div>
+        <div class="koc-status">⏳ awaiting results · betting locked</div>
       </div>`;
     }
-    html+='</div></div>';
+    html+='</div>';
+    if(rk==='SF'&&!real.length&&slots.length){
+      html+=`<div style="font-size:10px;color:var(--dim);margin-top:6px;line-height:1.5">Bracket halves (real bracket structure - see the registered QF panel on the Bracket tab): the France-Morocco winner meets the Spain-Belgium winner; the Norway-England winner meets the Argentina-Switzerland winner. Which semi-final plays on which date is shown once the fixtures are confirmed and recorded.</div>`;
+    }
+    html+='</div>';
   }
   return html;
 }
@@ -2607,6 +2659,17 @@ function actualBracket(){
 // IMPORTANT: iterate the REAL knockout fixtures (the actual matchups), and for each, compare the model's
 // own pick (higher team score) to the real winner. The model's simulated bracket pairings can differ from
 // reality, so we must score against the fixtures that were actually played, not the model's hypothetical bracket.
+// Stage of a real knockout fixture - ONE rule for every surface (scorecard, fixture cards, knockout tab).
+// SF_KEYS / THIRD_KEYS / FINAL_KEYS are guarded so this needs no edit ordering when those rounds are baked.
+function koStageOf(a,b){
+  const k=a+'|'+b;
+  if(typeof FINAL_KEYS!=='undefined'&&FINAL_KEYS[k])return'FINAL';
+  if(typeof THIRD_KEYS!=='undefined'&&THIRD_KEYS[k])return'3P';
+  if(typeof SF_KEYS!=='undefined'&&SF_KEYS[k])return'SF';
+  if(QF_KEYS[k])return'QF';
+  if(R16_KEYS[k])return'R16';
+  return'R32';
+}
 function knockoutFixtures(){
   // A knockout tie pairs teams from DIFFERENT groups; group-stage games are always within one group.
   // (Date alone is unreliable - the last group games were played the same day the knockouts began.)
@@ -2667,7 +2730,7 @@ function bracketScore(){
     const mm=marketFor(f);
     const mktW=mm?(mm.o[0]>mm.o[2]?a:(mm.o[2]>mm.o[0]?b:null)):null;
     rows.push({a,b,modelW,mktW,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
-               stage:(QF_KEYS[a+'|'+b]?'QF':(R16_KEYS[a+'|'+b]?'R16':'R32')),
+               stage:koStageOf(a,b),
                realW: advancer || (result90==='D'?'DRAW':null)});
   }
   // Symmetric ADVANCEMENT tallies - the PRIMARY knockout endpoint (designated 2 Jul, disclosed):
@@ -2878,7 +2941,7 @@ function renderActualBracket(){
       if(curStage!==null)html+='</div>';
       curStage=r.stage;
       const ps=bs.perStage[curStage]||{advD:0,advM:0,advK:0,advKN:0};
-      const label=curStage==='QF'?'QUARTER-FINALS':(curStage==='R16'?'ROUND OF 16':'ROUND OF 32');
+      const label=({R32:'ROUND OF 32',R16:'ROUND OF 16',QF:'QUARTER-FINALS',SF:'SEMI-FINALS','3P':'THIRD-PLACE PLAY-OFF',FINAL:'FINAL'})[curStage]||curStage;
       html+=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:${curStage==='R16'?'16px':'0'} 0 8px">${label}${ps.advD?` · model ${ps.advM}/${ps.advD} advanced · market ${ps.advK}/${ps.advKN}`:''}</div>`;
       html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px">';
     }
@@ -2927,7 +2990,7 @@ function renderActualBracket(){
   }
   html+='</div>';
   // later rounds note
-  html+=`<div style="margin-top:18px;padding:11px 14px;background:var(--card2);border:1px solid var(--bdr);border-radius:9px;font-size:11px;color:var(--mut);line-height:1.6">Round of 16 and beyond will populate here as those ties are played. The model's full predicted path to the title is on the <b style="color:var(--gold)">predicted bracket</b> tab.</div>`;
+  html+=`<div style="margin-top:18px;padding:11px 14px;background:var(--card2);border:1px solid var(--bdr);border-radius:9px;font-size:11px;color:var(--mut);line-height:1.6">Each remaining round populates here as its ties are played - the semi-finals, third-place play-off and final appear the moment their results are recorded. The model's full predicted path to the title is on the <b style="color:var(--gold)">predicted bracket</b> tab.</div>`;
   return html;
 }
 
