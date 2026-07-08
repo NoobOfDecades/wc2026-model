@@ -406,11 +406,12 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["MEXICO","ENGLAND","2026-07-06T02:00:00+02:00",2,3,"Estadio Azteca"],
 ["PORTUGAL","SPAIN","2026-07-06T21:00:00+02:00",0,1,"AT&T Stadium"],
 ["USA","BELGIUM","2026-07-07T02:00:00+02:00",1,4,"Lumen Field"],
-["ARGENTINA","EGYPT","2026-07-07T18:00:00+02:00",null,null,"Mercedes-Benz Stadium"],
-["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",null,null,"BC Place"],
+["ARGENTINA","EGYPT","2026-07-07T18:00:00+02:00",3,2,"Mercedes-Benz Stadium"],
+["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",0,0,"BC Place"],
 ["FRANCE","MOROCCO","2026-07-09T22:00:00+02:00",null,null,"Gillette Stadium"],
 ["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",null,null,"Hard Rock Stadium"],
-["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",null,null,"SoFi Stadium"],];
+["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",null,null,"SoFi Stadium"],
+["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",null,null,"Arrowhead Stadium"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
 // This feature was added after the model was already live. The ideal single-source benchmark
@@ -649,7 +650,7 @@ function marketAggregate(){
     // argmax picks for the matrix
     const m=marketFor(f);const act=actualOutcome(f);
     const wp=winProbs(teamScore(f[0]),teamScore(f[1]));
-    const ourPick=wp.wA>=wp.d&&wp.wA>=wp.wB?'A':(wp.wB>=wp.d?'B':'D');
+    const ourPick=(wp.wA===wp.wB)?(wp.wA>=wp.d?(wp.lean==='B'?'B':'A'):'D'):(wp.wA>=wp.d&&wp.wA>=wp.wB?'A':(wp.wB>=wp.d?'B':'D'));
     const mktPick=m.o[0]>=m.o[1]&&m.o[0]>=m.o[2]?'A':(m.o[2]>=m.o[1]?'B':'D');
     const oR=ourPick===act,kR=mktPick===act;
     if(oR&&kR)bothRight++;else if(oR&&!kR)weRightMktWrong++;else if(!oR&&kR)mktRightWeWrong++;else neither++;
@@ -673,7 +674,7 @@ function callItRight(){
     const m=marketFor(f);if(!m)continue;            // only games with verified pre-match odds
     const act=actualOutcome(f);                      // 'A' home win, 'B' away win, 'D' draw
     const wp=winProbs(teamScore(h),teamScore(b));
-    const mPick=(wp.wA>=wp.d&&wp.wA>=wp.wB)?'A':((wp.wB>=wp.d&&wp.wB>=wp.wA)?'B':'D');
+    const mPick=(wp.wA===wp.wB)?(wp.wA>=wp.d?(wp.lean==='B'?'B':'A'):'D'):((wp.wA>=wp.d&&wp.wA>=wp.wB)?'A':((wp.wB>=wp.d&&wp.wB>=wp.wA)?'B':'D'));
     const kPick=(m.o[0]>=m.o[1]&&m.o[0]>=m.o[2])?'A':((m.o[2]>=m.o[1]&&m.o[2]>=m.o[0])?'B':'D');
     n++; if(mPick===act)mHit++; if(kPick===act)kHit++;
     const close=Math.abs(f[3]-f[4])<=1;              // single-goal margin or draw — pure scoreline
@@ -820,13 +821,16 @@ function recompute(){
 
 // ════════════ WIN PROBABILITY ════════════
 function winProbs(sA,sB){
-  if(!sA||!sB||Math.abs(sA-sB)<0.001)return{wA:36,d:28,wB:36};
+  if(!sA||!sB||Math.abs(sA-sB)<0.001)return{wA:36,d:28,wB:36,lean:'A'};
   const r=sA/sB,x=Math.log(r)*1.5;
   const pW=1/(1+Math.exp(-x));
   const pD=0.28*Math.exp(-0.30*Math.abs(x));
   const wA=Math.round(pW*(1-pD)*100);
   const wB=Math.round((1-pW)*(1-pD)*100);
-  return{wA,d:100-wA-wB,wB};
+  // lean = the UNROUNDED direction (equivalently: the higher frozen score). Display rounds to
+  // integers, so near-equal ties can show e.g. 36/36; the pick must then follow the registered
+  // rule - higher score advances - NOT an arbitrary home-side bias. (Fix v7.13.1, designer-caught.)
+  return{wA,d:100-wA-wB,wB,lean:(sA>sB?'A':'B')};
 }
 function fairOdds(p){return p<=0?'—':(1/(p/100)).toFixed(2);}
 
@@ -1116,9 +1120,21 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.13.0";
-const BUILD_STAMP="2026-07-07 18:46 SAST (date web-verified)";
+const BUILD_VERSION="v7.14.0";
+const BUILD_STAMP="2026-07-08 08:23 SAST (date web-verified)";
 const CHANGELOG=[
+  {v:"v7.14.0",d:"2026-07-08",items:[
+    "ROUND OF 16 COMPLETE - AND IT IS THE MODEL'S FIRST STAGE WON OUTRIGHT AGAINST THE MARKET: baked Argentina 3-2 Egypt (three unanswered goals from the 79th minute, Messi's record 21st World Cup goal - registered pick Argentina CORRECT, market agreed) and Switzerland 0-0 Colombia with the Swiss through 4-3 on penalties (registered pick Colombia WRONG on the primary endpoint - and the market's Colombia lean equally wrong; the 90-minute draw is a miss for both on the uniform basis). R16 stage node final: MODEL 6/8 vs MARKET 5/8 - the model's registered picks beat the market's leans over a full pre-registered stage. Overall advancement: model 18/24 vs market 19/24; the gap remains one tie.",
+    "REGISTERED: the full forward path from the ACTUAL 8 (frozen panel, Bracket tab, both views) - committed in this build before any quarter-final kicks off, with the git push as the public seal: France over Morocco, Spain over Belgium, England over Norway, Argentina over Switzerland; implied semis France-Spain and England-Argentina; implied final FRANCE over Argentina; implied finishing order 1 France, 2 Argentina, 3 Spain, 4 England, 5 Belgium, 6 Norway, 7 Morocco, 8 Switzerland. This is the QF-field assessment point in the per-stage study design.",
+    "NEW MODEL TAB SECTION at the designer's order: 'Scoring corrections - the public ledger' - a permanent, dated, plain-language account of the v7.13.1 Portugal-Spain correction written for the reader who arrives via an archived snapshot showing the old miss: the same snapshot's Bracket tab scored Spain correct (proving inconsistency, not re-scoring), the Spain pick was public in the 2 July registration before the matchup existed, the sweep and its non-rescued miss are stated, and the buggy version remains in git history forever. Fraud hides; this photographs.",
+    "Fourth quarter-final fixture added: Argentina v Switzerland (Sun 12 Jul 03:00 SAST, Arrowhead). QF 1X2 odds: to be captured as books post them, before each kickoff, Polymarket preferred (the France-Morocco Polymarket to-advance line, ~54/46, was banked on 6 Jul as a dated comment). Henderson (England): still no official tournament rule-out found - remains monitor-only under the dropout rule. Live: 96/96 games with pre-game odds."
+  ]},
+  {v:"v7.13.1",d:"2026-07-07",items:[
+    "AI ERROR #9, CAUGHT BY THE DESIGNER FROM THE LIVE APP AND FIXED: Portugal-Spain was scored a model MISS on the 90-minute surfaces while the Bracket tab scored it CORRECT - two answers from one model. Root cause: winProbs rounds display probabilities to integers, so the near-equal tie showed 36/36; three 90-minute argmax sites then broke the tie TOWARD THE HOME SIDE - an arbitrary, undocumented rule that contradicted the registered tie-break ('the frozen ranking edges Spain', stated in the pre-registration itself). The advancement surfaces always used the higher score and were right; the argmax surfaces were wrong.",
+    "THE FIX, one unified documented rule everywhere: on a rounded dead-heat the pick follows the UNROUNDED direction - equivalently, the higher frozen score - exactly the registered rule. All non-tied outcomes are bit-for-bit unchanged.",
+    "FULL 94-GAME SWEEP for every rounded tie, disclosed both directions: exactly four exist - Mexico v South Africa (lean Mexico, won: pick unchanged, correct), Ghana v Panama (lean Ghana, won: unchanged, correct), Czechia v Mexico (lean Czechia, lost: unchanged, still a miss - the fix does NOT rescue it), Portugal v Spain (lean SPAIN, the tournament's ONLY away-lean tie: flips from wrongly-scored miss to correctly-scored hit). One game affected in ninety-four; the bias was invisible elsewhere only because home and higher-score coincided.",
+    "Net effect, stated plainly: 90-minute model 59/94 (+1) vs market 63/94; agreement matrix 56/3/7/28 (the flip moves one game from market-only-right to both-right, since the market also picked Spain); Brier UNCHANGED 0.579 vs 0.483 (probabilities were never wrong, only the tie-break label); advancement (primary) UNCHANGED 17/22 vs 18/22 - the Bracket tab had scored Spain correct all along, which is how the inconsistency was visible."
+  ]},
   {v:"v7.13.0",d:"2026-07-07",items:[
     "Baked Monday's results, web-verified: Spain 1-0 Portugal (90+1' winner - the frozen line had this DEAD EVEN with Spain ahead by 1.5 points of squad score; registered pick Spain CORRECT on both endpoints) and Belgium 4-1 USA. The Belgium tie is a landmark for the record: the registered pick (Belgium, 43-57 to advance from v7.8.1) was correct while the MARKET leaned USA on both bases (de-vigged 1X2 35.9/28.8/35.2; To Advance USA -118) - the model's first knockout head-to-head advancement win over the market. R16 stands model 5/6 vs market 4/6.",
     "FIRST IN-TOURNAMENT DROPOUT BAKED, exactly per the pre-stated rule (injuries handled as patient dropout, confirmed tournament-ending only): Belgium's Amadou Onana ruptured an ACL against the USA, 9-12 months out (The Athletic) - flagged out:'tournament' in the squad data, dated and sourced, making him unavailable for XI/Top-15 selection while remaining a named squad member. Honest, measured effect: Belgium's Top-15 score is UNCHANGED (119.4) because Onana's context score was not among their best fifteen - the squad's depth absorbs the loss, which is the model's central thesis operating through its own dropout mechanism. Frozen registrations untouched, as always.",
@@ -2176,7 +2192,7 @@ function accuracyStats(){
     const a=f[0],b=f[1];
     if(!S[a]||!S[b])continue;
     const sA=TOTALS[a],sB=TOTALS[b];
-    const {wA,d,wB}=winProbs(sA,sB); // percentages 0-100
+    const wp=winProbs(sA,sB);const {wA,d,wB}=wp; // percentages 0-100
     const pA=wA/100,pD=d/100,pB=wB/100;
     const act=actualOutcome(f);
     // KNOCKOUT SCORING: always graded on the 90-minute result, identical to how the market is scored
@@ -2223,7 +2239,7 @@ function teamRecord(teamKey){
     const pA=wA/100,pD=d/100,pB=wB/100;
     const oA=act==='A'?1:0,oD=act==='D'?1:0,oB=act==='B'?1:0;
     brierSum+=(pA-oA)**2+(pD-oD)**2+(pB-oB)**2; // 0=perfect … 2=confident wrong
-    const pick=wA>=d&&wA>=wB?'A':wB>=d&&wA<=wB?'B':'D';
+    const pick=(wA===wB)?(wA>=d?((wp&&wp.lean==='B')?'B':'A'):'D'):(wA>=d&&wA>=wB?'A':wB>=d&&wA<=wB?'B':'D');
     if(pick===act)correct++;
     // market's call on this game (1X2 argmax), only if we have verified odds
     const m=marketFor(f);
@@ -2586,6 +2602,7 @@ const KO_ADVANCERS={
   'BELGIUM|SENEGAL':'BELGIUM',       // 2-2 at 90', Belgium won 3-2 in extra time
   'AUSTRALIA|EGYPT':'EGYPT',         // 1-1, Egypt won 4-2 on pens
   'ARGENTINA|CAPE_VERDE':'ARGENTINA',// 1-1 at 90', Argentina won 3-2 in extra time
+  'SWITZERLAND|COLOMBIA':'SWITZERLAND', // 0-0 after 120', Switzerland won 4-3 on pens
 };
 // How each level-at-90 tie was decided, for honest display labels ('pens' or 'aet').
 const KO_HOW={
@@ -2594,8 +2611,9 @@ const KO_HOW={
   'BELGIUM|SENEGAL':'aet',
   'AUSTRALIA|EGYPT':'pens',
   'ARGENTINA|CAPE_VERDE':'aet',
+  'SWITZERLAND|COLOMBIA':'pens',
 };
-const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1,'SPAIN|BELGIUM':1};
+const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1,'SPAIN|BELGIUM':1,'ARGENTINA|SWITZERLAND':1};
 const R16_KEYS={'CANADA|MOROCCO':1,'FRANCE|PARAGUAY':1,'BRAZIL|NORWAY':1,'MEXICO|ENGLAND':1,'PORTUGAL|SPAIN':1,'USA|BELGIUM':1,'ARGENTINA|EGYPT':1,'SWITZERLAND|COLOMBIA':1};
 function bracketScore(){
   let played=0,correct=0;
@@ -2645,6 +2663,23 @@ function bracketScore(){
   return {played,correct,rows,advDecided,advModel,advMkt,advMktN,r90Mkt,perStage};
 }
 
+function renderQFForward(){
+  // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 8 (build 8 Jul 2026, before any QF; git push = public seal) ══
+  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px" open>
+  <summary style="padding:11px 14px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold)">🧊 REGISTERED 8 JUL — FULL FORWARD PATH FROM THE ACTUAL 8</summary>
+  <div style="padding:2px 14px 13px;font-size:11px;color:var(--mut);line-height:1.65">
+    <p style="margin:6px 0">The quarter-final field is decided. Same frozen ranking, read out again - every pick to the champion, committed before any quarter-final kicks off. Higher frozen Top-15 score advances through the real bracket. Frozen scores in brackets.</p>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">QUARTER-FINAL PICKS</div>
+    <div>France (133.1) over Morocco (104.8) · Spain (129.2) over Belgium (119.4) · England (118.2) over Norway (105.8) · Argentina (122.6) over Switzerland (97.3)</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED SEMI-FINALS → PICKS</div>
+    <div>France v Spain → FRANCE · England v Argentina → ARGENTINA</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINAL → CHAMPION</div>
+    <div>France v Argentina → <b style="color:var(--gold)">FRANCE</b></div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 8</div>
+    <div>1 France · 2 Argentina · 3 Spain · 4 England · 5 Belgium · 6 Norway · 7 Morocco · 8 Switzerland</div>
+    <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">The QF-field assessment point in the per-stage study design (Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end.</p>
+  </div></details>`;
+}
 function renderR16Forward(){
   // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 16 (committed 4 Jul 2026, morning SAST, before Canada-Morocco kicked off) ══
   // Study node: the R16-field assessment point. Same frozen ranking, read out against the real surviving field
@@ -2692,8 +2727,8 @@ function renderBracket(){
     <button onclick="setBrkView('model')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='model'?'var(--gold)':'var(--card)'};color:${bv==='model'?'#0a1018':'var(--mut)'}">🔮 MODEL'S PREDICTED BRACKET</button>
     <button onclick="setBrkView('actual')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='actual'?'#22C55E':'var(--card)'};color:${bv==='actual'?'#04140a':'var(--mut)'}">✅ ACTUAL RESULTS${bs.advDecided?` · model ${bs.advModel}/${bs.advDecided}`:''}</button>
   </div>`;
-  if(bv==='actual') return toggle+renderR16Prereg()+renderR16Forward()+renderActualBracket();
-  let html=toggle+renderR16Prereg()+renderR16Forward();
+  if(bv==='actual') return toggle+renderR16Prereg()+renderR16Forward()+renderQFForward()+renderActualBracket();
+  let html=toggle+renderR16Prereg()+renderR16Forward()+renderQFForward();
   html+=`<div style="background:linear-gradient(135deg,#061018,#0a1929 50%,#07111A);border:1px solid rgba(200,155,60,.4);border-radius:14px;padding:22px 20px;text-align:center;margin-bottom:18px;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,${cl(champ)}22,transparent 60%);pointer-events:none"></div>
     <div style="font-size:10px;font-weight:800;letter-spacing:3px;color:#C89B3C;margin-bottom:10px">⚠️ PREDICTED CHAMPION · ${modeTag().toUpperCase()} BASIS · MODEL FORECAST</div>
@@ -3062,6 +3097,11 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
   <div class="msect"><h3>KNOCKOUT SIMULATION (BRACKET TAB)</h3>
     <p>The bracket is a deterministic forecast: at every stage the team with the higher model score advances, with no randomness. Group order and the eight best third-placed teams resolve the same way, and the bracket follows the official FIFA 2026 Round-of-32 structure. Because it is deterministic, switching the calculation basis is what surfaces alternative outcomes — Starting XI, Top 15 and Whole Squad can each crown a different champion. The Fixtures tab is a separate, read-only layer and never feeds back into this simulation. The bracket is clearly a prediction, shown so the model's accuracy can be weighed against real results.</p></div>
   <div class="mgroup-hd"><span>⑤ HOW IT MEASURES UP</span></div>
+  <details class="msect"><summary>⚠️ Scoring corrections — the public ledger</summary><div class="msect-bd">
+    <p>Every correction to how this app SCORES is listed here, dated, because a scoreboard that changes silently is worthless. The model itself - parameters, formulas, frozen predictions - has never been changed mid-tournament; that is auditable in the git history.</p>
+    <p><b>Correction of 8 Jul 2026 (v7.13.1), Portugal v Spain.</b> Archived snapshots of this site (e.g. the Wayback Machine) show this tie briefly graded a model MISS on the 90-minute table. That grading was a BUG, and the same snapshot proves it: the Bracket tab on the very same page scored Spain CORRECT, because the two surfaces were using different tie-break rules. The display rounds probabilities to whole numbers, this tie rounded to 36/36, and three scoring sites then broke the tie toward the home side - an arbitrary rule that contradicted the tie-break stated in the pre-registration itself ("the frozen ranking edges Spain", pushed 2 July, before the matchup existed). The fix made the registered rule - higher frozen score - universal. A full sweep of all 94 games found exactly four rounded ties; this was the only one affected, and one of the other four remains a scored MISS (Czechia v Mexico) - the fix rescues nothing it should not. Probabilities, Brier and the advancement tallies were untouched. Fraud changes a prediction after the result; this corrected a display to match a prediction that was public before the result, and disclosed it - here, in the changelog below, and in the git history where the buggy version remains visible forever.</p>
+    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (nine to date, all designer-caught or harness-caught) and the safeguards that caught them are part of the forthcoming write-up.</p>
+  </div></details>
   <details class="msect"><summary>One frozen ranking, read out at every stage</summary><div class="msect-bd">
     <p>Most public prediction models quietly re-rank teams as results come in, so by the end nobody can say what they "predicted" - the prediction moved with the scoreboard. This model does the opposite, and it is the project's defining design choice: <b>the ranking froze before the first ball and never changes.</b> What happens instead is that the same frozen ranking is <b>read out at every stage of the tournament</b>, and each readout is its own pre-registered assessment point:</p>
     <p>the pre-tournament bracket (the purest, fully blind test) → the actual 32 who reached the knockouts → the actual 16 → the actual 8 → the actual 4 → the final two. Each node is committed <b>before that round kicks off</b> (the git history supplies the timestamp), forecasts the field that <b>reality</b> selected - not the field the model guessed - and every node is reported, flattering or not.</p>
