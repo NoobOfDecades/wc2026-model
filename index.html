@@ -1179,9 +1179,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.18.0";
-const BUILD_STAMP="2026-07-11 08:45 SAST (date and time web-verified at build)";
+const BUILD_VERSION="v7.18.1";
+const BUILD_STAMP="2026-07-11 09:55 SAST (date and time web-verified at build)";
 const CHANGELOG=[
+  {v:"v7.18.1",d:"2026-07-11",items:[
+    "THE PER-NODE SCOREBOARD - the study design made visible, designer-ordered after a visual audit found the Bracket tab's actual-results view confusing: an unlabelled 'model 20/26' on the toggle (it means: of the 26 knockout ties actually played and decided, the frozen ranking's higher-rated side went through in 20 - graded on the REAL matchups, not the predicted bracket's paths), three expanded registration panels burying the first real result roughly 70% down the page, duplicated tallies, and - the core omission - no per-node accuracy anywhere despite per-stage pre-registration being the entire point of the design. New at the top of the actual view: one row per registered node (pre-tournament bracket, R32 ties, R16 node, R16 forward path, QF node - the SF and final nodes join as they are sealed), each graded ONLY on its own test with its own denominator, the market's like-for-like figure alongside wherever one exists, and the caveat printed ON the scoreboard itself: assessment points within one tournament, not independent replications; later nodes share downstream games; each surviving field is stronger than the last; figures reported per node, never blended.",
+    "LIVE GRADING STRIPS inside each sealed registration panel, under the designer's explicit ruling on the frozen-panel law: the registered prose is byte-identical (verified against git history in this build's audit); the strip sits below it, visually distinct, labelled 'computed display, not part of the frozen registration'. Each strip grades that node's registered picks tick/cross/pending; conditional pairings the real bracket eliminated show as VOIDED with the count stated - shown, never counted as hit or miss (a branch not taken is not a game; distinct from the tie ladder, which governs played games). Also: toggle relabelled with a one-line explainer; scoreboard and results now sit ABOVE the registration panels, which default to collapsed with their seal dates visible in the summaries - nothing hidden, one tap away, in git, and Wayback-sealed. Numbers as of this build: pre-tournament bracket R16 survivors 10/16, QF field 5/8, SF field 2/2 so far, champion pick France alive; R32 12/16 (market 14/16); R16 node 6/8 (market 5/8); R16 forward implied QFs 2/2 materialised, 2 voided; QF node 2/2 (market 2/2), 2 pending. No scoring rule, tally, probability or registration changed - display only."
+  ]},
   {v:"v7.18.0",d:"2026-07-11",items:[
     "TIE-RESOLUTION LADDER REGISTERED - designer's ruling, ratified and sealed 11 Jul 2026, BEFORE any game ever required it. The question arose from the v7.17.1 audit: what is the MARKET's pick if a captured line ever prices both wins exactly equal? (Distinct from the MODEL's rounded-tie rule - higher frozen score, registered 2 Jul and enforced everywhere since v7.17.1 - which was never in doubt; the v7.17.1 changelog sentence 'no rule for a true market tie was pre-registered' referred only to the market's own internal tie and is hereby clarified.) The assistant proposed excluding such games from favourite-based tallies; THE DESIGNER REJECTED EXCLUSION - the record should show the road not taken and why: endpoints and denominators were formulated weeks ago precisely so that no game is ever thrown away, and a silently shrunk n for one forecaster would make every headline comparison incoherent. Registered instead: identical denominators always, and a forecaster's tie resolves by ITS OWN higher-precision signal - never by the other forecaster, never by home side.",
     "THE LADDER, now in the Model tab's scoring rules and enforced in code at every market-pick site through one shared function (marketPick), including the advancement scorer which previously EXCLUDED a tied market from its tally: (a) draw priced highest = no tie, the pick is the draw; (b) the tie must survive full-precision de-vig of the same registered capture's raw odds, adjudicated at bake time from registered-first material only; (c) knockout advancement: the banked pre-game to-advance line breaks it; (d) a second banked pre-game source breaks it; (e) a true dead heat is graded half credit (0.5) on pick-based tallies, both endpoints, n unchanged, Brier untouched. Symmetry clause: the model's rounded ties resolve by its own unrounded lean and never reach (e); an exact full-precision model tie - never observed on any basis - takes the same half credit (a home-bias fossil in winProbs' exact-equality branch, unreachable by any real pairing past or present, was cleaned in the same sweep).",
@@ -2849,7 +2853,7 @@ function bracketScore(){
 
 function renderQFForward(){
   // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 8 (build 8 Jul 2026, before any QF; git push = public seal) ══
-  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px" open>
+  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px">
   <summary style="padding:11px 14px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold)">🧊 REGISTERED 8 JUL — FULL FORWARD PATH FROM THE ACTUAL 8</summary>
   <div style="padding:2px 14px 13px;font-size:11px;color:var(--mut);line-height:1.65">
     <p style="margin:6px 0">The quarter-final field is decided. Same frozen ranking, read out again - every pick to the champion, committed before any quarter-final kicks off. Higher frozen Top-15 score advances through the real bracket. Frozen scores in brackets.</p>
@@ -2862,13 +2866,13 @@ function renderQFForward(){
     <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 8</div>
     <div>1 France · 2 Argentina · 3 Spain · 4 England · 5 Belgium · 6 Norway · 7 Morocco · 8 Switzerland</div>
     <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">The QF-field assessment point in the per-stage study design (Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end.</p>
-  </div></details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_QF.QF.concat(NODE_QF.SF,NODE_QF.FINAL)),`champion pick France: ${champStatus('FRANCE')}`)}</details>`;
 }
 function renderR16Forward(){
   // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 16 (committed 4 Jul 2026, morning SAST, before Canada-Morocco kicked off) ══
   // Study node: the R16-field assessment point. Same frozen ranking, read out against the real surviving field
   // through the REAL bracket structure. Hardcoded; never recomputed. Frozen Top-15 scores in brackets.
-  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px" open>
+  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px">
   <summary style="padding:11px 14px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold)">🧊 REGISTERED 4 JUL — FULL FORWARD PATH FROM THE ACTUAL 16</summary>
   <div style="padding:2px 14px 13px;font-size:11px;color:var(--mut);line-height:1.65">
     <p style="margin:6px 0">All sixteen Round-of-16 places are now decided by results on the pitch. This panel commits the frozen model's complete forward read of that actual field — every pick, through to the champion — before any Round-of-16 game kicks off. Higher frozen Top-15 score advances at each node of the real bracket. These lines never change; they are here to be scored.</p>
@@ -2883,7 +2887,7 @@ function renderR16Forward(){
     <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 16 (tier = predicted exit round; ordered by frozen score within tier)</div>
     <div>1 France · 2 Brazil · 3 Spain · 4 Argentina · 5 Belgium · 6 England · 7 Morocco · 8 Colombia · 9 Portugal · 10 Norway · 11 Egypt · 12 Mexico · 13 USA · 14 Switzerland · 15 Canada · 16 Paraguay</div>
     <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">One of the tournament's pre-registered assessment points (see the Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end. Ties within a tier share a predicted exit round - the order inside a tier is the frozen score, stated for completeness.</p>
-  </div></details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_R16_PICKS.concat(NODE_R16FWD.QF,NODE_R16FWD.SF,NODE_R16FWD.FINAL)),`champion pick France: ${champStatus('FRANCE')}`)}</details>`;
 }
 function renderR16Prereg(){
   return `<details class="msect-fold" style="margin-bottom:14px"><summary class="msect-sum">\u{1F510} PRE-REGISTERED ROUND-OF-16 NODE - committed 2 Jul 2026, 08:15 SAST, before any R16 kickoff</summary>
@@ -2896,7 +2900,102 @@ function renderR16Prereg(){
   <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--gold);margin:12px 0 4px">WHO WINS IT FROM HERE</div>
   <p>Of the 22 teams still alive, the frozen ranking\u2019s pick to win the tournament is <b style="color:var(--gold)">France</b>. Top of the surviving field by frozen squad score: France 133.1 · Spain 129.2 · Portugal 127.7 · Brazil 124.7 · Argentina 122.6 · Belgium 119.4. This pick changes only if a higher-ranked survivor is eliminated - the model learns nothing from results.</p>
   <p style="margin-top:8px;font-size:10px;color:var(--dim)">Registered with three R32 games still unplayed (Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana at commit time; Spain-Austria, Portugal-Croatia, Switzerland-Algeria later on commit day). To-advance figures are the 90-minute draw redistributed proportionally between the two sides. Endpoint designation (set 2 Jul, same day as this registration and before any R16 game): <b>advancement is the primary scored endpoint</b> for knockout ties - the frozen bracket is itself an advancement forecast - with the 90-minute 1X2 co-reported as the market-odds basis. Both figures above are registered for every tie, so scoring on either basis reads off this table.</b></p>
-  </div></details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_R16_PICKS),null,NODE_R16_VOIDED_BRANCHES)}</details>`;
+}
+// ════════════ PER-NODE GRADING (designer's rulings 11 Jul 2026, v7.18.1) ════════════
+// Frozen node picks, transcribed VERBATIM from the sealed panels (facts of record, used only to
+// GRADE the nodes - the panels' registered prose is never computed from these, never touched).
+const NODE_R16_PICKS=[
+ {a:'CANADA',b:'MOROCCO',pick:'MOROCCO'},{a:'FRANCE',b:'PARAGUAY',pick:'FRANCE'},
+ {a:'BRAZIL',b:'NORWAY',pick:'BRAZIL'},{a:'MEXICO',b:'ENGLAND',pick:'ENGLAND'},
+ {a:'USA',b:'BELGIUM',pick:'BELGIUM'},{a:'PORTUGAL',b:'SPAIN',pick:'SPAIN'},
+ {a:'ARGENTINA',b:'EGYPT',pick:'ARGENTINA'},{a:'SWITZERLAND',b:'COLOMBIA',pick:'COLOMBIA'}];
+const NODE_R16_VOIDED_BRANCHES=9; // of the twelve pre-committed conditionals, nine never materialised
+const NODE_R16FWD={QF:[{a:'FRANCE',b:'MOROCCO',pick:'FRANCE'},{a:'SPAIN',b:'BELGIUM',pick:'SPAIN'},{a:'BRAZIL',b:'ENGLAND',pick:'BRAZIL'},{a:'ARGENTINA',b:'COLOMBIA',pick:'ARGENTINA'}],
+ SF:[{a:'FRANCE',b:'SPAIN',pick:'FRANCE'},{a:'BRAZIL',b:'ARGENTINA',pick:'BRAZIL'}],FINAL:[{a:'FRANCE',b:'BRAZIL',pick:'FRANCE'}],champ:'FRANCE'};
+const NODE_QF={QF:[{a:'FRANCE',b:'MOROCCO',pick:'FRANCE'},{a:'SPAIN',b:'BELGIUM',pick:'SPAIN'},{a:'NORWAY',b:'ENGLAND',pick:'ENGLAND'},{a:'ARGENTINA',b:'SWITZERLAND',pick:'ARGENTINA'}],
+ SF:[{a:'FRANCE',b:'SPAIN',pick:'FRANCE'},{a:'ENGLAND',b:'ARGENTINA',pick:'ARGENTINA'}],FINAL:[{a:'FRANCE',b:'ARGENTINA',pick:'FRANCE'}],champ:'FRANCE'};
+// Teams knocked out of the tournament so far (knockout rounds; every conditional-tie team reached R32)
+function koEliminatedSet(){
+  const out=new Set();
+  for(const f of knockoutFixtures()){
+    if(f[3]===null||f[3]===undefined)continue;
+    const o=actualOutcome(f);
+    const adv=o==='D'?KO_ADVANCERS[f[0]+'|'+f[1]]:(o==='A'?f[0]:f[1]);
+    if(adv)out.add(adv===f[0]?f[1]:f[0]);
+  }
+  return out;
+}
+// Grade one registered tie against reality: hit/miss when played and decided; pending while the
+// pairing exists or is still reachable; VOIDED when the real bracket has made it impossible -
+// shown with its count, never counted as hit or miss (branch not taken is not a game; ruling 11 Jul).
+function gradeNodeTie(t,elim){
+  const f=FIXTURES.find(x=>(x[0]===t.a&&x[1]===t.b)||(x[0]===t.b&&x[1]===t.a));
+  if(f&&f[3]!==null&&f[3]!==undefined){
+    const o=actualOutcome(f);
+    const adv=o==='D'?(KO_ADVANCERS[f[0]+'|'+f[1]]||null):(o==='A'?f[0]:f[1]);
+    if(!adv)return'pending';
+    return adv===t.pick?'hit':'miss';
+  }
+  if(f)return'pending';
+  return (elim.has(t.a)||elim.has(t.b))?'voided':'pending';
+}
+function gradeNodeTies(list){
+  const elim=koEliminatedSet();
+  return list.map(t=>({t,state:gradeNodeTie(t,elim),label:`${S[t.pick].meta.name} (v ${S[t.pick]===S[t.a]?S[t.b].meta.name:S[t.a].meta.name})`}));
+}
+// The appended strip - APPROVED reading of the frozen-panel law (designer, 11 Jul 2026): the
+// registered prose above it stays byte-identical; this box is computed display, clearly labelled.
+function nodeStrip(rows,extra,voidedNote){
+  const ic={hit:'✓',miss:'✗',pending:'⏳',voided:'∅'};
+  const col={hit:'#34D77F',miss:'#F87171',pending:'var(--mut)',voided:'var(--dim)'};
+  const hits=rows.filter(r=>r.state==='hit').length,dec=rows.filter(r=>r.state==='hit'||r.state==='miss').length;
+  const pend=rows.filter(r=>r.state==='pending').length,voided=rows.filter(r=>r.state==='voided').length+(voidedNote||0);
+  return `<div style="margin:4px 14px 13px;padding:10px 12px;background:rgba(34,197,94,.05);border:1px dashed rgba(34,197,94,.4);border-radius:8px">
+    <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:#34D77F;margin-bottom:6px">LIVE GRADING - computed display, not part of the frozen registration</div>
+    <div style="font-size:10.5px;line-height:1.9;color:var(--mut)">${rows.map(r=>`<span style="display:inline-block;margin-right:11px;color:${col[r.state]}">${ic[r.state]} ${r.label}</span>`).join('')}</div>
+    <div style="font-size:10px;color:var(--text);margin-top:5px;font-weight:700">${hits}/${dec} decided ties correct${pend?` · ${pend} pending`:''}${voided?` · ${voided} voided - branch not taken, shown never counted`:''}${extra?` · ${extra}`:''}</div>
+  </div>`;
+}
+function champStatus(champ){
+  if(!koEliminatedSet().has(champ)){
+    const fin=FIXTURES.find(x=>koStageOf(x[0],x[1])==='FINAL'&&x[3]!==null&&x[3]!==undefined);
+    if(fin){const o=actualOutcome(fin);const adv=o==='D'?KO_ADVANCERS[fin[0]+'|'+fin[1]]:(o==='A'?fin[0]:fin[1]);return adv===champ?'WON the tournament':'alive';}
+    return'alive';
+  }
+  return'OUT';
+}
+// THE PER-NODE SCOREBOARD - the study design made visible: every pre-registered node graded on
+// ITS OWN denominator, with the market's like-for-like figure wherever one exists.
+function renderNodeScoreboard(){
+  const bs=bracketScore(),ps=bs.perStage;
+  const sim=simulate();
+  const predOf=pairs=>new Set(pairs.map(([a,b])=>teamScore(a)>=teamScore(b)?a:b));
+  const predR16=predOf(sim.R32),predQF=predOf(sim.R16),predSF=predOf(sim.QF);
+  const actR16=new Set(),actQF=new Set(),actSF=new Set();
+  for(const r of bs.rows){if(!r.advancer)continue;
+    if(r.stage==='R32')actR16.add(r.advancer);if(r.stage==='R16')actQF.add(r.advancer);if(r.stage==='QF')actSF.add(r.advancer);}
+  const inter=(A,B)=>[...A].filter(x=>B.has(x)).length;
+  const fwdQF=gradeNodeTies(NODE_R16FWD.QF);
+  const fwdHits=fwdQF.filter(r=>r.state==='hit').length,fwdDec=fwdQF.filter(r=>r.state==='hit'||r.state==='miss').length,fwdVoid=fwdQF.filter(r=>r.state==='voided').length;
+  const qfPend=4-ps.QF.advD;
+  const st=(m,k)=>`<td style="padding:7px 8px;font-family:monospace;font-weight:800;color:${m}">`;
+  const rows=[
+   ['Pre-tournament bracket','sealed before kickoff',`survivor overlap per stage`,`R16 ${inter(predR16,actR16)}/16 · QF ${inter(predQF,actQF)}/8 · SF ${inter(predSF,actSF)}/${actSF.size} so far`,'—',`champion pick France: ${champStatus('FRANCE')}`],
+   ['R32 ties','28 Jun','16 ties · who advances',`${ps.R32.advM}/16`,`${ps.R32.advK}/16`,'complete'],
+   ['R16 node','2 Jul','8 ties · who advances',`${ps.R16.advM}/8`,`${ps.R16.advK}/8`,'complete'],
+   ['R16 forward path','4 Jul','implied QFs onward',`${fwdHits}/${fwdDec} materialised${fwdVoid?` · ${fwdVoid} voided`:''}`,'—',`champion pick France: ${champStatus('FRANCE')}`],
+   ['QF node','8 Jul','4 ties · who advances',`${ps.QF.advM}/${ps.QF.advD||0}`,`${ps.QF.advK}/${ps.QF.advKN||0}`,qfPend?`${qfPend} pending`:'complete']
+  ];
+  return `<div style="background:var(--card);border:1px solid var(--gdim);border-radius:12px;padding:14px 14px 10px;margin-bottom:16px">
+    <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">📋 THE PRE-REGISTERED NODES - EACH GRADED ON ITS OWN TEST</div>
+    <div style="font-size:10px;color:var(--mut);line-height:1.6;margin-bottom:9px">Each row is a frozen registration (git push + Wayback = the seal), graded only against what actually happened from that point on. <b style="color:var(--text)">These are multiple pre-registered assessment points within one tournament, not independent replications</b> - later nodes share downstream games with earlier ones, and each surviving field is stronger than the last, so the figures are reported per node and never blended. Market column = the same test on the same games from the registered pre-match odds, wherever a like-for-like exists (the market registers no forward paths). Voided = a conditional pairing the real bracket eliminated - shown, never counted.</div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10.5px">
+    <thead><tr style="color:var(--dim);font-size:9px;text-transform:uppercase;text-align:left"><th style="padding:5px 8px">Node</th><th style="padding:5px 8px">Sealed</th><th style="padding:5px 8px">Its own test</th><th style="padding:5px 8px">Model</th><th style="padding:5px 8px">Market</th><th style="padding:5px 8px">Status</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 8px;font-weight:700;color:var(--text)">${r[0]}</td><td style="padding:7px 8px;color:var(--mut)">${r[1]}</td><td style="padding:7px 8px;color:var(--mut)">${r[2]}</td>${st('#34D77F')}${r[3]}</td>${st('var(--txt)')}${r[4]}</td><td style="padding:7px 8px;color:var(--mut)">${r[5]}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div style="font-size:9px;color:var(--dim);margin-top:6px">Full frozen registrations: the sealed panels below the results. At tournament end the write-up reports overall and per node on these same denominators.</div>
+  </div>`;
 }
 function renderBracket(){
   const sim=simulate();
@@ -2909,10 +3008,15 @@ function renderBracket(){
   const bs=bracketScore();
   const toggle=`<div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--bdr);border-radius:9px;overflow:hidden">
     <button onclick="setBrkView('model')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='model'?'var(--gold)':'var(--card)'};color:${bv==='model'?'#0a1018':'var(--mut)'}">🔮 MODEL'S PREDICTED BRACKET</button>
-    <button onclick="setBrkView('actual')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='actual'?'#22C55E':'var(--card)'};color:${bv==='actual'?'#04140a':'var(--mut)'}">✅ ACTUAL RESULTS${bs.advDecided?` · model ${bs.advModel}/${bs.advDecided}`:''}</button>
+    <button onclick="setBrkView('actual')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-size:11.5px;font-weight:800;letter-spacing:.3px;background:${bv==='actual'?'#22C55E':'var(--card)'};color:${bv==='actual'?'#04140a':'var(--mut)'}">✅ ACTUAL RESULTS${bs.advDecided?` · frozen favourite through ${bs.advModel}/${bs.advDecided} ties`:''}</button>
   </div>`;
-  if(bv==='actual') return toggle+renderR16Prereg()+renderR16Forward()+renderQFForward()+renderActualBracket();
-  let html=toggle+renderR16Prereg()+renderR16Forward()+renderQFForward();
+  // One-line explainer for the toggle figure (designer, 11 Jul: an unlabelled ratio on a button is a defect)
+  const toggleNote=bs.advDecided?`<div style="font-size:9.5px;color:var(--dim);margin:-10px 0 14px;line-height:1.5">The figure on the green tab: of the <b>${bs.advDecided} knockout ties actually played and decided</b>, the side the frozen ranking rated higher went through in <b>${bs.advModel}</b> (advancement, extra time and penalties included; graded on the real matchups, tie by tie - NOT on the predicted bracket's paths). Market like-for-like: ${bs.advMkt}/${bs.advMktN}. Per-node breakdown: scoreboard below.</div>`:'';
+  // Sealed registration panels - collapsed by default (ruling 3: seals and dates stay visible in
+  // the summaries; the full frozen text is one tap away, in git, and Wayback-sealed).
+  const panelsBlock=`<div class="sect-title" style="margin-top:22px">🔐 THE PRE-REGISTERED NODES - FROZEN PANELS (git push + Wayback = the seal)</div>`+renderR16Prereg()+renderR16Forward()+renderQFForward();
+  if(bv==='actual') return toggle+toggleNote+renderNodeScoreboard()+renderActualBracket()+panelsBlock;
+  let html=toggle;
   html+=`<div style="background:linear-gradient(135deg,#061018,#0a1929 50%,#07111A);border:1px solid rgba(200,155,60,.4);border-radius:14px;padding:22px 20px;text-align:center;margin-bottom:18px;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,${cl(champ)}22,transparent 60%);pointer-events:none"></div>
     <div style="font-size:10px;font-weight:800;letter-spacing:3px;color:#C89B3C;margin-bottom:10px">⚠️ PREDICTED CHAMPION · ${modeTag().toUpperCase()} BASIS · MODEL FORECAST</div>
@@ -2996,6 +3100,7 @@ function renderBracket(){
     });
     html+='</div></div>';
   }
+  html+=panelsBlock;
   return html;
 }
 
