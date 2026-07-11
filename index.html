@@ -442,6 +442,7 @@ const MKT={
  // ARGENTINA|SWITZERLAND FanDuel via FOX, 8 Jul 11:35 ET: ARG -150 / D +250 / SUI +490 (de-vig 56.9/27.1/16.0, Switzerland rounded down so the three sum to 100)
  // ── SEMI-FINAL 1 (FRANCE|SPAIN, Tue 14 Jul 21:00 SAST): odds hunt run 11 Jul 07:09 SAST, the morning after the matchup locked. Polymarket per-match market NOT YET POSTED - verified directly against the gamma API (fifwc-fra-esp / esp-fra slug variants empty while fifwc-nor-eng-2026-07-11 lists live, so the check itself is sound). Registration waits for the Polymarket line per the preferred-source order; hunt re-fires every run, kickoff is 3 days out. FanDuel 3-way opening line banked meanwhile per the fallback rule: ──
  // FRANCE|SPAIN FanDuel via SI, 10 Jul ~18:00 ET opening: FRA +130 / D +220 / ESP +220 (de-vig 41.0/29.5/29.5). BetMGM via VegasInsider same day: +125/+220/+225 (corroboration only).
+ // FRANCE|SPAIN gamma-API re-probe 11 Jul 07:56 SAST: still empty (both slug orientations) - Polymarket line not yet posted; hunt continues.
  // ── AI ERROR #12, resolved 8 Jul 2026: the three entries below were re-insertions committed 4 Jul (0065547) for keys already registered 28 Jun (5e4c002, v7.2.0 advance R32 captures). Registered-first rule: the 28 Jun entries further down govern - as JS had silently resolved all along (later literal wins), so no displayed number changed. Preserved verbatim, commented so no duplicate key remains: ──
  // 'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
  // 'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
@@ -621,7 +622,7 @@ function closeCalls(){
     const act=actualOutcome(f);
     const wp=winProbs(teamScore(h),teamScore(b));
     const p=[wp.wA,wp.d,wp.wB];
-    const pick=p[0]>=p[1]&&p[0]>=p[2]?'A':(p[2]>=p[1]?'B':'D');
+    const pick=modelPick(wp);
     total++;
     if(pick===act){hits++;continue;} // only misses get bucketed
     const sorted=[...p].sort((x,y)=>y-x);
@@ -664,7 +665,7 @@ function marketAggregate(){
     // argmax picks for the matrix
     const m=marketFor(f);const act=actualOutcome(f);
     const wp=winProbs(teamScore(f[0]),teamScore(f[1]));
-    const ourPick=(wp.wA===wp.wB)?(wp.wA>=wp.d?(wp.lean==='B'?'B':'A'):'D'):(wp.wA>=wp.d&&wp.wA>=wp.wB?'A':(wp.wB>=wp.d?'B':'D'));
+    const ourPick=modelPick(wp);
     const mktPick=m.o[0]>=m.o[1]&&m.o[0]>=m.o[2]?'A':(m.o[2]>=m.o[1]?'B':'D');
     const oR=ourPick===act,kR=mktPick===act;
     if(oR&&kR)bothRight++;else if(oR&&!kR)weRightMktWrong++;else if(!oR&&kR)mktRightWeWrong++;else neither++;
@@ -688,7 +689,7 @@ function callItRight(){
     const m=marketFor(f);if(!m)continue;            // only games with verified pre-match odds
     const act=actualOutcome(f);                      // 'A' home win, 'B' away win, 'D' draw
     const wp=winProbs(teamScore(h),teamScore(b));
-    const mPick=(wp.wA===wp.wB)?(wp.wA>=wp.d?(wp.lean==='B'?'B':'A'):'D'):((wp.wA>=wp.d&&wp.wA>=wp.wB)?'A':((wp.wB>=wp.d&&wp.wB>=wp.wA)?'B':'D'));
+    const mPick=modelPick(wp);
     const kPick=(m.o[0]>=m.o[1]&&m.o[0]>=m.o[2])?'A':((m.o[2]>=m.o[1]&&m.o[2]>=m.o[0])?'B':'D');
     n++; if(mPick===act)mHit++; if(kPick===act)kHit++;
     const close=Math.abs(f[3]-f[4])<=1;              // single-goal margin or draw — pure scoreline
@@ -845,6 +846,16 @@ function winProbs(sA,sB){
   // integers, so near-equal ties can show e.g. 36/36; the pick must then follow the registered
   // rule - higher score advances - NOT an arbitrary home-side bias. (Fix v7.13.1, designer-caught.)
   return{wA,d:100-wA-wB,wB,lean:(sA>sB?'A':'B')};
+}
+// THE MODEL'S PICK - ONE implementation for EVERY surface (v7.17.1, AI error #16).
+// ROUNDED-TIE RULE (registered pre-match, applied in v7.13.1): when the displayed (rounded)
+// win probabilities tie, the pick follows wp.lean - the higher-frozen-score side - NEVER the
+// home side. v7.13.1 applied this at three call sites and claimed universality; three more
+// sites kept the naive home-biased argmax until the designer caught Portugal-Spain graded ✗
+// on the Accuracy tab on 11 Jul. Every pick everywhere now flows through this function.
+function modelPick(wp){
+  if(wp.wA===wp.wB)return wp.wA>=wp.d?wp.lean:'D';
+  return wp.wA>=wp.d&&wp.wA>=wp.wB?'A':(wp.wB>=wp.d?'B':'D');
 }
 function fairOdds(p){return p<=0?'—':(1/(p/100)).toFixed(2);}
 
@@ -1134,9 +1145,14 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.17.0";
-const BUILD_STAMP="2026-07-11 07:10 SAST (date and time web-verified at build)";
+const BUILD_VERSION="v7.17.1";
+const BUILD_STAMP="2026-07-11 08:05 SAST (date and time web-verified at build)";
 const CHANGELOG=[
+  {v:"v7.17.1",d:"2026-07-11",items:[
+    "AI ERROR #16 - THE HOME-BIAS TIE-BREAK SURVIVED ITS OWN 'UNIVERSAL' FIX, designer-caught on the Accuracy tab: Portugal 0-1 Spain graded ✗ with 'model favoured Portugal', when the registered pick - committed to this site and Wayback-sealed on 2 Jul, BEFORE the match existed - was Spain ('dead even, frozen ranking edges Spain', R16 pre-registration panel). The v7.13.1 correction applied the rounded-tie rule (pick follows the higher frozen score, never the home side) at three call sites and claimed universality; THREE MORE sites kept the naive home-biased argmax: the Accuracy tab's scoring engine (which also drives the headline hit-rate), the per-match verdict engine behind the Results tab and team-review popups, and the miss-classification buckets. A fourth instance then surfaced in this build's own audit: the verdict SENTENCE computed its 'favoured' side independently, again home-biased, so a corrected row could read '✓ CORRECT... the model favoured Portugal'. All picks everywhere now flow through ONE shared function (modelPick), the verdict text derives from the pick itself, and a dead never-firing override block in the verdict engine was removed (it compared a side label to a team key; zero behaviour change).",
+    "WHAT CHANGES ON SCREEN, disclosed in both directions and in all three modes: Top-15 (default) - Portugal-Spain flips ✗ to ✓, headline hit-rate 62.2% to 63.3% (61 to 62 of 98). Starting-XI - Portugal-Spain flips ✗ to ✓ AND Mexico-Ecuador flips ✓ to ✗ (the buggy home pick had been accidentally right; the registered rule scores it a miss), net zero. Whole-Squad - no verdict changes (Portugal-Spain leans Portugal on that basis and stays ✗; the Switzerland-Colombia pick label corrects to the lean side, both remain 90-minute misses). The aggregates already on the lean rule (model-vs-market matrix, callItRight, per-team pills) do not move - which is itself the smoking gun that this was a display-layer defect: the Rank tab pills and the Accuracy table disagreed on the same game until today.",
+    "WHY THIS IS A CORRECTION AND NOT A RETROACTIVE EDIT, for any reviewer walking the Wayback trail: the pick these surfaces now show is the one pre-registered before kickoff (2 Jul panel, git commit + Wayback snapshot both predate the match), and the correction was made under the same public discipline as every error before it - numbered (#16), changelogged here, ledger count to sixteen, the buggy versions permanently visible in git history and Wayback. The bug made the model look WORSE than its registered predictions in the default view; fixing it aligns display with registration. MEGA AUDIT run in the same build (designer-ordered): an independent oracle recomputed pick/hit for every completed match in all three modes and diffed against every scoring path - zero mismatches after the fix; cross-surface identities (Accuracy hits = verdict-engine hits = 2x sum of per-team hits) hold in all modes; the market-pick argmax was audited for the same tie class (one tied entry exists, Algeria-Austria 27.0/46.1/27.0, where the draw is max so no bias can operate - noted as a latent edge, untouched as no rule for a true market tie was pre-registered)."
+  ]},
   {v:"v7.17.0",d:"2026-07-11",items:[
     "SPAIN 2-1 BELGIUM baked (QF2, 10 Jul, SoFi Stadium; Fabian Ruiz 30', De Ketelaere 41', Merino 88'; regulation win, confirmed via FOX boxscore, ESPN, CNN, NBC). Registered pick correct on BOTH endpoints: the frozen QF panel picked Spain to advance, Spain won in regulation - model and market (Polymarket 61/24/17, registered pre-game v7.15.0) both called it. Quarter-final stage so far: model 2/2, market 2/2 on both endpoints. Spain meet France in the Bastille Day semi-final in Dallas.",
     "SEMI-FINAL 1 ENTERS THE FIXTURE LIST the moment its teams became known, per the standing fixture rule: France v Spain, Tue 14 Jul 21:00 SAST (3pm ET, web-verified across two sources), AT&T Stadium. Stage-tagged via the pre-guarded SF_KEYS hook from v7.14.6 - no logic edit needed, the guard worked as designed. The Knockouts sub-tab now keeps placeholders for a round's still-undecided ties when part of the round is known (previously all-or-nothing per round), so the second semi-final still shows as awaiting the Norway-England and Argentina-Switzerland winners.",
@@ -2255,13 +2271,12 @@ function matchAnalysis(f){
   const koKey=a+'|'+b;
   const advanced=(act==='D'&&KO_ADVANCERS[koKey])?KO_ADVANCERS[koKey]:(act==='A'?a:act==='B'?b:null);
   const advHow=KO_HOW[koKey]||null;
-  const pick=pA>=pD&&pA>=pB?'A':pB>=pD&&pB>=pA?'B':'D';
+  const pick=modelPick(wp);
+  // hit = the 90-minute basis, deliberately: a win-pick on a tie level at 90' is a miss here for
+  // model and market alike. The PRIMARY knockout endpoint (advancement) is graded separately as
+  // advHit below. (A dead override block sat here until v7.17.1 - it compared an 'A'/'B' side
+  // label against a team-key string, so it could never fire; removed, zero behaviour change.)
   let hit=pick===act;
-  if(isKO&&act==='D'){
-    const modelFav=pA>pB?'A':pB>pA?'B':null;
-    if(pick==='D')hit=true;
-    else if(advanced&&modelFav===advanced)hit=true;
-  }
   const nmA=S[a].meta.name, nmB=S[b].meta.name;
   // Did the model give the underdog a genuine chance others might dismiss?
   // Flag when the weaker side (by our score) won or drew AND our model had given them a non-trivial chance (>=30%).
@@ -2270,8 +2285,11 @@ function matchAnalysis(f){
   const underdogProb = strongerIsA ? (pB+pD) : (pA+pD); // our chance for underdog not to lose
   const underdogFlag = underdogResult && underdogProb>=30;
   // Build a short honest verdict
-  const favPct=Math.max(pA,pB);
-  const favName=pA>=pB?nmA:nmB;
+  // The 'favoured' side in verdict text = the model's actual pick side (lean on rounded ties).
+  // Until v7.17.1 this was its own home-biased argmax, so the sentence could contradict the very
+  // pick it was explaining ('✓ CORRECT ... the model favoured Portugal' on a graded Spain pick).
+  const favName=pick==='B'?nmB:pick==='A'?nmA:(wp.lean==='B'?nmB:nmA);
+  const favPct=pick==='B'?pB:pick==='A'?pA:Math.max(pA,pB);
   let verdict;
   const resultStr = act==='A'?(nmA+' won'):act==='B'?(nmB+' won'):'it was a draw';
   if(hit){
@@ -2312,8 +2330,8 @@ function accuracyStats(){
     // Brier = sum of squared diffs across the 3 outcomes (scored on the 90' result)
     let brier=(pA-oA)**2+(pD-oD)**2+(pB-oB)**2;
     brierSum+=brier;
-    // model's single pick = highest probability
-    const pick=pA>=pD&&pA>=pB?'A':pB>=pD&&pB>=pA?'B':'D';
+    // model's single pick - the shared rule (rounded ties follow the lean, never the home side)
+    const pick=modelPick(wp);
     let hit=pick===act;
     if(hit)hits++;
     n++;
@@ -2348,7 +2366,7 @@ function teamRecord(teamKey){
     const pA=wA/100,pD=d/100,pB=wB/100;
     const oA=act==='A'?1:0,oD=act==='D'?1:0,oB=act==='B'?1:0;
     brierSum+=(pA-oA)**2+(pD-oD)**2+(pB-oB)**2; // 0=perfect … 2=confident wrong
-    const pick=(wA===wB)?(wA>=d?((wp&&wp.lean==='B')?'B':'A'):'D'):(wA>=d&&wA>=wB?'A':wB>=d&&wA<=wB?'B':'D');
+    const pick=modelPick(wp);
     if(pick===act)correct++;
     // market's call on this game (1X2 argmax), only if we have verified odds
     const m=marketFor(f);
@@ -3221,7 +3239,7 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
   <details class="msect"><summary>⚠️ Scoring corrections — the public ledger</summary><div class="msect-bd">
     <p>Every correction to how this app SCORES is listed here, dated, because a scoreboard that changes silently is worthless. The model itself - parameters, formulas, frozen predictions - has never been changed mid-tournament; that is auditable in the git history.</p>
     <p><b>Correction of 8 Jul 2026 (v7.13.1), Portugal v Spain.</b> Archived snapshots of this site (e.g. the Wayback Machine) show this tie briefly graded a model MISS on the 90-minute table. That grading was a BUG, and the same snapshot proves it: the Bracket tab on the very same page scored Spain CORRECT, because the two surfaces were using different tie-break rules. The display rounds probabilities to whole numbers, this tie rounded to 36/36, and three scoring sites then broke the tie toward the home side - an arbitrary rule that contradicted the tie-break stated in the pre-registration itself ("the frozen ranking edges Spain", pushed 2 July, before the matchup existed). The fix made the registered rule - higher frozen score - universal. A full sweep of all 94 games found exactly four rounded ties; this was the only one affected, and one of the other four remains a scored MISS (Czechia v Mexico) - the fix rescues nothing it should not. Probabilities, Brier and the advancement tallies were untouched. Fraud changes a prediction after the result; this corrected a display to match a prediction that was public before the result, and disclosed it - here, in the changelog below, and in the git history where the buggy version remains visible forever.</p>
-    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (fifteen to date - caught by the designer, the harness, or a mandated full-file read) and the safeguards that caught them are part of the forthcoming write-up.</p>
+    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (sixteen to date - caught by the designer, the harness, or a mandated full-file read) and the safeguards that caught them are part of the forthcoming write-up.</p>
   </div></details>
   <details class="msect"><summary>One frozen ranking, read out at every stage</summary><div class="msect-bd">
     <p>Most public prediction models quietly re-rank teams as results come in, so by the end nobody can say what they "predicted" - the prediction moved with the scoreboard. This model does the opposite, and it is the project's defining design choice: <b>the ranking froze before the first ball and never changes.</b> What happens instead is that the same frozen ranking is <b>read out at every stage of the tournament</b>, and each readout is its own pre-registered assessment point:</p>
