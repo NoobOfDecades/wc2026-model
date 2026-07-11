@@ -666,9 +666,11 @@ function marketAggregate(){
     const m=marketFor(f);const act=actualOutcome(f);
     const wp=winProbs(teamScore(f[0]),teamScore(f[1]));
     const ourPick=modelPick(wp);
-    const mktPick=m.o[0]>=m.o[1]&&m.o[0]>=m.o[2]?'A':(m.o[2]>=m.o[1]?'B':'D');
-    const oR=ourPick===act,kR=mktPick===act;
-    if(oR&&kR)bothRight++;else if(oR&&!kR)weRightMktWrong++;else if(!oR&&kR)mktRightWeWrong++;else neither++;
+    const mktPick=marketPick(m);
+    // Half-credit ties (registered ladder, rung e) split a game's unit across the matrix so the
+    // four cells still sum to n exactly; with no tie this reduces to the old boolean counting.
+    const oh=pickHit(ourPick,act),kh=pickHit(mktPick,act);
+    bothRight+=oh*kh;weRightMktWrong+=oh*(1-kh);mktRightWeWrong+=(1-oh)*kh;neither+=(1-oh)*(1-kh);
   }
   const sameCall=bothRight+neither;
   return {n,wins,close,loss,ourMean:n?ourSum/n:0,mktMean:n?mktSum/n:0,
@@ -690,10 +692,10 @@ function callItRight(){
     const act=actualOutcome(f);                      // 'A' home win, 'B' away win, 'D' draw
     const wp=winProbs(teamScore(h),teamScore(b));
     const mPick=modelPick(wp);
-    const kPick=(m.o[0]>=m.o[1]&&m.o[0]>=m.o[2])?'A':((m.o[2]>=m.o[1]&&m.o[2]>=m.o[0])?'B':'D');
-    n++; if(mPick===act)mHit++; if(kPick===act)kHit++;
+    const kPick=marketPick(m);
+    n++; mHit+=pickHit(mPick,act); kHit+=pickHit(kPick,act);
     const close=Math.abs(f[3]-f[4])<=1;              // single-goal margin or draw — pure scoreline
-    if(close){cN++; if(mPick===act)cM++; if(kPick===act)cK++;}
+    if(close){cN++; cM+=pickHit(mPick,act); cK+=pickHit(kPick,act);}
   }
   return {n,mHit,kHit,cN,cM,cK};
 }
@@ -836,7 +838,10 @@ function recompute(){
 
 // ════════════ WIN PROBABILITY ════════════
 function winProbs(sA,sB){
-  if(!sA||!sB||Math.abs(sA-sB)<0.001)return{wA:36,d:28,wB:36,lean:'A'};
+  // Exact equality at full precision: no lean exists (lean:null -> modelPick returns 'TIE', half
+  // credit per the registered ladder's symmetry clause). Never yet observed on any basis - the
+  // old lean:'A' here was a home-bias fossil in a branch no real pairing has ever reached.
+  if(!sA||!sB||Math.abs(sA-sB)<0.001)return{wA:36,d:28,wB:36,lean:null};
   const r=sA/sB,x=Math.log(r)*1.5;
   const pW=1/(1+Math.exp(-x));
   const pD=0.28*Math.exp(-0.30*Math.abs(x));
@@ -854,9 +859,38 @@ function winProbs(sA,sB){
 // sites kept the naive home-biased argmax until the designer caught Portugal-Spain graded ✗
 // on the Accuracy tab on 11 Jul. Every pick everywhere now flows through this function.
 function modelPick(wp){
-  if(wp.wA===wp.wB)return wp.wA>=wp.d?wp.lean:'D';
+  if(wp.wA===wp.wB)return wp.wA>=wp.d?(wp.lean||'TIE'):'D';
   return wp.wA>=wp.d&&wp.wA>=wp.wB?'A':(wp.wB>=wp.d?'B':'D');
 }
+// MARKET-TIE RESOLUTION LADDER - ratified by the designer and registered 11 Jul 2026, BEFORE any
+// game required it (census at registration: 100 registered captures (106 rows counting the six preserved duplicate comments), one win-win tie ALGERIA|AUSTRIA 27/46.1/27,
+// dominated by its draw price = rung (a); ZERO games below rung (a)). Principles: identical
+// denominators for model and market on both endpoints - NO game is ever dropped because a
+// forecaster's numbers tied (the designer explicitly REJECTED an exclusion proposal); and a
+// forecaster's tie resolves by ITS OWN higher-precision signal - never by the other forecaster,
+// never by home side. The ladder for a captured line pricing both wins exactly equal:
+//   (a) draw priced highest -> the 1X2 pick is the draw; no tie exists on the 90-minute basis.
+//   (b) the tie must survive a full-precision de-vig of the SAME registered capture's raw odds
+//       (adjudicated at bake time; a tie resolved here is stored as tb:'A'|'B' with a dated note -
+//       registered-first material only, nothing fetched after kickoff).
+//   (c) knockout advancement endpoint: the pre-game to-advance line banked for that game
+//       (including the dated comment bank) breaks the tie.
+//   (d) either endpoint: a second pre-game source already banked for that game breaks the tie.
+//   (e) true dead heat surviving all rungs: HALF CREDIT (0.5) on pick-based tallies, both
+//       endpoints, n unchanged, Brier untouched (it never needed a pick).
+// SYMMETRY: the model's rounded ties resolve by its own unrounded lean and never reach (e); an
+// exact full-precision model tie (never yet observed on any basis) takes the same half credit.
+function marketPick(m){
+  if(m.tb)return m.tb;                 // rungs (b)-(d), adjudicated and dated at bake time
+  const o=m.o;
+  if(o[1]>o[0]&&o[1]>o[2])return'D';   // rung (a)
+  if(o[0]>o[2])return'A';
+  if(o[2]>o[0])return'B';
+  return o[1]>=o[0]?'D':'TIE';         // equal wins: draw at least their price -> 'D'; else rung (e)
+}
+// Pick-based credit: 1 hit, 0 miss, 0.5 for a registered dead heat (rung e). Keeps n identical
+// for model and market in every tally.
+function pickHit(pick,act){return pick==='TIE'?0.5:(pick===act?1:0);}
 function fairOdds(p){return p<=0?'—':(1/(p/100)).toFixed(2);}
 
 // ════════════ KNOCKOUT ADVANCEMENT (Round of 32 onward — no draws stand) ════════════
@@ -1145,9 +1179,14 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.17.1";
-const BUILD_STAMP="2026-07-11 08:05 SAST (date and time web-verified at build)";
+const BUILD_VERSION="v7.18.0";
+const BUILD_STAMP="2026-07-11 08:45 SAST (date and time web-verified at build)";
 const CHANGELOG=[
+  {v:"v7.18.0",d:"2026-07-11",items:[
+    "TIE-RESOLUTION LADDER REGISTERED - designer's ruling, ratified and sealed 11 Jul 2026, BEFORE any game ever required it. The question arose from the v7.17.1 audit: what is the MARKET's pick if a captured line ever prices both wins exactly equal? (Distinct from the MODEL's rounded-tie rule - higher frozen score, registered 2 Jul and enforced everywhere since v7.17.1 - which was never in doubt; the v7.17.1 changelog sentence 'no rule for a true market tie was pre-registered' referred only to the market's own internal tie and is hereby clarified.) The assistant proposed excluding such games from favourite-based tallies; THE DESIGNER REJECTED EXCLUSION - the record should show the road not taken and why: endpoints and denominators were formulated weeks ago precisely so that no game is ever thrown away, and a silently shrunk n for one forecaster would make every headline comparison incoherent. Registered instead: identical denominators always, and a forecaster's tie resolves by ITS OWN higher-precision signal - never by the other forecaster, never by home side.",
+    "THE LADDER, now in the Model tab's scoring rules and enforced in code at every market-pick site through one shared function (marketPick), including the advancement scorer which previously EXCLUDED a tied market from its tally: (a) draw priced highest = no tie, the pick is the draw; (b) the tie must survive full-precision de-vig of the same registered capture's raw odds, adjudicated at bake time from registered-first material only; (c) knockout advancement: the banked pre-game to-advance line breaks it; (d) a second banked pre-game source breaks it; (e) a true dead heat is graded half credit (0.5) on pick-based tallies, both endpoints, n unchanged, Brier untouched. Symmetry clause: the model's rounded ties resolve by its own unrounded lean and never reach (e); an exact full-precision model tie - never observed on any basis - takes the same half credit (a home-bias fossil in winProbs' exact-equality branch, unreachable by any real pairing past or present, was cleaned in the same sweep).",
+    "CENSUS AT REGISTRATION, the printed artefact: 100 registered captures (a first-pass count of 106 had also swept up the six preserved duplicate COMMENTS - caught in this build's own audit before shipping, corrected here); exactly one prices its wins equal (Algeria-Austria 27.0/46.1/27.0), and its draw is priced highest - rung (a), no tie, graded correctly as a draw pick all along; ZERO games sit below rung (a) on any surface. Half-credit ties split their unit across the model-vs-market matrix cells, so the matrix still sums to n exactly. NO displayed number changes in this build - the ladder is registered while it binds nothing, which is the point: the rule pre-exists any game that could ever invoke it."
+  ]},
   {v:"v7.17.1",d:"2026-07-11",items:[
     "AI ERROR #16 - THE HOME-BIAS TIE-BREAK SURVIVED ITS OWN 'UNIVERSAL' FIX, designer-caught on the Accuracy tab: Portugal 0-1 Spain graded ✗ with 'model favoured Portugal', when the registered pick - committed to this site and Wayback-sealed on 2 Jul, BEFORE the match existed - was Spain ('dead even, frozen ranking edges Spain', R16 pre-registration panel). The v7.13.1 correction applied the rounded-tie rule (pick follows the higher frozen score, never the home side) at three call sites and claimed universality; THREE MORE sites kept the naive home-biased argmax: the Accuracy tab's scoring engine (which also drives the headline hit-rate), the per-match verdict engine behind the Results tab and team-review popups, and the miss-classification buckets. A fourth instance then surfaced in this build's own audit: the verdict SENTENCE computed its 'favoured' side independently, again home-biased, so a corrected row could read '✓ CORRECT... the model favoured Portugal'. All picks everywhere now flow through ONE shared function (modelPick), the verdict text derives from the pick itself, and a dead never-firing override block in the verdict engine was removed (it compared a side label to a team key; zero behaviour change).",
     "WHAT CHANGES ON SCREEN, disclosed in both directions and in all three modes: Top-15 (default) - Portugal-Spain flips ✗ to ✓, headline hit-rate 62.2% to 63.3% (61 to 62 of 98). Starting-XI - Portugal-Spain flips ✗ to ✓ AND Mexico-Ecuador flips ✓ to ✗ (the buggy home pick had been accidentally right; the registered rule scores it a miss), net zero. Whole-Squad - no verdict changes (Portugal-Spain leans Portugal on that basis and stays ✗; the Switzerland-Colombia pick label corrects to the lean side, both remain 90-minute misses). The aggregates already on the lean rule (model-vs-market matrix, callItRight, per-team pills) do not move - which is itself the smoking gun that this was a display-layer defect: the Rank tab pills and the Accuracy table disagreed on the same game until today.",
@@ -2292,7 +2331,9 @@ function matchAnalysis(f){
   const favPct=pick==='B'?pB:pick==='A'?pA:Math.max(pA,pB);
   let verdict;
   const resultStr = act==='A'?(nmA+' won'):act==='B'?(nmB+' won'):'it was a draw';
-  if(hit){
+  if(pick==='TIE'){
+    verdict='Exact dead heat at full precision — graded half credit per the tie ladder registered 11 Jul 2026 ('+resultStr+').';
+  } else if(hit){
     if(pick==='D')verdict='Called it — the model rated this close and a draw was a real outcome ('+resultStr+').';
     else verdict='Correct — the model favoured '+favName+' ('+favPct+'%) and '+resultStr+'.';
   } else {
@@ -2333,7 +2374,7 @@ function accuracyStats(){
     // model's single pick - the shared rule (rounded ties follow the lean, never the home side)
     const pick=modelPick(wp);
     let hit=pick===act;
-    if(hit)hits++;
+    hits+=pickHit(pick,act);  // 'TIE' (exact full-precision dead heat, never yet observed) = 0.5
     n++;
     rows.push({f,a,b,sA,sB,wA,d,wB,act,pick,hit,brier,isKO:false,advanced:null});
   }
@@ -2367,10 +2408,10 @@ function teamRecord(teamKey){
     const oA=act==='A'?1:0,oD=act==='D'?1:0,oB=act==='B'?1:0;
     brierSum+=(pA-oA)**2+(pD-oD)**2+(pB-oB)**2; // 0=perfect … 2=confident wrong
     const pick=modelPick(wp);
-    if(pick===act)correct++;
-    // market's call on this game (1X2 argmax), only if we have verified odds
+    correct+=pickHit(pick,act);
+    // market's call on this game (shared marketPick - registered tie ladder), only with verified odds
     const m=marketFor(f);
-    if(m){mktGames++; const kp=m.o[0]>=m.o[1]&&m.o[0]>=m.o[2]?'A':(m.o[2]>=m.o[1]&&m.o[2]>=m.o[0]?'B':'D'); if(kp===act)mktCorrect++;}
+    if(m){mktGames++; mktCorrect+=pickHit(marketPick(m),act);}
   }
   const ppgPct=played?Math.round(pts/(played*3)*100):null; // % of max points (opponent-blind, real results)
   // Brier-based model accuracy (confidence-weighted) — consistent with the Accuracy tab.
@@ -2779,10 +2820,14 @@ function bracketScore(){
     const hit=(result90!==null && result90!=='D' && (result90==='A'?a:b)===modelW);
     if(result90!==null){played++; if(hit)correct++;}
     // Market advancement favourite (same rule as the model: whichever side it rates higher to WIN).
-    // Scored identically for both forecasters - no asymmetry.
+    // Scored identically for both forecasters - no asymmetry. A win-win price tie is resolved by
+    // the registered ladder (tb from rungs b-d if adjudicated, else rung (e) half credit via
+    // mktTie) - NEVER excluded, per the designer's 11 Jul ruling: identical denominators always.
     const mm=marketFor(f);
-    const mktW=mm?(mm.o[0]>mm.o[2]?a:(mm.o[2]>mm.o[0]?b:null)):null;
-    rows.push({a,b,modelW,mktW,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
+    const mktTB=mm&&mm.tb?(mm.tb==='A'?a:(mm.tb==='B'?b:null)):null;
+    const mktW=mm?(mktTB||(mm.o[0]>mm.o[2]?a:(mm.o[2]>mm.o[0]?b:null))):null;
+    const mktTie=!!(mm&&!mktW&&mm.o[0]===mm.o[2]);
+    rows.push({a,b,modelW,mktW,mktTie,result90,advancer,viaShootout,hit,scA:f[3],scB:f[4],
                stage:koStageOf(a,b),
                realW: advancer || (result90==='D'?'DRAW':null)});
   }
@@ -2792,13 +2837,13 @@ function bracketScore(){
   let advDecided=0,advModel=0,advMkt=0,advMktN=0,r90Mkt=0;
   rows.forEach(r=>{ if(r.advancer){ advDecided++;
     if(r.advancer===r.modelW)advModel++;
-    if(r.mktW){advMktN++; if(r.advancer===r.mktW)advMkt++;} }
-    if(r.result90&&r.result90!=='D'&&r.mktW){ if((r.result90==='A'?r.a:r.b)===r.mktW)r90Mkt++; }});
+    if(r.mktW||r.mktTie){advMktN++; advMkt+=r.mktW?(r.advancer===r.mktW?1:0):0.5;} }
+    if(r.result90&&r.result90!=='D'){ if(r.mktW&&(r.result90==='A'?r.a:r.b)===r.mktW)r90Mkt++; else if(r.mktTie)r90Mkt+=0.5; }});
   // Per-stage split (standing order: per-round hit-rates)
   const perStage={};
   rows.forEach(r=>{ const s=perStage[r.stage]||(perStage[r.stage]={advD:0,advM:0,advK:0,advKN:0});
     if(r.advancer){ s.advD++; if(r.advancer===r.modelW)s.advM++;
-      if(r.mktW){s.advKN++; if(r.advancer===r.mktW)s.advK++;} }});
+      if(r.mktW||r.mktTie){s.advKN++; s.advK+=r.mktW?(r.advancer===r.mktW?1:0):0.5;} }});
   return {played,correct,rows,advDecided,advModel,advMkt,advMktN,r90Mkt,perStage};
 }
 
@@ -3255,6 +3300,7 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
       <li><b>Every past game uses cross-verified pre-match odds</b> from mainstream bookmakers (FanDuel, CBS, Fox and similar), checked across more than one source where possible.</li>
       <li><b>The source is shown on every single game</b> in the Results tab - no number appears without saying where it came from.</li>
       <li><b>Odds are converted fairly:</b> American odds to implied probability, then de-vigged (the bookmaker's built-in margin removed so the three outcomes sum to 100%). This is the honest way to compare - it grades the market at its true opinion, not its padded one.</li>
+      <li><b>Tie handling - the resolution ladder, registered 11 Jul 2026, before any game ever required it.</b> Two principles, ratified by the designer (who explicitly <b>rejected</b> a proposal to exclude such games - endpoints and denominators were formulated weeks earlier precisely so that no game is ever thrown away, and a silently shrunk n for one forecaster would make every headline comparison incoherent): model and market are graded on <b>identical denominators</b> on both endpoints, and a forecaster's tie is resolved by <b>that forecaster's own higher-precision signal</b> - never by the other forecaster, never by the home side. For a captured market line pricing both wins exactly equal: (a) if the draw is priced highest there is no tie - the 1X2 pick is the draw (the single such capture to date, Algeria-Austria 27.0/46.1/27.0, is this case and was always fine); (b) the tie must survive a full-precision de-vig of the same registered capture's raw odds; (c) on the knockout advancement endpoint, the pre-game to-advance line banked for that game breaks it; (d) a second pre-game source already banked breaks it - registered-first material only, nothing fetched after kickoff; (e) a true dead heat surviving all rungs is graded <b>half credit (0.5)</b> on pick-based tallies, both endpoints, n unchanged, Brier untouched. Symmetrically, the model's rounded ties resolve by its own unrounded lean (the higher frozen score) and so never reach (e); an exact full-precision model tie - never yet observed on any basis - would take the same half credit. Census at registration: 100 registered captures, zero games below rung (a).</li>
       <li><b>Coverage is complete for every played game - group stage and knockouts alike.</b> Every played game has cross-verified pre-match odds attached, with the source shown. Knockout odds are captured pre-match the same way as each round's ties lock; from the Round of 16 onward, Polymarket per-match prices were additionally captured pre-game where extractable, with dated source notes.</li>
       <li><b>Going forward</b>, pre-match market odds for upcoming games are captured cleanly at the time of each update, so this comparison becomes sharper and more decisive through the knockout rounds.</li>
     </ul>
