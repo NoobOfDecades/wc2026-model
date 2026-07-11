@@ -410,8 +410,9 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",0,0,"BC Place"],
 ["FRANCE","MOROCCO","2026-07-09T22:00:00+02:00",2,0,"Gillette Stadium"],
 ["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",null,null,"Hard Rock Stadium"],
-["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",null,null,"SoFi Stadium"],
-["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",null,null,"Arrowhead Stadium"],];
+["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",2,1,"SoFi Stadium"],
+["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",null,null,"Arrowhead Stadium"],
+["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",null,null,"AT&T Stadium"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
 // This feature was added after the model was already live. The ideal single-source benchmark
@@ -439,6 +440,8 @@ const MKT={
  // NORWAY|ENGLAND FanDuel via FOX, 8 Jul 11:35 ET: NOR +330 / D +270 / ENG -120 (de-vig 22.2/25.8/52.0)
  'ARGENTINA|SWITZERLAND':{o:[57.5,26,16.5],src:'Polymarket regulation 1X2 via dated sync mirror ($131K vol), capt. 9 Jul 2026 ~18:15 SAST pre-game (08:20 stamp in commit 5c1fc11 was a stale-clock error, corrected v7.15.1)'},
  // ARGENTINA|SWITZERLAND FanDuel via FOX, 8 Jul 11:35 ET: ARG -150 / D +250 / SUI +490 (de-vig 56.9/27.1/16.0, Switzerland rounded down so the three sum to 100)
+ // ── SEMI-FINAL 1 (FRANCE|SPAIN, Tue 14 Jul 21:00 SAST): odds hunt run 11 Jul 07:09 SAST, the morning after the matchup locked. Polymarket per-match market NOT YET POSTED - verified directly against the gamma API (fifwc-fra-esp / esp-fra slug variants empty while fifwc-nor-eng-2026-07-11 lists live, so the check itself is sound). Registration waits for the Polymarket line per the preferred-source order; hunt re-fires every run, kickoff is 3 days out. FanDuel 3-way opening line banked meanwhile per the fallback rule: ──
+ // FRANCE|SPAIN FanDuel via SI, 10 Jul ~18:00 ET opening: FRA +130 / D +220 / ESP +220 (de-vig 41.0/29.5/29.5). BetMGM via VegasInsider same day: +125/+220/+225 (corroboration only).
  // ── AI ERROR #12, resolved 8 Jul 2026: the three entries below were re-insertions committed 4 Jul (0065547) for keys already registered 28 Jun (5e4c002, v7.2.0 advance R32 captures). Registered-first rule: the 28 Jun entries further down govern - as JS had silently resolved all along (later literal wins), so no displayed number changed. Preserved verbatim, commented so no duplicate key remains: ──
  // 'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
  // 'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
@@ -1131,9 +1134,15 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.16.0";
-const BUILD_STAMP="2026-07-10 08:20 SAST (date and time web-verified at build)";
+const BUILD_VERSION="v7.17.0";
+const BUILD_STAMP="2026-07-11 07:10 SAST (date and time web-verified at build)";
 const CHANGELOG=[
+  {v:"v7.17.0",d:"2026-07-11",items:[
+    "SPAIN 2-1 BELGIUM baked (QF2, 10 Jul, SoFi Stadium; Fabian Ruiz 30', De Ketelaere 41', Merino 88'; regulation win, confirmed via FOX boxscore, ESPN, CNN, NBC). Registered pick correct on BOTH endpoints: the frozen QF panel picked Spain to advance, Spain won in regulation - model and market (Polymarket 61/24/17, registered pre-game v7.15.0) both called it. Quarter-final stage so far: model 2/2, market 2/2 on both endpoints. Spain meet France in the Bastille Day semi-final in Dallas.",
+    "SEMI-FINAL 1 ENTERS THE FIXTURE LIST the moment its teams became known, per the standing fixture rule: France v Spain, Tue 14 Jul 21:00 SAST (3pm ET, web-verified across two sources), AT&T Stadium. Stage-tagged via the pre-guarded SF_KEYS hook from v7.14.6 - no logic edit needed, the guard worked as designed. The Knockouts sub-tab now keeps placeholders for a round's still-undecided ties when part of the round is known (previously all-or-nothing per round), so the second semi-final still shows as awaiting the Norway-England and Argentina-Switzerland winners.",
+    "ODDS-HUNT OUTCOME (standing report line): Polymarket per-match line for France-Spain NOT YET POSTED as of 07:09 SAST 11 Jul - verified directly against Polymarket's own API, where the semi-final match event does not exist yet while the Norway-England quarter-final market lists live (so the probe itself is proven sound). Per the preferred-source order the registration waits for the Polymarket line; the hunt re-fires every run and kickoff is three days out. FanDuel's 3-way opening line (FRA +130 / D +220 / ESP +220, de-vig 41.0/29.5/29.5, via SI 10 Jul) is banked as a dated comment per the fallback rule. Norway-England and Argentina-Switzerland lines were registered pre-game in v7.15.0; the third-place play-off and final have no locked matchups yet.",
+    "INJURY SWEEP, ALL SIX SURVIVING SQUADS (standing report line): no new officially confirmed tournament-ending rule-outs. Checked and still doubtful-not-out, so NOT baked per the dropout rule: Tchouameni (France - unused sub v Morocco, semi-final fitness undecided), Nico Williams (Spain), Yeremy Pino (Spain - the sweep chased his group-stage collarbone scare to ground: RFEF ruled OUT a fracture, it is an AC sprain and he is available from the bench, so never a dropout), Reece James and Guehi (England - both missed training before the Norway tie, manager expects them fit), Manzambi (Switzerland - misses the Argentina quarter-final, tournament status unresolved). Belgium's Courtois and Tielemans injuries are noted for the record only - Belgium are eliminated. Baked dropouts remain Onana (Belgium) and Henderson (England); Quansah's ban is a suspension and is never baked."
+  ]},
   {v:"v7.16.0",d:"2026-07-10",items:[
     "FRANCE 2-0 MOROCCO baked (QF1, 9 Jul, Gillette Stadium; Mbappe 60' after a missed first-half penalty, Dembele 66'; confirmed via FIFA, ESPN, FOX, CNN, Al Jazeera). Registered pick correct on BOTH endpoints: the frozen QF panel picked France to advance, and France won in regulation - model and market (Polymarket 63/25/14, registered pre-game v7.15.0) both called it. France await the Spain-Belgium winner in the Bastille Day semi-final. ODDS-HUNT OUTCOME (standing report line): nothing new capturable - all four QF lines are registered; SF matchups do not lock until the remaining QFs resolve.",
     "SECOND DROPOUT BAKED, and this one moves a number: Jordan Henderson (England) officially ruled out of the tournament (broken arm from the post-match celebration fall v Mexico, surgery required; Sky Sports/ESPN, official rule-out 10 Jul; had been on the announced monitor list since 6 Jul, doubtful-is-not-out held until today). Henderson is England's 10th-best frozen score (7.224), so unlike the Onana precedent the Top-15 basis shifts: Eze (6.367) steps into the fifteen and England's live Top-15 drops 118.2 -> 117.3. The frozen registered panels are NOT touched - they carry the scores as registered, by design; the live app recomputes, and the depth thesis now faces its first real test at the sharp end. Whole-squad basis keeps Henderson in the 26 (not replaced), also by design.",
@@ -2165,7 +2174,9 @@ function renderKnockoutSkeleton(){
   let html='<div style="font-size:11px;color:var(--mut);margin-bottom:12px">The full knockout road to the final. Played ties show the result and who advanced (extra time and penalties included). Upcoming ties with both teams confirmed open the betting comparison on tap. Rounds whose field is still being decided show placeholders until results confirm the matchups.</div>';
   for(const[rk,rlbl]of Object.entries(rounds)){
     const real=(byStage[rk]||[]).slice().sort((x,y)=>fxDate(x[2])-fxDate(y[2]));
-    const slots=real.length?[]:KO_SKELETON.filter(s=>s[0]===rk);
+    // slice(real.length): a partially-known round keeps placeholders for its still-undecided ties
+    // (fixtures resolve in bracket-date order, matching the skeleton's order within each round).
+    const slots=KO_SKELETON.filter(s=>s[0]===rk).slice(real.length);
     if(!real.length&&!slots.length)continue;
     html+=`<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:8px">${rlbl}</div>`;
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px">';
@@ -2206,8 +2217,10 @@ function renderKnockoutSkeleton(){
       </div>`;
     }
     html+='</div>';
-    if(rk==='SF'&&!real.length&&slots.length){
-      html+=`<div style="font-size:10px;color:var(--dim);margin-top:6px;line-height:1.5">Bracket halves (real bracket structure - see the registered QF panel on the Bracket tab): the France-Morocco winner meets the Spain-Belgium winner; the Norway-England winner meets the Argentina-Switzerland winner. Which semi-final plays on which date is shown once the fixtures are confirmed and recorded.</div>`;
+    if(rk==='SF'&&slots.length){
+      html+=real.length
+        ?`<div style="font-size:10px;color:var(--dim);margin-top:6px;line-height:1.5">Second semi-final (bottom bracket half): the Norway-England winner meets the Argentina-Switzerland winner, Wed 15 Jul. It enters the fixture list the moment both quarter-finals are decided and confirmed.</div>`
+        :`<div style="font-size:10px;color:var(--dim);margin-top:6px;line-height:1.5">Bracket halves (real bracket structure - see the registered QF panel on the Bracket tab): the France-Morocco winner meets the Spain-Belgium winner; the Norway-England winner meets the Argentina-Switzerland winner. Which semi-final plays on which date is shown once the fixtures are confirmed and recorded.</div>`;
     }
     html+='</div>';
   }
@@ -2721,6 +2734,7 @@ const KO_HOW={
   'SWITZERLAND|COLOMBIA':'pens',
 };
 const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1,'SPAIN|BELGIUM':1,'ARGENTINA|SWITZERLAND':1};
+const SF_KEYS={'FRANCE|SPAIN':1};
 const R16_KEYS={'CANADA|MOROCCO':1,'FRANCE|PARAGUAY':1,'BRAZIL|NORWAY':1,'MEXICO|ENGLAND':1,'PORTUGAL|SPAIN':1,'USA|BELGIUM':1,'ARGENTINA|EGYPT':1,'SWITZERLAND|COLOMBIA':1};
 function bracketScore(){
   let played=0,correct=0;
