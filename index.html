@@ -409,10 +409,10 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["ARGENTINA","EGYPT","2026-07-07T18:00:00+02:00",3,2,"Mercedes-Benz Stadium"],
 ["SWITZERLAND","COLOMBIA","2026-07-07T22:00:00+02:00",0,0,"BC Place"],
 ["FRANCE","MOROCCO","2026-07-09T22:00:00+02:00",2,0,"Gillette Stadium"],
-["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",null,null,"Hard Rock Stadium"],
+["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",1,1,"Hard Rock Stadium"],
 ["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",2,1,"SoFi Stadium"],
-["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",null,null,"Arrowhead Stadium"],
-["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",null,null,"AT&T Stadium"],];
+["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",1,1,"Arrowhead Stadium"],
+["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",null,null,"AT&T Stadium"],["ENGLAND","ARGENTINA","2026-07-15T21:00:00+02:00",null,null,"Mercedes-Benz Stadium"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
 // This feature was added after the model was already live. The ideal single-source benchmark
@@ -443,6 +443,9 @@ const MKT={
  // ── SEMI-FINAL 1 (FRANCE|SPAIN, Tue 14 Jul 21:00 SAST): odds hunt run 11 Jul 07:09 SAST, the morning after the matchup locked. Polymarket per-match market NOT YET POSTED - verified directly against the gamma API (fifwc-fra-esp / esp-fra slug variants empty while fifwc-nor-eng-2026-07-11 lists live, so the check itself is sound). Registration waits for the Polymarket line per the preferred-source order; hunt re-fires every run, kickoff is 3 days out. FanDuel 3-way opening line banked meanwhile per the fallback rule: ──
  // FRANCE|SPAIN FanDuel via SI, 10 Jul ~18:00 ET opening: FRA +130 / D +220 / ESP +220 (de-vig 41.0/29.5/29.5). BetMGM via VegasInsider same day: +125/+220/+225 (corroboration only).
  // FRANCE|SPAIN gamma-API re-probe 11 Jul 07:56 SAST: still empty (both slug orientations) - Polymarket line not yet posted; hunt continues.
+ // FRANCE|SPAIN gamma-API probe 12 Jul 07:06 SAST: LINE POSTED (event fifwc-fra-esp-2026-07-14, created by Polymarket 11 Jul 10:04 GMT) - hunt fulfilled, registered below, pre-game (kickoff Tue 14 Jul 21:00 SAST). Prices as-is per standing order (sum 100.5).
+ 'FRANCE|SPAIN':{o:[42.5,29.5,28.5],src:'Polymarket regulation 1X2 via gamma API (event fifwc-fra-esp-2026-07-14, $914K vol, $5.7M liq), capt. 12 Jul 2026 07:06 SAST pre-game'},
+ // ── SEMI-FINAL 2 (ENGLAND|ARGENTINA, Wed 15 Jul 21:00 SAST, Mercedes-Benz Stadium): field resolved overnight (Argentina-Switzerland finished ~06:00 SAST 12 Jul aet). Odds hunt run 12 Jul 07:03 SAST, within ~1h of the field locking: Polymarket per-match line NOT YET POSTED - gamma API empty for both slug orientations (fifwc-eng-arg-2026-07-15 / fifwc-arg-eng-2026-07-15) while fifwc-fra-esp-2026-07-14 lists live, so the check itself is sound. Hunt re-fires every run; kickoff 3 days out. ──
  // ── AI ERROR #12, resolved 8 Jul 2026: the three entries below were re-insertions committed 4 Jul (0065547) for keys already registered 28 Jun (5e4c002, v7.2.0 advance R32 captures). Registered-first rule: the 28 Jun entries further down govern - as JS had silently resolved all along (later literal wins), so no displayed number changed. Preserved verbatim, commented so no duplicate key remains: ──
  // 'AUSTRALIA|EGYPT':{o:[28.1,33.6,38.3],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
  // 'ARGENTINA|CAPE_VERDE':{o:[82.7,12.6,4.7],src:'FanDuel via FOX, capt. 2 Jul pre-game'},
@@ -1179,9 +1182,16 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.18.5";
-const BUILD_STAMP="2026-07-11 22:04 SAST (time web-verified in this command burst)";
+const BUILD_VERSION="v7.19.0";
+const BUILD_STAMP="2026-07-12 07:12 SAST (time web-verified in this command burst)";
 const CHANGELOG=[
+  {v:"v7.19.0",d:"2026-07-12",items:[
+    "THE SEMI-FINAL NODE - REGISTERED. The fourth per-stage assessment point: the full forward path from the ACTUAL four survivors, committed this morning, before either semi-final kicks off (first KO Tue 14 Jul 21:00 SAST). France (133.1) over Spain (129.2); Argentina (122.6) over England (117.3, the post-Henderson basis); implied final France v Argentina, champion FRANCE; implied third-place playoff Spain over England; finishing order 1 France 2 Argentina 3 Spain 4 England. Identical to the QF node's implied path - the frozen ranking learns nothing from results; what changed is that the field is now real. New sealed panel beside the existing three (all untouched, byte for byte); git push + Wayback = the seal.",
+    "QUARTER-FINALS 3 AND 4 BAKED, both level at 90 - both depth-thesis data points. Norway 1-1 England at 90 minutes, England through 2-1 in extra time (Bellingham 93rd); Argentina 1-1 Switzerland at 90, Argentina through 3-1 in extra time (Alvarez 112th, Martinez 121st). QF node closes 4/4 on the advancement endpoint - and the market's four captures also favoured all four advancers, 4/4: agreement, not daylight. On the co-reported 90-minute 1X2 both forecasters picked wins in both games, so both take the miss on both - identical denominators, as designed.",
+    "SEMI-FINAL 1 MARKET LINE REGISTERED, hunt fulfilled: Polymarket per-match regulation 1X2 for France-Spain posted overnight (event created 11 Jul 10:04 GMT) and captured 12 Jul 07:06 SAST, pre-game, ~62 hours before kickoff - France 42.5 / draw 29.5 / Spain 28.5, prices as-is per standing order ($914K volume). The model's frozen read of the same game on the 90-minute endpoint: France 37 / draw 28 / Spain 35. Both name France favourite; the market is considerably surer of it than the near-coin-flip model is.",
+    "SEMI-FINAL 2 ENTERS THE FIXTURE LIST the moment its teams became known: England v Argentina, Wed 15 Jul 21:00 SAST, Mercedes-Benz Stadium, Atlanta. Odds hunt run within the hour (07:03 SAST): Polymarket line NOT YET POSTED - gamma API empty for both slug orientations while the France-Spain event lists live, so the probe itself is sound. Hunt re-fires every run; kickoff is 3 days out.",
+    "INJURY SWEEP, all four surviving squads, outcome: ZERO new tournament-ending rule-outs. Tchouameni (France) remains the only live monitor - missed both QFs with the 3 Jul muscle issue, medical staff targeting the semi-final, not ruled out. Mbappe took a knock v Morocco and says he is fine; Kone precautionary. Spain: Nico Williams PLAYED v Belgium (late sub) - monitor resolved; Pino and Victor Munoz both passed fit. England: James, Guehi and Rice all trained and were available v Norway - monitors resolved. Argentina: a circulating claim that Medina had tournament-ending calf surgery was chased to ground and REFUTED (Scaloni: cramp, no structural injury; he came on v Egypt in the R16). Doubtful is not out; nothing baked.",
+  ]},
   {v:"v7.18.5",d:"2026-07-11",items:[
     "STANCE ADDENDUM HASH-SEALED, same evening: the designer ruled that the interpretive stance's reference to the AI-error canon carries the LIVE ledger count (seventeen), not the handover-era figure (twelve) dictated by slip - the count is never downgraded to match a slip. Point (5) replaced in full by a dated addendum in the private dossier, original text retained verbatim per append-only law, provenance note included. SHA-256 of the addendum block: c1431849206432bf0354ebf2625456674d64eb885eee40a2261320e18b25ea91. Also in this build's record: WAYBACK SPOT-CHECK of the last 15 captures against the git timeline, every capture's content fetched and matched - all critical epochs independently witnessed (R16 forward path archived 4 Jul; the QF-node registration archived 8 Jul 09:26 SAST, ~36 hours before the first quarter-final; all four QF market lines archived 9 Jul 18:28 SAST, 3.5 hours before the first kickoff; error corrections #12/#16/#17, the tie ladder, the per-node scoreboard and the stance hash all captured same-day, most within minutes of their pushes). Versions never individually captured (v7.14.0/.2/.3, v7.15.0, v7.16.x patches, v7.18.0/.1/.3) were each superseded within minutes-to-hours and their full changelog content is carried inside the next capture - nothing in the public trail contradicts the git history anywhere. Changelog-only build."
   ]},
@@ -2798,6 +2808,8 @@ const KO_ADVANCERS={
   'AUSTRALIA|EGYPT':'EGYPT',         // 1-1, Egypt won 4-2 on pens
   'ARGENTINA|CAPE_VERDE':'ARGENTINA',// 1-1 at 90', Argentina won 3-2 in extra time
   'SWITZERLAND|COLOMBIA':'SWITZERLAND', // 0-0 after 120', Switzerland won 4-3 on pens
+  'NORWAY|ENGLAND':'ENGLAND',        // 1-1 at 90', England won 2-1 in extra time (Bellingham 93')
+  'ARGENTINA|SWITZERLAND':'ARGENTINA', // 1-1 at 90', Argentina won 3-1 in extra time
 };
 // How each level-at-90 tie was decided, for honest display labels ('pens' or 'aet').
 const KO_HOW={
@@ -2807,9 +2819,11 @@ const KO_HOW={
   'AUSTRALIA|EGYPT':'pens',
   'ARGENTINA|CAPE_VERDE':'aet',
   'SWITZERLAND|COLOMBIA':'pens',
+  'NORWAY|ENGLAND':'aet',
+  'ARGENTINA|SWITZERLAND':'aet',
 };
 const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1,'SPAIN|BELGIUM':1,'ARGENTINA|SWITZERLAND':1};
-const SF_KEYS={'FRANCE|SPAIN':1};
+const SF_KEYS={'FRANCE|SPAIN':1,'ENGLAND|ARGENTINA':1};
 const R16_KEYS={'CANADA|MOROCCO':1,'FRANCE|PARAGUAY':1,'BRAZIL|NORWAY':1,'MEXICO|ENGLAND':1,'PORTUGAL|SPAIN':1,'USA|BELGIUM':1,'ARGENTINA|EGYPT':1,'SWITZERLAND|COLOMBIA':1};
 function bracketScore(){
   let played=0,correct=0;
@@ -2880,6 +2894,23 @@ function renderQFForward(){
     <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">The QF-field assessment point in the per-stage study design (Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end.</p>
   </div>${nodeStrip(gradeNodeTies(NODE_QF.QF.concat(NODE_QF.SF,NODE_QF.FINAL)),`champion pick France: ${champStatus('FRANCE')}`)}</details>`;
 }
+function renderSFForward(){
+  // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 4 (build 12 Jul 2026, before either semi-final; git push = public seal) ══
+  return `<details style="margin-top:12px;background:var(--card);border:1px solid var(--gdim);border-radius:10px">
+  <summary style="padding:11px 14px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold)">🧊 REGISTERED 12 JUL — FULL FORWARD PATH FROM THE ACTUAL 4</summary>
+  <div style="padding:2px 14px 13px;font-size:11px;color:var(--mut);line-height:1.65">
+    <p style="margin:6px 0">The semi-final field is decided. Same frozen ranking, read out again - every pick to the champion, committed before either semi-final kicks off. Higher frozen Top-15 score advances through the real bracket. Frozen scores in brackets (England&#39;s reflects the Henderson dropout, baked 10 Jul per the pre-stated rule).</p>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">SEMI-FINAL PICKS</div>
+    <div>France (133.1) over Spain (129.2) · Argentina (122.6) over England (117.3)</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINAL → CHAMPION</div>
+    <div>France v Argentina → <b style="color:var(--gold)">FRANCE</b></div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED THIRD-PLACE PLAYOFF → PICK</div>
+    <div>Spain v England → SPAIN</div>
+    <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 4</div>
+    <div>1 France · 2 Argentina · 3 Spain · 4 England</div>
+    <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">The SF-field assessment point in the per-stage study design (Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end. The live strip below grades the semi-finals and the implied final; the third-place pick and finishing order are scored in the end-of-tournament write-up.</p>
+  </div>${nodeStrip(gradeNodeTies(NODE_SF.SF.concat(NODE_SF.FINAL)),`champion pick France: ${champStatus('FRANCE')}`)}</details>`;
+}
 function renderR16Forward(){
   // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 16 (committed 4 Jul 2026, morning SAST, before Canada-Morocco kicked off) ══
   // Study node: the R16-field assessment point. Same frozen ranking, read out against the real surviving field
@@ -2927,6 +2958,7 @@ const NODE_R16FWD={QF:[{a:'FRANCE',b:'MOROCCO',pick:'FRANCE'},{a:'SPAIN',b:'BELG
  SF:[{a:'FRANCE',b:'SPAIN',pick:'FRANCE'},{a:'BRAZIL',b:'ARGENTINA',pick:'BRAZIL'}],FINAL:[{a:'FRANCE',b:'BRAZIL',pick:'FRANCE'}],champ:'FRANCE'};
 const NODE_QF={QF:[{a:'FRANCE',b:'MOROCCO',pick:'FRANCE'},{a:'SPAIN',b:'BELGIUM',pick:'SPAIN'},{a:'NORWAY',b:'ENGLAND',pick:'ENGLAND'},{a:'ARGENTINA',b:'SWITZERLAND',pick:'ARGENTINA'}],
  SF:[{a:'FRANCE',b:'SPAIN',pick:'FRANCE'},{a:'ENGLAND',b:'ARGENTINA',pick:'ARGENTINA'}],FINAL:[{a:'FRANCE',b:'ARGENTINA',pick:'FRANCE'}],champ:'FRANCE'};
+const NODE_SF={SF:[{a:'FRANCE',b:'SPAIN',pick:'FRANCE'},{a:'ENGLAND',b:'ARGENTINA',pick:'ARGENTINA'}],FINAL:[{a:'FRANCE',b:'ARGENTINA',pick:'FRANCE'}],champ:'FRANCE'};
 // Teams knocked out of the tournament so far (knockout rounds; every conditional-tie team reached R32)
 function koEliminatedSet(){
   const out=new Set();
@@ -2991,13 +3023,16 @@ function renderNodeScoreboard(){
   const fwdQF=gradeNodeTies(NODE_R16FWD.QF);
   const fwdHits=fwdQF.filter(r=>r.state==='hit').length,fwdDec=fwdQF.filter(r=>r.state==='hit'||r.state==='miss').length,fwdVoid=fwdQF.filter(r=>r.state==='voided').length;
   const qfPend=4-ps.QF.advD;
+  const sfStage=ps.SF||{advM:0,advD:0,advK:0,advKN:0};
+  const sfPend=2-sfStage.advD;
   const st=(m,k)=>`<td style="padding:7px 8px;font-family:monospace;font-weight:800;color:${m}">`;
   const rows=[
    ['Pre-tournament bracket','sealed before kickoff',`survivor overlap per stage`,`R16 ${inter(predR16,actR16)}/16 · QF ${inter(predQF,actQF)}/8 · SF ${inter(predSF,actSF)}/${actSF.size} so far`,'n/a*',`champion pick France: ${champStatus('FRANCE')}`],
    ['R32 matchups','28 Jun','16 matchups · who advances',`${ps.R32.advM}/16`,`${ps.R32.advK}/16`,'complete'],
    ['R16 node','2 Jul','8 matchups · who advances',`${ps.R16.advM}/8`,`${ps.R16.advK}/8`,'complete'],
    ['R16 forward path','4 Jul','implied QFs onward',`${fwdHits}/${fwdDec} that happened correct${fwdVoid?` · ${fwdVoid} pairings never occurred`:''}`,'n/a*',`champion pick France: ${champStatus('FRANCE')}`],
-   ['QF node','8 Jul','4 matchups · who advances',`${ps.QF.advM}/${ps.QF.advD||0}`,`${ps.QF.advK}/${ps.QF.advKN||0}`,qfPend?`${qfPend} pending`:'complete']
+   ['QF node','8 Jul','4 matchups · who advances',`${ps.QF.advM}/${ps.QF.advD||0}`,`${ps.QF.advK}/${ps.QF.advKN||0}`,qfPend?`${qfPend} pending`:'complete'],
+   ['SF node','12 Jul','2 matchups · who advances',`${sfStage.advM}/${sfStage.advD||0}`,`${sfStage.advK}/${sfStage.advKN||0}`,sfPend?`${sfPend} pending`:'complete']
   ];
   return `<div style="background:var(--card);border:1px solid var(--gdim);border-radius:12px;padding:14px 14px 10px;margin-bottom:16px">
     <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">📋 THE PRE-REGISTERED NODES - EACH GRADED ON ITS OWN TEST</div>
@@ -3026,7 +3061,7 @@ function renderBracket(){
   const toggleNote=bs.advDecided?`<div style="font-size:9.5px;color:var(--dim);margin:-10px 0 14px;line-height:1.5">The figure on the green tab: of the <b>${bs.advDecided} knockout matchups actually played and decided</b>, the side the frozen ranking rated higher went through in <b>${bs.advModel}</b> (advancement, extra time and penalties included; graded on the real matchups, match by match - NOT on the predicted bracket's paths). Market like-for-like: ${bs.advMkt}/${bs.advMktN}. Per-node breakdown: scoreboard below.</div>`:'';
   // Sealed registration panels - collapsed by default (ruling 3: seals and dates stay visible in
   // the summaries; the full frozen text is one tap away, in git, and Wayback-sealed).
-  const panelsBlock=`<div class="sect-title" style="margin-top:22px">🔐 THE PRE-REGISTERED NODES - FROZEN PANELS (git push + Wayback = the seal)</div>`+renderR16Prereg()+renderR16Forward()+renderQFForward();
+  const panelsBlock=`<div class="sect-title" style="margin-top:22px">🔐 THE PRE-REGISTERED NODES - FROZEN PANELS (git push + Wayback = the seal)</div>`+renderR16Prereg()+renderR16Forward()+renderQFForward()+renderSFForward();
   if(bv==='actual') return toggle+toggleNote+renderNodeScoreboard()+renderActualBracket()+panelsBlock;
   let html=toggle;
   html+=`<div style="background:linear-gradient(135deg,#061018,#0a1929 50%,#07111A);border:1px solid rgba(200,155,60,.4);border-radius:14px;padding:22px 20px;text-align:center;margin-bottom:18px;position:relative;overflow:hidden">
