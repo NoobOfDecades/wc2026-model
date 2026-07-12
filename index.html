@@ -328,6 +328,13 @@ a{color:inherit;text-decoration:none}
 .koc-v{font-size:10px;color:var(--dim)}
 .koc-status{font-size:9px;color:var(--mut);margin-top:7px;letter-spacing:.3px}
 @media(max-width:640px){.sg{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}.cscores{flex-direction:column}.brand{flex-direction:column;align-items:flex-start}.modewrap{margin-left:0;width:100%}.bblocks{grid-template-columns:1fr}.bor{flex-direction:row;padding:2px 0}.bor-line{width:auto;height:1px;flex:1}.toggle button{padding:5px 9px;font-size:10px}}
+/* node scoreboard - mobile pass (v7.19.2, display-only): wrap long component strings, tighter cells */
+.ndbc{white-space:normal;overflow-wrap:break-word;max-width:360px}
+@media(max-width:640px){
+  .ndbt{font-size:9.5px}
+  .ndbt th,.ndbt td{padding:5px 4px!important}
+  .ndbc{min-width:150px;max-width:none;font-size:9.5px;line-height:1.55}
+}
 </style>
 </head>
 <body>
@@ -1182,9 +1189,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.19.1";
-const BUILD_STAMP="2026-07-12 11:46 SAST (time web-verified in this command burst)";
+const BUILD_VERSION="v7.19.2";
+const BUILD_STAMP="2026-07-12 12:11 SAST (time web-verified in this command burst)";
 const CHANGELOG=[
+  {v:"v7.19.2",d:"2026-07-12",items:[
+    "THIRD-PLACE PICK AND ORDER 1-4, ratified and registered BEFORE the first semi-final (designer's ruling): the SF node's forward-path grading now carries its own explicit lines for the implied third-place matchup (Spain v England, pick Spain - the two implied semi-final losers, resolved mechanically by higher frozen Top-15 score, no new judgement) and the completed sealed finishing order with its labels (1 France champion · 2 Argentina runner-up · 3 Spain third · 4 England fourth - mechanically derived from the sealed panel's frozen scores; graded at tournament end). Grading semantics as ruled: correct/incorrect if the implied pairing materialises, shown-not-counted if the real semi-final winners void it. That required a real logic extension: a pairing is now recognised as impossible the moment the actual fixtures of its stage exist without it - previously an implied third-place pairing could dangle as pending forever if a predicted loser reached the final instead (neither team eliminated, so the old check never fired). Regression artefact: every one of the 30 grade states across all four nodes is byte-identical before and after the extension (diff empty) - the new rule changes nothing today, it exists for the branches ahead. Frozen prose byte-identical x4 panels.",
+    "MOBILE VISUAL PASS on the scoreboard, approved display-only: long component strings now wrap (overflow-wrap on the figure cells), tighter cell padding and type below 640px via dedicated classes - ZERO wording or grading-logic changes (the render-text diff of the scoreboard at desktop width is empty but for the ruling-mandated third-place/order additions above)."
+  ]},
   {v:"v7.19.1",d:"2026-07-12",items:[
     "FULL-COMPONENT NODE GRADING - designer's correction, replacing the node-display rule in full: a scoreboard entry must grade EVERY component its frozen panel sealed, not only the matchup picks - displaying a subset of a sealed prediction is selective reporting, the exact accusation this project exists to be immune to. Each forward-bearing node now shows separated lines with their own denominators: QF node = '4 matchups' (4/4 model, 4/4 market after both level-at-90 quarter-finals went to the registered picks in extra time) PLUS 'forward path' (implied SFs both materialised and pending, implied final France-Argentina pending, champion France alive, order of the 8 graded at tournament end). SF node = '2 matchups' (0/0, 2 pending) PLUS 'forward path' (implied final pending, implied THIRD-PLACE pick Spain-over-England pending - included although the correction's example omitted it, because the panel sealed it and the rule the designer wrote governs; champion alive; order of the 4 at end). R16 node gains its sealed champion line; R16 forward path now grades implied SFs and final explicitly (France-Spain materialised and pending; Brazil-Argentina and the France-Brazil final never occurred - Brazil out); the pre-tournament bracket splits into survivors (R16 10/16 · QF 5/8 · SF field complete) and champion-and-order lines. Panel grading strips extended to match (finishing-order graded-at-end note; SF strip gains the third-place pick). Frozen prose byte-identical throughout - the SF panel's registered note describing a narrower strip is a historical document and stands unedited. Rule registered in CLAUDE.md; the dossier reports per node on these same full-component denominators."
   ]},
@@ -2895,7 +2906,7 @@ function renderQFForward(){
     <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 8</div>
     <div>1 France · 2 Argentina · 3 Spain · 4 England · 5 Belgium · 6 Norway · 7 Morocco · 8 Switzerland</div>
     <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">The QF-field assessment point in the per-stage study design (Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end.</p>
-  </div>${nodeStrip(gradeNodeTies(NODE_QF.QF.concat(NODE_QF.SF,NODE_QF.FINAL)),`champion pick France: ${champStatus('FRANCE')} · finishing order of the 8: graded at tournament end`)}</details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_QF.QF,'QF').concat(gradeNodeTies(NODE_QF.SF,'SF'),gradeNodeTies(NODE_QF.FINAL,'FINAL')),`champion pick France: ${champStatus('FRANCE')} · finishing order of the 8: graded at tournament end`)}</details>`;
 }
 function renderSFForward(){
   // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 4 (build 12 Jul 2026, before either semi-final; git push = public seal) ══
@@ -2912,7 +2923,7 @@ function renderSFForward(){
     <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 4</div>
     <div>1 France · 2 Argentina · 3 Spain · 4 England</div>
     <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">The SF-field assessment point in the per-stage study design (Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end. The live strip below grades the semi-finals and the implied final; the third-place pick and finishing order are scored in the end-of-tournament write-up.</p>
-  </div>${nodeStrip(gradeNodeTies(NODE_SF.SF.concat(NODE_SF.FINAL,NODE_SF.P3)),`champion pick France: ${champStatus('FRANCE')} · finishing order of the 4: graded at tournament end`)}</details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_SF.SF,'SF').concat(gradeNodeTies(NODE_SF.FINAL,'FINAL'),gradeNodeTies(NODE_SF.P3,'3P')),`champion pick France: ${champStatus('FRANCE')} · finishing order of the 4: graded at tournament end`)}</details>`;
 }
 function renderR16Forward(){
   // ══ FROZEN REGISTRATION — full forward path from the ACTUAL 16 (committed 4 Jul 2026, morning SAST, before Canada-Morocco kicked off) ══
@@ -2933,7 +2944,7 @@ function renderR16Forward(){
     <div style="font-weight:800;color:var(--text);margin:9px 0 3px">IMPLIED FINISHING ORDER OF THE 16 (tier = predicted exit round; ordered by frozen score within tier)</div>
     <div>1 France · 2 Brazil · 3 Spain · 4 Argentina · 5 Belgium · 6 England · 7 Morocco · 8 Colombia · 9 Portugal · 10 Norway · 11 Egypt · 12 Mexico · 13 USA · 14 Switzerland · 15 Canada · 16 Paraguay</div>
     <p style="margin:9px 0 0;font-size:10px;color:var(--dim)">One of the tournament's pre-registered assessment points (see the Model tab). Registered before the round; scored on advancement per tie plus finishing-order metrics at tournament end. Ties within a tier share a predicted exit round - the order inside a tier is the frozen score, stated for completeness.</p>
-  </div>${nodeStrip(gradeNodeTies(NODE_R16_PICKS.concat(NODE_R16FWD.QF,NODE_R16FWD.SF,NODE_R16FWD.FINAL)),`champion pick France: ${champStatus('FRANCE')} · finishing order of the 16: graded at tournament end`)}</details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_R16_PICKS,'R16').concat(gradeNodeTies(NODE_R16FWD.QF,'QF'),gradeNodeTies(NODE_R16FWD.SF,'SF'),gradeNodeTies(NODE_R16FWD.FINAL,'FINAL')),`champion pick France: ${champStatus('FRANCE')} · finishing order of the 16: graded at tournament end`)}</details>`;
 }
 function renderR16Prereg(){
   return `<details class="msect-fold" style="margin-bottom:14px"><summary class="msect-sum">\u{1F510} PRE-REGISTERED ROUND-OF-16 NODE - committed 2 Jul 2026, 08:15 SAST, before any R16 kickoff</summary>
@@ -2946,7 +2957,7 @@ function renderR16Prereg(){
   <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--gold);margin:12px 0 4px">WHO WINS IT FROM HERE</div>
   <p>Of the 22 teams still alive, the frozen ranking\u2019s pick to win the tournament is <b style="color:var(--gold)">France</b>. Top of the surviving field by frozen squad score: France 133.1 · Spain 129.2 · Portugal 127.7 · Brazil 124.7 · Argentina 122.6 · Belgium 119.4. This pick changes only if a higher-ranked survivor is eliminated - the model learns nothing from results.</p>
   <p style="margin-top:8px;font-size:10px;color:var(--dim)">Registered with three R32 games still unplayed (Australia-Egypt, Argentina-Cape Verde, Colombia-Ghana at commit time; Spain-Austria, Portugal-Croatia, Switzerland-Algeria later on commit day). To-advance figures are the 90-minute draw redistributed proportionally between the two sides. Endpoint designation (set 2 Jul, same day as this registration and before any R16 game): <b>advancement is the primary scored endpoint</b> for knockout ties - the frozen bracket is itself an advancement forecast - with the 90-minute 1X2 co-reported as the market-odds basis. Both figures above are registered for every tie, so scoring on either basis reads off this table.</b></p>
-  </div>${nodeStrip(gradeNodeTies(NODE_R16_PICKS),null,NODE_R16_VOIDED_BRANCHES)}</details>`;
+  </div>${nodeStrip(gradeNodeTies(NODE_R16_PICKS,'R16'),null,NODE_R16_VOIDED_BRANCHES)}</details>`;
 }
 // ════════════ PER-NODE GRADING (designer's rulings 11 Jul 2026, v7.18.1) ════════════
 // Frozen node picks, transcribed VERBATIM from the sealed panels (facts of record, used only to
@@ -2976,7 +2987,7 @@ function koEliminatedSet(){
 // Grade one registered tie against reality: hit/miss when played and decided; pending while the
 // pairing exists or is still reachable; VOIDED when the real bracket has made it impossible -
 // shown with its count, never counted as hit or miss (branch not taken is not a game; ruling 11 Jul).
-function gradeNodeTie(t,elim){
+function gradeNodeTie(t,elim,stage){
   const f=FIXTURES.find(x=>(x[0]===t.a&&x[1]===t.b)||(x[0]===t.b&&x[1]===t.a));
   if(f&&f[3]!==null&&f[3]!==undefined){
     const o=actualOutcome(f);
@@ -2985,11 +2996,25 @@ function gradeNodeTie(t,elim){
     return adv===t.pick?'hit':'miss';
   }
   if(f)return'pending';
+  // Stage-aware impossibility (12 Jul ruling, third-place case): a pairing is voided the moment
+  // the REAL fixture(s) of its stage exist without it - e.g. if a predicted SF loser reaches the
+  // final instead, the implied 3rd-place pairing dies even though neither team was knocked out.
+  if(stage){
+    const real=knockoutFixtures().filter(x=>koStageOf(x[0],x[1])===stage);
+    if(real.length){
+      const match=real.some(x=>(x[0]===t.a&&x[1]===t.b)||(x[0]===t.b&&x[1]===t.a));
+      if(!match){
+        if(stage==='FINAL'||stage==='3P')return'voided';
+        const involves=real.some(x=>x[0]===t.a||x[1]===t.a||x[0]===t.b||x[1]===t.b);
+        if(involves||real.length>=2)return'voided';
+      }
+    }
+  }
   return (elim.has(t.a)||elim.has(t.b))?'voided':'pending';
 }
-function gradeNodeTies(list){
+function gradeNodeTies(list,stage){
   const elim=koEliminatedSet();
-  return list.map(t=>({t,state:gradeNodeTie(t,elim),label:`${S[t.pick].meta.name} (v ${S[t.pick]===S[t.a]?S[t.b].meta.name:S[t.a].meta.name})`}));
+  return list.map(t=>({t,state:gradeNodeTie(t,elim,stage),label:`${S[t.pick].meta.name} (v ${S[t.pick]===S[t.a]?S[t.b].meta.name:S[t.a].meta.name})`}));
 }
 // The appended strip - APPROVED reading of the frozen-panel law (designer, 11 Jul 2026): the
 // registered prose above it stays byte-identical; this box is computed display, clearly labelled.
@@ -3028,7 +3053,7 @@ function renderNodeScoreboard(){
   // AND finishing order (marked graded-at-end until then). Displaying a subset of a sealed
   // prediction is selective reporting; matchup rows and forward-path rows are separate lines
   // with their own denominators so nothing is blended and nothing is dropped.
-  const fwdSum=list=>{const g=gradeNodeTies(list);
+  const fwdSum=(list,stage)=>{const g=gradeNodeTies(list,stage);
     const h=g.filter(r=>r.state==='hit').length,d=g.filter(r=>r.state==='hit'||r.state==='miss').length;
     const v=g.filter(r=>r.state==='voided').length,p=g.filter(r=>r.state==='pending').length;
     const bits=[];if(d)bits.push(`${h}/${d} that happened correct`);
@@ -3038,24 +3063,24 @@ function renderNodeScoreboard(){
   const sfStage=ps.SF||{advM:0,advD:0,advK:0,advKN:0};
   const sfPend=2-sfStage.advD;
   const champ=champStatus('FRANCE');
-  const st=m=>`<td style="padding:7px 8px;font-family:monospace;font-weight:800;color:${m}">`;
+  const st=m=>`<td class="ndbc" style="padding:7px 8px;font-family:monospace;font-weight:800;color:${m}">`;
   const rows=[
    ['Pre-tournament bracket · survivors','pre-kickoff','survivor overlap per stage',`R16 ${inter(predR16,actR16)}/16 · QF ${inter(predQF,actQF)}/8 · SF ${inter(predSF,actSF)}/${actSF.size}${actSF.size<4?' so far':''}`,'n/a*',actSF.size<4?'in progress':'complete to SF field'],
    ['&nbsp;&nbsp;· champion & finishing order','pre-kickoff','champion pick + full order',`champion France: ${champ} · finishing order: graded at tournament end`,'n/a*','open'],
    ['R32 matchups','28 Jun','16 matchups · who advances',`${ps.R32.advM}/16`,`${ps.R32.advK}/16`,'complete'],
    ['R16 node · matchups','2 Jul','8 matchups · who advances',`${ps.R16.advM}/8`,`${ps.R16.advK}/8`,'complete'],
    ['&nbsp;&nbsp;· champion (sealed in the same panel)','2 Jul','tournament winner pick',`champion France: ${champ}`,'n/a*','open'],
-   ['R16 forward path','4 Jul','implied QFs → SFs → final',`QFs: ${fwdSum(NODE_R16FWD.QF)} · SFs: ${fwdSum(NODE_R16FWD.SF)} · final: ${fwdSum(NODE_R16FWD.FINAL)}`,'n/a*','open'],
+   ['R16 forward path','4 Jul','implied QFs → SFs → final',`QFs: ${fwdSum(NODE_R16FWD.QF,'QF')} · SFs: ${fwdSum(NODE_R16FWD.SF,'SF')} · final: ${fwdSum(NODE_R16FWD.FINAL,'FINAL')}`,'n/a*','open'],
    ['&nbsp;&nbsp;· champion & order of the 16','4 Jul','champion pick + full order',`champion France: ${champ} · order: graded at tournament end`,'n/a*','open'],
    ['QF node · matchups','8 Jul','4 matchups · who advances',`${ps.QF.advM}/${ps.QF.advD||0}`,`${ps.QF.advK}/${ps.QF.advKN||0}`,qfPend?`${qfPend} pending`:'complete'],
-   ['&nbsp;&nbsp;· forward path','8 Jul','implied SFs + final + champion + order',`SFs: ${fwdSum(NODE_QF.SF)} · final: ${fwdSum(NODE_QF.FINAL)} · champion France: ${champ} · order of the 8: graded at tournament end`,'n/a*','open'],
+   ['&nbsp;&nbsp;· forward path','8 Jul','implied SFs + final + champion + order',`SFs: ${fwdSum(NODE_QF.SF,'SF')} · final: ${fwdSum(NODE_QF.FINAL,'FINAL')} · champion France: ${champ} · order of the 8: graded at tournament end`,'n/a*','open'],
    ['SF node · matchups','12 Jul','2 matchups · who advances',`${sfStage.advM}/${sfStage.advD||0}`,`${sfStage.advK}/${sfStage.advKN||0}`,sfPend?`${sfPend} pending`:'complete'],
-   ['&nbsp;&nbsp;· forward path','12 Jul','implied final + 3rd place + champion + order',`final: ${fwdSum(NODE_SF.FINAL)} · 3rd place: ${fwdSum(NODE_SF.P3)} · champion France: ${champ} · order of the 4: graded at tournament end`,'n/a*','open']
+   ['&nbsp;&nbsp;· forward path','12 Jul','implied final + 3rd-place matchup + champion + order 1-4',`final France v Argentina: ${fwdSum(NODE_SF.FINAL,'FINAL')} · implied 3rd-place matchup Spain v England, pick Spain: ${fwdSum(NODE_SF.P3,'3P')} · champion France: ${champ} · sealed order (mechanically derived - higher frozen score at each implied node): 1 France (champion) · 2 Argentina (runner-up) · 3 Spain (third) · 4 England (fourth) - graded at tournament end`,'n/a*','open']
   ];
   return `<div style="background:var(--card);border:1px solid var(--gdim);border-radius:12px;padding:14px 14px 10px;margin-bottom:16px">
     <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">📋 THE PRE-REGISTERED NODES - EACH GRADED ON ITS OWN TEST</div>
     <div style="font-size:10.5px;color:var(--text);line-height:1.6;margin-bottom:6px"><b>Each row = one frozen, dated prediction set; its Model and Market figures count only real matches played after that seal - so every node shows how the model did once the field was actually known.</b></div><div style="font-size:10px;color:var(--mut);line-height:1.6;margin-bottom:9px">Each row is a frozen registration (git push + Wayback = the seal), graded only against what actually happened from that point on. <b style="color:var(--text)">These are multiple pre-registered assessment points within one tournament, not independent replications</b> - later nodes share downstream games with earlier ones, and each surviving field is stronger than the last, so the figures are reported per node and never blended. Market column = the same test on the same games from the registered pre-match odds, wherever a like-for-like exists (the market registers no forward paths). Pairings that never occurred (other teams advanced) are shown but not counted - a prediction for a match that never existed can be neither right nor wrong.</div>
-    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10.5px">
+    <div style="overflow-x:auto"><table class="ndbt" style="width:100%;border-collapse:collapse;font-size:10.5px">
     <thead><tr style="color:var(--dim);font-size:9px;text-transform:uppercase;text-align:left"><th style="padding:5px 8px">Node</th><th style="padding:5px 8px">Sealed</th><th style="padding:5px 8px">Its own test</th><th style="padding:5px 8px">Model</th><th style="padding:5px 8px">Market</th><th style="padding:5px 8px">Status</th></tr></thead>
     <tbody>${rows.map(r=>`<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 8px;font-weight:700;color:var(--text)">${r[0]}</td><td style="padding:7px 8px;color:var(--mut)">${r[1]}</td><td style="padding:7px 8px;color:var(--mut)">${r[2]}</td>${st('#34D77F')}${r[3]}</td>${st('var(--txt)')}${r[4]}</td><td style="padding:7px 8px;color:var(--mut)">${r[5]}</td></tr>`).join('')}</tbody>
     </table></div>
