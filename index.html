@@ -1191,9 +1191,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.21.0";
-const BUILD_STAMP="2026-07-15 07:04 SAST (time web-verified in this command burst)";
+const BUILD_VERSION="v7.21.1";
+const BUILD_STAMP="2026-07-15 11:41 SAST (time web-verified in this command burst)";
 const CHANGELOG=[
+  {v:"v7.21.1",d:"2026-07-15",items:[
+    "THE CANON DOES NOT FLINCH - designer-ordered post-SF1 confirmations, all three delivered with artefacts, plus one new numbered error found by the confirmation itself. (1) SF1 graded plainly everywhere: the frozen SF node's France pick shows MISS on both grading strips and the scoreboard (model and market both picked France - an agreed call, missed by both; the SF matchup line reads 0/1 for each). (2) Champion status: every surface that said 'champion France: alive' now says 'champion France: OUT' - five scoreboard lines and all four panel strips, computed from one function, verified by extraction. (3) Third-place implications - AI ERROR #18, caught BY the ordered confirmation: the 12 Jul ruling said an implied third-place pairing is voided 'if the real SF winners void it', but the implementation only checked eliminations and same-stage fixtures, so after Spain WON her semi-final the impossible Spain-England playoff pairing displayed as pending for about five hours. Fixed: a 3rd-place pairing now voids the moment either team wins a decided semi-final. Regression artefact: of the 30 grade states across all four nodes, EXACTLY ONE changed (SF-node 3P: pending to voided; diff printed) - nothing else moved. Corrections-ledger count updated to eighteen.",
+    "LIMITATION 9.1 REGISTERED BEFORE THE FINAL and hash-sealed here: young-player history truncation - the 2022-2026 cycle context structurally underrepresents ascending youth (earliest cycle seasons are youth/fringe football regardless of present quality; recency weighting mitigates but cannot distinguish young-and-ascending from peripheral), with Spain's semi-final win over the registered champion as the honest motivating example, and the prospective fix (age-conditional windows / trajectory terms) explicitly deferred to future work under the frozen-model law. Registered in the private dossier at the designer's post-semi-final review, in real time and before the final - SHA-256 of the limitation section: 3934d4909e4b62575e7bc5915e7cff6d47a749969d4a9a4bfed914316311e894. The registered champion pick stands as what it always was: one pre-sealed binary call, now scored incorrect, reported without flinch."
+  ]},
   {v:"v7.21.0",d:"2026-07-15",items:[
     "FRANCE 0-2 SPAIN baked (SF1, 14 Jul, AT&T Stadium Dallas; Oyarzabal 22' penalty won by Yamal, Porro 58'; regulation win, confirmed via FIFA match centre, ESPN, FOX, NBC, CNN, Sky Sports). Registered pick WRONG on BOTH endpoints: the frozen SF node picked France to advance (133.1 over 129.2), France lost in regulation - and the market missed identically (Polymarket 42.5 France / 29.5 draw / 28.5 Spain, registered pre-game v7.19.0, its strongest lean of the two semi-finals). First miss for the SF node; the sealed implied final (France v Argentina), the champion pick France and the implied third-place pairing (Spain v England) are all now impossible or altered - graded exactly as sealed, per the full-component rule. Spain reach the final and await tonight's England-Argentina winner.",
     "Baked count cross-check: 101 baked = 101 played (72 group + 16 R32 + 8 R16 + 4 QF + 1 SF). Semi-final stage so far: model 0/1, market 0/1 on both endpoints.",
@@ -3022,6 +3026,18 @@ function gradeNodeTie(t,elim,stage){
         if(involves||real.length>=2)return'voided';
       }
     }
+    // AI error #18 (15 Jul): a 3rd-place pairing is also impossible the moment either team WINS
+    // a decided semi-final - they play the final, not the playoff. The 12 Jul ruling said exactly
+    // this ('voided if the real SF winners void it'); the first implementation only checked
+    // eliminations and stage fixtures, so Spain-England sat 'pending' after Spain reached the final.
+    if(stage==='3P'){
+      for(const x of knockoutFixtures()){
+        if(koStageOf(x[0],x[1])!=='SF'||x[3]===null||x[3]===undefined)continue;
+        const o=actualOutcome(x);
+        const adv=o==='D'?(KO_ADVANCERS[x[0]+'|'+x[1]]||null):(o==='A'?x[0]:x[1]);
+        if(adv===t.a||adv===t.b)return'voided';
+      }
+    }
   }
   return (elim.has(t.a)||elim.has(t.b))?'voided':'pending';
 }
@@ -3492,7 +3508,7 @@ P(Draw) = 0.28 × e^(−0.30 × |x|)</div>
   <details class="msect"><summary>⚠️ Scoring corrections — the public ledger</summary><div class="msect-bd">
     <p>Every correction to how this app SCORES is listed here, dated, because a scoreboard that changes silently is worthless. The model itself - parameters, formulas, frozen predictions - has never been changed mid-tournament; that is auditable in the git history.</p>
     <p><b>Correction of 8 Jul 2026 (v7.13.1), Portugal v Spain.</b> Archived snapshots of this site (e.g. the Wayback Machine) show this tie briefly graded a model MISS on the 90-minute table. That grading was a BUG, and the same snapshot proves it: the Bracket tab on the very same page scored Spain CORRECT, because the two surfaces were using different tie-break rules. The display rounds probabilities to whole numbers, this tie rounded to 36/36, and three scoring sites then broke the tie toward the home side - an arbitrary rule that contradicted the tie-break stated in the pre-registration itself ("the frozen ranking edges Spain", pushed 2 July, before the matchup existed). The fix made the registered rule - higher frozen score - universal. A full sweep of all 94 games found exactly four rounded ties; this was the only one affected, and one of the other four remains a scored MISS (Czechia v Mexico) - the fix rescues nothing it should not. Probabilities, Brier and the advancement tallies were untouched. Fraud changes a prediction after the result; this corrected a display to match a prediction that was public before the result, and disclosed it - here, in the changelog below, and in the git history where the buggy version remains visible forever.</p>
-    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (seventeen to date - caught by the designer, the harness, or a mandated full-file read) and the safeguards that caught them are part of the forthcoming write-up.</p>
+    <p>This project is built with an AI assistant under an adversarial protocol; its documented errors (eighteen to date - caught by the designer, the harness, or a mandated full-file read) and the safeguards that caught them are part of the forthcoming write-up.</p>
   </div></details>
   <details class="msect"><summary>One frozen ranking, read out at every stage</summary><div class="msect-bd">
     <p>Most public prediction models quietly re-rank teams as results come in, so by the end nobody can say what they "predicted" - the prediction moved with the scoreboard. This model does the opposite, and it is the project's defining design choice: <b>the ranking froze before the first ball and never changes.</b> What happens instead is that the same frozen ranking is <b>read out at every stage of the tournament</b>, and each readout is its own pre-registered assessment point:</p>
