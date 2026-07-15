@@ -419,7 +419,7 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",1,1,"Hard Rock Stadium"],
 ["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",2,1,"SoFi Stadium"],
 ["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",1,1,"Arrowhead Stadium"],
-["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",null,null,"AT&T Stadium"],["ENGLAND","ARGENTINA","2026-07-15T21:00:00+02:00",null,null,"Mercedes-Benz Stadium"],];
+["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",0,2,"AT&T Stadium"],["ENGLAND","ARGENTINA","2026-07-15T21:00:00+02:00",null,null,"Mercedes-Benz Stadium"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
 // This feature was added after the model was already live. The ideal single-source benchmark
@@ -1191,9 +1191,16 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.20.0";
-const BUILD_STAMP="2026-07-13 07:03 SAST (time web-verified in this command burst)";
+const BUILD_VERSION="v7.21.0";
+const BUILD_STAMP="2026-07-15 07:04 SAST (time web-verified in this command burst)";
 const CHANGELOG=[
+  {v:"v7.21.0",d:"2026-07-15",items:[
+    "FRANCE 0-2 SPAIN baked (SF1, 14 Jul, AT&T Stadium Dallas; Oyarzabal 22' penalty won by Yamal, Porro 58'; regulation win, confirmed via FIFA match centre, ESPN, FOX, NBC, CNN, Sky Sports). Registered pick WRONG on BOTH endpoints: the frozen SF node picked France to advance (133.1 over 129.2), France lost in regulation - and the market missed identically (Polymarket 42.5 France / 29.5 draw / 28.5 Spain, registered pre-game v7.19.0, its strongest lean of the two semi-finals). First miss for the SF node; the sealed implied final (France v Argentina), the champion pick France and the implied third-place pairing (Spain v England) are all now impossible or altered - graded exactly as sealed, per the full-component rule. Spain reach the final and await tonight's England-Argentina winner.",
+    "Baked count cross-check: 101 baked = 101 played (72 group + 16 R32 + 8 R16 + 4 QF + 1 SF). Semi-final stage so far: model 0/1, market 0/1 on both endpoints.",
+    "INJURY SWEEP, all four squads still playing (Spain, England, Argentina + France's third-place game): ZERO new official tournament-ending rule-outs; nothing baked. NEW MONITOR: Saliba (France) left SF1 after 30 minutes with a back injury (subbed for Lacroix, seen saying 'my back is gone'; carried a back issue into the tournament) - severity officially unknown, a race to be fit for Saturday's third-place game; doubtful is not out, bake only on official rule-out. Spain: no injuries reported from SF1 (Oyarzabal and Porro substitutions tactical). England pre-SF2: Rice (illness v Norway) expected to return to the XI, Konsa likely retained, James fit; Henderson remains the sole baked dropout; Quansah serves the second match of his ban - a suspension, never baked. Argentina: Scaloni reports his entire squad available.",
+    "ODDS-HUNT OUTCOME (standing report line): NOTHING DUE - both semi-final lines were banked pre-game (SF1 12 Jul, SF2 13 Jul, each ~62h before kickoff); the third-place playoff and final each have only ONE team known (France to the third-place game, Spain to the final) so no matchup is locked and no per-match line can exist yet. The hunt re-fires the moment tonight's SF2 resolves both fields. Coverage check: all 101 completed matches have registered MKT entries.",
+    "NODE REGISTRATION: NOTHING DUE TODAY - the FINAL NODE (and third-place registration) becomes due the moment SF2 resolves the fields tonight, before the third-place game Sat 18 Jul and the final Sun 19 Jul; it will be built per the renderQFForward cloning procedure. SF node sealed v7.19.0 remains untouched, byte for byte.",
+  ]},
   {v:"v7.20.0",d:"2026-07-13",items:[
     "SF2 MARKET LINE CAPTURED PRE-GAME, ~62 hours before kickoff: Polymarket regulation 1X2 for England v Argentina posted by Polymarket 12 Jul 10:04 GMT (~4 hours after the field locked overnight) and captured at the 13 Jul 07:00 SAST scheduled run - England 35.875 / draw 32.875 / Argentina 30.875, mid prices as-is per standing order ($554K volume, $3.5M liquidity), duplicate-key check run before insertion (zero existing MKT entries for the key; ledger now 102 literal entries = 102 distinct keys). The model's frozen numbers for the same game, recomputed from this file: England 35 / draw 28 / Argentina 37 - a genuine pick disagreement on both endpoints, the market narrowly favouring England, the model narrowly favouring Argentina.",
     "Rest of the scheduled sweep, all quiet and reported: no matches played 12 Jul (rest day - baked count 100 = real-world played count 100); injury sweep of all four surviving squads found ZERO new official tournament-ending rule-outs (Tchouameni reported recovered and set to start the semi-final - monitor stays open until team news confirms; Nico Williams and Pino remain with the Spain squad, neither ruled out; Rice illness recovering per England camp; Messi fine after the knock against Switzerland); no fixture due (third-place and final teams unknown until the semi-finals); no node due (SF node sealed in v7.19.0, final node due after the semi-finals, before Sun 19 Jul)."
