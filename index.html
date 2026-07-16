@@ -44,7 +44,23 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WC 2026 · Squad Strength Model · 48 Teams</title>
+<title>WC2026 Squad Strength Model - Pre-Registered World Cup 2026 Predictions vs the Betting Market</title>
+<meta name="description" content="A frozen, pre-registered squad-strength model forecasting the 2026 FIFA World Cup: every prediction sealed on git and the Internet Archive before kickoff, scored openly against the betting market, with a published error ledger. Zero player statistics - club context only.">
+<link rel="canonical" href="https://model26.xyz/">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://model26.xyz/">
+<meta property="og:title" content="WC2026 Squad Strength Model - pre-registered predictions vs the betting market">
+<meta property="og:description" content="Every World Cup 2026 prediction frozen and publicly sealed before kickoff - git-timestamped, Internet-Archive-witnessed, scored openly against the betting market, errors ledgered.">
+<meta property="og:site_name" content="model26.xyz">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WC2026 Squad Strength Model - pre-registered predictions vs the betting market">
+<meta name="twitter:description" content="Frozen pre-registered World Cup 2026 model, sealed before kickoff and scored openly against the betting market.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","url":"https://model26.xyz/","name":"WC2026 Squad Strength Model","description":"Pre-registered, frozen squad-strength model for the 2026 FIFA World Cup, scored openly against the betting market with git and Internet Archive seals."},
+{"@type":"Dataset","name":"WC2026 pre-registered forecast record","url":"https://model26.xyz/","description":"Six pre-registered forecast nodes for the 2026 FIFA World Cup with per-match probabilities, market comparison, reproducibility package and a published correction ledger.","license":"https://github.com/NoobOfDecades/wc2026-model","isAccessibleForFree":true,"distribution":[{"@type":"DataDownload","encodingFormat":"text/html","contentUrl":"https://model26.xyz/"},{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://model26.xyz/data/player_contexts.json"}]}]}
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#07111A;--card:#0D1B29;--card2:#112035;--bdr:#1A2E42;--gold:#C89B3C;--gdim:#7B5B1A;--text:#E8EEF4;--mut:#6B8299;--dim:#2A3F54;--grn:#22C55E;--amb:#F97316;--red:#EF4444}
@@ -1198,8 +1214,11 @@ function render(){
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
 const BUILD_VERSION="v7.23.0";
-const BUILD_STAMP="2026-07-16 07:04 SAST (time web-verified in this command burst)";
+const BUILD_STAMP="2026-07-16 14:59 SAST (time web-verified in this command burst)";
 const CHANGELOG=[
+  {v:"v7.22.1",d:"2026-07-16",items:[
+    "SEARCH-ENGINE DISCOVERABILITY, at the designer's order - the site had a bare head (title, charset, viewport and nothing else) and no crawler infrastructure at all, which is why it appears in no search results despite five weeks live. Added: a descriptive title and meta description, canonical URL, robots meta, Open Graph and Twitter cards, and JSON-LD structured data (WebSite + Dataset, pointing at the reproducibility files); plus the repo&#39;s first three non-page files, authorized by the designer&#39;s order as a scoped extension of the git file list - robots.txt (allow all, sitemap declared), sitemap.xml, and an IndexNow verification key. On deploy, the site was submitted via the IndexNow API (covers Bing, Yandex and partner engines; response code logged in the session record). Google retired anonymous sitemap pings in 2023 and accepts submission only through Search Console, which requires the site owner&#39;s account - the one step that remains with the designer, documented in the run report. No model, scoring, registration or display-logic change - head metadata and crawler files only."
+  ]},
   {v:"v7.23.0",d:"2026-07-16",items:[
     "THIRD-PLACE PLAYOFF and FINAL market lines captured PRE-GAME, both in one hunt (16 Jul 07:04 SAST, HTTP Date printed in the same burst as the price fetch): Polymarket posted both events overnight (~28h after SF2 full time) and the morning run banked them immediately per the odds-in-advance standing order. FRANCE|ENGLAND (3P, Sat 18 Jul 22:00 SAST, Hard Rock Stadium): 49.5 France / 25.5 draw / 26.5 England, mid prices as-is, $66K vol, $1.8M liq, ~63h pre-kickoff. SPAIN|ARGENTINA (final, Sun 19 Jul 21:00 SAST, MetLife Stadium): 41.5 Spain / 31.5 draw / 26.5 Argentina, $60K vol, $1.4M liq, ~86h pre-kickoff. Model&#39;s own numbers for the same games, recomputed via the site&#39;s winProbs on the Top-15 basis: France 40/27/33 over England; Spain 38/27/35 over Argentina - model and market AGREE on both favourites (the final-node registration, sealed v7.22.0, already carries Spain as matchup and champion pick). Duplicate-key check before insertion: neither key existed (102 literal = 102 distinct; now 104 = 104). Rest of the scheduled sweep quiet and reported: no matches played since SF2 (baked 102 = played 102), zero new tournament-ending rule-outs across all four surviving squads (Saliba doubtful for the 3P after going off in the semi - doubtful, not out; Rice recovering from illness; Tchouameni made the SF squad; Nico Williams fully fit), no fixture due (3P and final already entered v7.22.0), no node due (all six registrations sealed - final node was the last)."
   ]},
