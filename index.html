@@ -1213,9 +1213,14 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.23.1";
-const BUILD_STAMP="2026-07-16 15:00 SAST (time web-verified in this command burst)";
+const BUILD_VERSION="v7.23.2";
+const BUILD_STAMP="2026-07-17 10:34 SAST (time web-verified in this command burst; two in-burst conversion slips caught and corrected pre-commit - the machine TZ database falls back to UTC, epoch+7200 is the proven method)";
 const CHANGELOG=[
+  {v:"v7.23.2",d:"2026-07-17",items:[
+    "DISPLAY CLARITY on the team page, designer-ordered and designer-caught: the squad table's highlight was stuck on the Starting XI in every mode - switching to Top 15 changed the total in the footer but gave no visual clue WHICH fifteen players produce it, and ruled-out players sat interleaved mid-table. Now the highlight always marks exactly the players the current basis counts (the 11 in Starting XI; all 15 in Top 15, the green dot still marking the likely XI within them; Whole Squad unchanged - all 26 count there), the counted block sorts first, and players officially ruled out sort last, are never highlighted, and keep their dated OUT note. The displayed set is derived from the same activePlayers() selection the scores sum, so display and arithmetic can no longer diverge. The selection engine itself is untouched - ruled-out players were always excluded from XI/Top-15 (the dropout rule) and every XI always fielded exactly one goalkeeper; this build makes those facts visible.",
+    "MODEL TAB - the squad-selection rules are now stated in prose (they were enforced in code all tournament but documented only in dated changelog entries, a gap found while preparing the paper's methods section): (1) ruled-out players are excluded from XI/Top-15 selection and retained in the Whole-Squad count; (2) every XI force-includes the best available goalkeeper, second-best stepping in on a rule-out; (3) the Top 15's four additions are position-blind best-by-score and can legitimately include a second goalkeeper - as of this build 23 of 48 squads count two keepers in their Top 15 and Argentina counts three (Musso, Rulli, Martinez), a composition inside the registered scores since the pre-tournament freeze. Selection rules only; no score, probability, tally or registration changed - verified by recompute (all 48x3 totals byte-identical) and the team-page render added to the standing sweep (48 teams x 3 modes), closing an error-#10-class blind spot: renderTeam was never among the nine swept surfaces.",
+    "For the stamp record: two in-burst SAST conversion slips were caught and corrected pre-commit during this build (the machine's TZ database silently falls back to UTC; the epoch+7200 method with an arithmetic sanity assertion is now the standing conversion, as the 12 Jul run had already established)."
+  ]},
   {v:"v7.23.1",d:"2026-07-16",items:[
     "AI ERROR #19 - BUILD WITHOUT RECONCILIATION, self-caught in the push output minutes after pushing: the SEO build below was assembled without first reconciling the repository against the morning's autonomous run, whose v7.23.0 had already captured BOTH remaining market lines pre-game. The version bump targeted the stale number and silently did nothing (an unasserted text replace - the same no-op failure shape as error #10's partial conversion, in build tooling rather than app code), so the previous entry shipped labelled v7.22.1 above v7.23.0 with BUILD_VERSION still reading v7.23.0. Per the append-only law the mislabelled entry stands below as pushed - THIS entry is the correction: that entry's true place in the sequence is here, as v7.23.1's predecessor-in-content; the version string now reads v7.23.1; the misnamed backup artefacts (wc2026-full-v7.22.1_*) are preserved un-overwritten with their contents noted as v7.23.0-plus-SEO. Corrections-ledger count updated to nineteen. Standing consequence: interactive builds carry the same reconcile-first duty as scheduled runs, and every version-bump replace is asserted - a bump that matches nothing must fail the build, not sail through it."
   ]},
@@ -1753,9 +1758,18 @@ function renderTeam(key){
   const sq=S[key];if(!sq)return'<p>Not found.</p>';
   const m=sq.meta,col=m.color,colT=textSafe(m.color),mx=maxScore();
   const xiSet=new Set(buildXI(key));
-  const allPlayers=sq.players.map(p=>[p,pscore(p,key),xiSet.has(p)]).sort((a,b)=>{
-    // starters first, then by score
-    if(a[2]!==b[2])return a[2]?-1:1;return b[1]-a[1];
+  // Mode-aware counted set for DISPLAY, derived from the engine's own selection (activePlayers) so the
+  // highlight can never diverge from what the score actually sums. Whole-Squad keeps the XI highlight
+  // only (all 26 count there; painting every row would say nothing).
+  const countedSet=MODE==='squad'?xiSet:new Set(activePlayers(key));
+  const allPlayers=sq.players.map(p=>[p,pscore(p,key),countedSet.has(p),xiSet.has(p)]).sort((a,b)=>{
+    // unavailable (injured / officially ruled out) always last - they cannot be selected, so they never sit among counted rows
+    const ua=(a[0][7]||injOutForSelection(a[0]))?1:0, ub=(b[0][7]||injOutForSelection(b[0]))?1:0;
+    if(ua!==ub)return ua-ub;
+    // counted-in-this-mode first; XI before the +4 within the counted block; then by score
+    if(a[2]!==b[2])return a[2]?-1:1;
+    if(a[3]!==b[3])return a[3]?-1:1;
+    return b[1]-a[1];
   });
   const tot=TOTALS[key],pct=(tot/mx*100).toFixed(1);
   const act=activePlayers(key);
@@ -1766,17 +1780,17 @@ function renderTeam(key){
   const lb={};act.forEach(p=>{const n=L[p[3]]?.n||p[3];lb[n]=(lb[n]||0)+pscore(p,key)});
   const lbSort=Object.entries(lb).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>.1);
   const lbMax=lbSort[0]?.[1]||1;
-  const rows=allPlayers.map(([p,score,inXI],i)=>{
+  const rows=allPlayers.map(([p,score,counted,inXI],i)=>{
     const lg=L[p[3]]||{};const c=playerColor(score);
     const _inj=injStatus(p);
     const _injOut=injOutForSelection(p);
-    const cls=p[7]?'injured':(_injOut?'injured':(inXI?'starter':''));
+    const cls=(p[7]||_injOut)?'injured':(counted?'starter':'');
     const cont=p[9]?(Array.isArray(p[9])?p[9][0]+' '+p[9][1]:p[9]):'';
     const conf=p[10]||'';
     const _injLabel=_inj?(' <span style="color:var(--amb);font-size:8.5px;font-weight:700" title="'+(_inj.note||'').replace(/"/g,'&quot;')+'">⚕ OUT — '+(_inj.until||(_inj.out==='next'?'next match':'injured'))+'</span>'):'';
     return`<tr class="${cls}">
       <td style="color:var(--mut);font-size:10px">${i+1}</td>
-      <td>${inXI&&!p[7]?'<span class="xi-dot" title="Starting XI"></span>':''}<span class="pbadge ${p[1]}">${p[1]}</span></td>
+      <td>${inXI&&!p[7]&&!_injOut?'<span class="xi-dot" title="Likely starting XI"></span>':''}<span class="pbadge ${p[1]}">${p[1]}</span></td>
       <td style="font-weight:${score>=7?'700':'400'};white-space:nowrap">${p[0]}${p[5]?'<span class="est"> *</span>':''}${p[7]?' <span style="color:var(--red);font-size:9px">⚕INJ</span>':''}${_injLabel}</td>
       <td style="color:var(--mut);font-size:11px;white-space:nowrap">${p[2]}</td>
       <td style="font-size:10px;color:var(--mut);white-space:nowrap">${lg.n||p[3]}</td>
@@ -1811,7 +1825,7 @@ function renderTeam(key){
       <div class="crd" style="margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:6px">
         <div class="crd-title" style="padding:0;border:none;color:${colT}">FULL SQUAD · 26 Players</div>
-        <span style="font-size:10px;color:var(--mut)"><span class="xi-dot"></span>= likely XI · * = est. position · ⚕INJ = unavailable</span></div>
+        <span style="font-size:10px;color:var(--mut)">${MODE==='squad'?'<span class="xi-dot"></span>= likely XI':'highlighted = the '+(MODE==='xi'?'11':'15')+' counted in this mode (<span class="xi-dot"></span>= likely XI)'} · * = est. position · ⚕ = ruled out, never selected</span></div>
       <div style="overflow-x:auto"><table class="sqtable">
         <thead><tr><th>#</th><th>Pos</th><th>Player</th><th>Club</th><th>League</th><th>LDW</th><th>Continental</th><th>Score</th></tr></thead>
         <tbody>${rows}</tbody>
@@ -1821,7 +1835,7 @@ function renderTeam(key){
       </table></div></div>
     <button onclick="STATE.cA='${key}';nav('compare')" style="padding:10px 18px;border:1px solid ${col}55;border-radius:8px;font-size:12px;font-weight:700;color:${colT};background:${col}11">Compare ${m.name} →</button>
     <div style="font-size:10px;color:var(--dim);margin-top:14px;line-height:1.7">
-      Showing <b>${modeTag()}</b> basis. In Starting-XI mode the green-dotted 11 count; toggle the header switch for whole-squad. The likely XI uses verified probable lineups, auto-filling by best-available player per position where needed. * positions are best-estimate for 2025-26.</div>`;
+      Showing <b>${modeTag()}</b> basis. Highlighted rows are exactly the players this mode counts (11 in Starting XI, 15 in Top 15; all 26 in Whole Squad). Players officially ruled out are excluded from XI/Top-15 selection, listed last and never highlighted - they remain in the 26 for the Whole-Squad number by design. Every XI always fields exactly one goalkeeper (the best available by score); the Top 15 adds the four best remaining players regardless of position, so a second goalkeeper can be among them. The likely XI uses verified probable lineups, auto-filling by best-available player per position where needed. * positions are best-estimate for 2025-26.</div>`;
 }
 
 // ════════════ BETTING PLAN RENDERER (shared by Compare + Fixtures) ════════════
@@ -3518,7 +3532,8 @@ function renderModel(){
     <ul><li><b style="color:var(--gold)">Starting XI</b> (default): only the likely 11 starters count (max 110). The realistic strength on the pitch; removes the distortion of deep benches at big clubs.</li>
     <li><b style="color:var(--gold)">Top 15</b>: the 11 starters plus the next 4 highest-scoring players (max 150). Rewards genuine bench depth — the rotation players who actually come on across an 8-game tournament — without the dead weight of squad places 16–26 dragging the total toward the mean.</li>
     <li><b style="color:var(--gold)">Whole Squad</b>: all 26 players count (max 260). Total depth, relevant when injuries/suspensions force deep rotation.</li></ul>
-    <p>Likely XIs come from verified probable line-ups and recent match line-ups; unclear slots auto-fill with the highest-scoring available player in that position. Rankings and the Bracket recompute live on switch.</p></div>
+    <p>Likely XIs come from verified probable line-ups and recent match line-ups; unclear slots auto-fill with the highest-scoring available player in that position. Rankings and the Bracket recompute live on switch.</p>
+    <p><b>Selection rules, enforced in code and unchanged all tournament:</b> (1) a player officially ruled out of the tournament is <b>excluded from the Starting-XI and Top-15 selections entirely</b> - the next-best available player takes the place - while remaining in the Whole-Squad count, because under FIFA rules an unreplaced player is still a registered squad member (the dropout rule described on the Accuracy tab). (2) Every Starting XI <b>always fields exactly one goalkeeper</b>: the highest-scoring available keeper is force-included, the second-best stepping in automatically if the top keeper is ruled out, displacing the weakest outfielder if needed. (3) The Top 15 adds the <b>four highest-scoring available players regardless of position</b> - deliberately position-blind, so a second goalkeeper can be among them when his score earns it. These are selection rules only; no player's score is ever altered by them.</p></div>
   <div class="msect"><h3>STEP 1 — FINISHING POSITION SCORE (FPS)</h3>
     <p>An exponential, top-heavy curve. Champions score 10.0; relegation scores near zero. The 1.5 exponent makes title winners worth dramatically more than mid-table.</p>
     <div class="fbox">FPS = 10 × ((n − rank + 1) / n) ^ 1.5
