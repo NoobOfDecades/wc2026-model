@@ -436,7 +436,7 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",2,1,"SoFi Stadium"],
 ["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",1,1,"Arrowhead Stadium"],
 ["FRANCE","ENGLAND","2026-07-18T22:00:00+02:00",4,6,"Hard Rock Stadium"],
-["SPAIN","ARGENTINA","2026-07-19T21:00:00+02:00",null,null,"MetLife Stadium"],
+["SPAIN","ARGENTINA","2026-07-19T21:00:00+02:00",0,0,"MetLife Stadium"],
 ["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",0,2,"AT&T Stadium"],["ENGLAND","ARGENTINA","2026-07-15T21:00:00+02:00",1,2,"Mercedes-Benz Stadium"],];
 
 // ============ MARKET ODDS COMPARISON (added later — see Model tab for full disclosure) ============
@@ -1213,9 +1213,14 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.24.0";
-const BUILD_STAMP="2026-07-19 07:05 SAST (time web-verified in this command burst, epoch+7200)";
+const BUILD_VERSION="v7.25.0";
+const BUILD_STAMP="2026-07-20 00:49 SAST (time web-verified in this command burst, epoch+7200)";
 const CHANGELOG=[
+  {v:"v7.25.0",d:"2026-07-20",items:[
+    "SPAIN 0-0 ARGENTINA at 90 minutes; SPAIN won 1-0 in extra time to become 2026 World Cup champions - the FINAL is baked (19 Jul, MetLife Stadium, East Rutherford; Ferran Torres 106&#39; from a Nico Williams knock-down off a Pedro Porro cross; Argentina reduced to ten men when Enzo Fernandez was sent off on 90&#39; for a foul on Cubarsi; confirmed complete including extra time via ESPN, NPR, Yahoo Sports, The National, amNewYork, Bolavip and Forbes before baking, the designer&#39;s +15-minute confirmation buffer observed). Level at 90 minutes, so baked as the 90-minute score 0-0 with KO_ADVANCERS/KO_HOW recording Spain through via extra time (aet) - the identical mechanism used for every prior level-at-90 tie. GRADING on both endpoints: the 90-minute 1X2 was a draw, so BOTH forecasters miss it (the model leaned Spain 38/27/35 and the market priced Spain 41.5/31.5/26.5 - both a Spain win, not the drawn regulation result); on the PRIMARY advancement endpoint BOTH hit - Spain advanced and both had Spain. The sealed final node (v7.22.0, 15 Jul, registered before the final) scored Spain 129.2 over Argentina 122.6 with the matchup pick equal to the champion pick: the model&#39;s CHAMPION CALL IS CORRECT.",
+    "TOURNAMENT COMPLETE - final running tallies, all recomputed against the baked results this build. Primary knockout ADVANCEMENT endpoint (who goes through, extra time and penalties included): model 24/32, market 24/32 - DEAD LEVEL across the whole tournament (per stage, model vs market: R32 12 vs 14 of 16, R16 6 vs 5 of 8, QF 4 vs 4 of 4, SF 1 vs 0 of 2, 3P 0 vs 0 of 1, final 1 vs 1 of 1). Co-reported 90-minute 1X2: model 63/104, market 66/104 (market three ahead on regulation results, level on advancement). The realised finishing order is now fixed - 1 Spain, 2 Argentina, 3 England, 4 France, with the quarter-finalists and below settled - so the finishing-order components (podium 1-4, order-of-16, the pre-tournament order and every per-node sealed order) become gradeable from this build; the dedicated RANK ANALYSIS follows as its own build tonight per the post-final programme.",
+    "Full sweep, all six points with explicit outcomes: (1) RESULTS - the final was the last unbaked match, 104 baked = 104 played, cross-checked against the real-world count; (2) FIXTURES - none remain, the tournament is over; (3) INJURY SWEEP - no surviving squad remains, nothing to bake; every open monitor (Yamal, Porro, Saliba, Samba, Reece James, Romero, Paredes) closed doubtful-not-out with nothing ever baked on any of them, the doubtful-not-out and never-bake-a-suspension laws held to the last day; (4) ODDS HUNT - nothing due, every fixture of the tournament had its regulation 1X2 banked pre-game (or an honest MISSING note), the odds record is permanently closed with no line ever added after a kickoff; (5) NODE REGISTRATION - all six pre-registered nodes were sealed before their rounds, the final node (v7.22.0) the last, the next boundary is the post-final analysis and not a node; (6) this build, versioned and stamped in-burst."
+  ]},
   {v:"v7.24.0",d:"2026-07-19",items:[
     "FRANCE 4-6 ENGLAND baked (third-place playoff, 18 Jul, Hard Rock Stadium, Miami; decided in regulation - halftime 4-0 England: Rice 3&#39;, Konsa 18&#39;, Saka 37&#39; and 45+1&#39;; France&#39;s comeback Mbappe 48&#39; and 66&#39; around Barcola 54&#39;; Saka penalty 87&#39; for the hat-trick, Dembele 90+5&#39;, Bellingham 90+7&#39; - a ten-goal game, confirmed via ESPN, FOX Sports, Sky Sports and beIN/AP before baking). England finish THIRD, France FOURTH - positions 3-4 are now settled for the finishing-order metrics graded at tournament end. Both forecasters MISS on both endpoints: the frozen final node&#39;s 3P pick was France (133.1 over England&#39;s post-Henderson 117.3, sealed 15 Jul before either remaining game) and the market&#39;s pre-game line also favoured France (49.5 / 25.5 / 26.5, captured 16 Jul ~63h out) - England won inside 90 minutes, so the miss is identical on the 90-minute 1X2 and the advancement endpoint. 3P stage closes 0/1 model vs 0/1 market. Running tallies: 90-minute 1X2 63/103 model vs 66/103 market; advancement 23/31 vs 23/31 - dead level on the primary endpoint with one game left. The final node&#39;s remaining components (Spain-Argentina matchup pick = champion pick Spain, and the completed order&#39;s positions 1-2) grade after tonight&#39;s final.",
     "Matchday injury sweep, both finalists, morning of the final: ZERO officially confirmed tournament-ending rule-outs - nothing baked. Spain: Yamal (ankle knock from SF1) and Porro (muscle) trained apart Thursday as workload management, both expected fit per ESPN and beIN reporting - doubtful-not-out holds; the stale Sports Mole line still listing Pino as out remains overruled by the official RFEF clearance of 11 Jul (AC sprain, no fracture, available from bench). Argentina: Romero and Paredes both fit (Romero played the full semi-final), Scaloni&#39;s stated concern is fatigue, not injury. France and England&#39;s tournaments are complete - their monitors (Saliba, Samba, Reece James) close with the 3P played, nothing ever baked on any of them, per the doubtful-not-out law."
@@ -2906,6 +2911,7 @@ const KO_ADVANCERS={
   'SWITZERLAND|COLOMBIA':'SWITZERLAND', // 0-0 after 120', Switzerland won 4-3 on pens
   'NORWAY|ENGLAND':'ENGLAND',        // 1-1 at 90', England won 2-1 in extra time (Bellingham 93')
   'ARGENTINA|SWITZERLAND':'ARGENTINA', // 1-1 at 90', Argentina won 3-1 in extra time
+  'SPAIN|ARGENTINA':'SPAIN',         // 0-0 at 90', Spain won 1-0 in extra time (Ferran Torres 106') - FINAL, Spain champions
 };
 // How each level-at-90 tie was decided, for honest display labels ('pens' or 'aet').
 const KO_HOW={
@@ -2917,6 +2923,7 @@ const KO_HOW={
   'SWITZERLAND|COLOMBIA':'pens',
   'NORWAY|ENGLAND':'aet',
   'ARGENTINA|SWITZERLAND':'aet',
+  'SPAIN|ARGENTINA':'aet',
 };
 const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1,'SPAIN|BELGIUM':1,'ARGENTINA|SWITZERLAND':1};
 const SF_KEYS={'FRANCE|SPAIN':1,'ENGLAND|ARGENTINA':1};
