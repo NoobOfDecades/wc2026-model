@@ -435,7 +435,7 @@ const S={"MEXICO":{meta:{"name": "Mexico", "emoji": "🇲🇽", "color": "#00684
 ["NORWAY","ENGLAND","2026-07-11T23:00:00+02:00",1,1,"Hard Rock Stadium"],
 ["SPAIN","BELGIUM","2026-07-10T21:00:00+02:00",2,1,"SoFi Stadium"],
 ["ARGENTINA","SWITZERLAND","2026-07-12T03:00:00+02:00",1,1,"Arrowhead Stadium"],
-["FRANCE","ENGLAND","2026-07-18T22:00:00+02:00",null,null,"Hard Rock Stadium"],
+["FRANCE","ENGLAND","2026-07-18T22:00:00+02:00",4,6,"Hard Rock Stadium"],
 ["SPAIN","ARGENTINA","2026-07-19T21:00:00+02:00",null,null,"MetLife Stadium"],
 ["FRANCE","SPAIN","2026-07-14T21:00:00+02:00",0,2,"AT&T Stadium"],["ENGLAND","ARGENTINA","2026-07-15T21:00:00+02:00",1,2,"Mercedes-Benz Stadium"],];
 
@@ -1213,9 +1213,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.23.3";
-const BUILD_STAMP="2026-07-18 10:49 SAST (time web-verified in this command burst, epoch+7200)";
+const BUILD_VERSION="v7.24.0";
+const BUILD_STAMP="2026-07-19 07:05 SAST (time web-verified in this command burst, epoch+7200)";
 const CHANGELOG=[
+  {v:"v7.24.0",d:"2026-07-19",items:[
+    "FRANCE 4-6 ENGLAND baked (third-place playoff, 18 Jul, Hard Rock Stadium, Miami; decided in regulation - halftime 4-0 England: Rice 3&#39;, Konsa 18&#39;, Saka 37&#39; and 45+1&#39;; France&#39;s comeback Mbappe 48&#39; and 66&#39; around Barcola 54&#39;; Saka penalty 87&#39; for the hat-trick, Dembele 90+5&#39;, Bellingham 90+7&#39; - a ten-goal game, confirmed via ESPN, FOX Sports, Sky Sports and beIN/AP before baking). England finish THIRD, France FOURTH - positions 3-4 are now settled for the finishing-order metrics graded at tournament end. Both forecasters MISS on both endpoints: the frozen final node&#39;s 3P pick was France (133.1 over England&#39;s post-Henderson 117.3, sealed 15 Jul before either remaining game) and the market&#39;s pre-game line also favoured France (49.5 / 25.5 / 26.5, captured 16 Jul ~63h out) - England won inside 90 minutes, so the miss is identical on the 90-minute 1X2 and the advancement endpoint. 3P stage closes 0/1 model vs 0/1 market. Running tallies: 90-minute 1X2 63/103 model vs 66/103 market; advancement 23/31 vs 23/31 - dead level on the primary endpoint with one game left. The final node&#39;s remaining components (Spain-Argentina matchup pick = champion pick Spain, and the completed order&#39;s positions 1-2) grade after tonight&#39;s final.",
+    "Matchday injury sweep, both finalists, morning of the final: ZERO officially confirmed tournament-ending rule-outs - nothing baked. Spain: Yamal (ankle knock from SF1) and Porro (muscle) trained apart Thursday as workload management, both expected fit per ESPN and beIN reporting - doubtful-not-out holds; the stale Sports Mole line still listing Pino as out remains overruled by the official RFEF clearance of 11 Jul (AC sprain, no fracture, available from bench). Argentina: Romero and Paredes both fit (Romero played the full semi-final), Scaloni&#39;s stated concern is fatigue, not injury. France and England&#39;s tournaments are complete - their monitors (Saliba, Samba, Reece James) close with the 3P played, nothing ever baked on any of them, per the doubtful-not-out law."
+  ]},
   {v:"v7.23.3",d:"2026-07-18",items:[
     "ANCHOR-VS-CAP wording fix, designer-ordered (prepared 17 Jul, shipped this build): the Model tab STEP 2 formula box claimed a 10.0 maximum for the player score - a pre-Build-Run-2 fossil. The index is anchored (strongest calibration-time context ~ 10 via the SCALE display constant), not capped: exactly two maximal-context players sit marginally above it (Nuno Mendes and Vitinha, both PSG, both 10.006 - four seasons of Ligue 1 titles plus UCL R16/SF/WIN/WIN), by design, not error. Clamping was refused - a cap would silently discard top-of-scale ordinal information and post-hoc transform sealed scores. Display audit: no element clips above 10 (player bars scale to the actual maximum); zero numbers changed; PAPER-MATERIALS gained the dated anchor-vs-cap note for the paper's data section.",
     "Shipped at the designer's word on third-place-playoff matchday with a fresh injury re-sweep (the 07:00 scheduled run had held this patch per the standing no-dedicated-push order, correctly): ZERO official tournament-ending rule-outs to bake. Saliba (France) is listed unavailable by press previews with surgery speculation, but no official federation or manager rule-out exists - Deschamps called the injury 'problematic' without ruling him out, so the doubtful-not-out law holds and nothing is baked; Samba (France) and Reece James (England) remain doubtful-only monitors. Frozen registrations, scores and tallies untouched - this build is wording and documentation only."
