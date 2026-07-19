@@ -378,6 +378,7 @@ a{color:inherit;text-decoration:none}
   <button class="nb" onclick="nav('accuracy')">🎯 Accuracy</button>
   <button class="nb" onclick="nav('results')">📋 Results</button>
   <button class="nb" onclick="nav('model')">🔢 Model</button>
+  <button class="nb" onclick="nav('rankanalysis')">📊 Rank Analysis</button>
 </nav>
 </div></div></header>
 <main class="content" id="root"></main>
@@ -1169,7 +1170,7 @@ function modeTag(){return modeName();}
 function nav(view,opts={}){
   STATE={...STATE,view,...opts};render();
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,results:6,model:7};
+  const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,results:6,model:7,rankanalysis:8};
   if(map[view]!==undefined){
     const btn=document.querySelectorAll('.nb')[map[view]];
     btn.classList.add('on');
@@ -1210,12 +1211,17 @@ function render(){
   else if(v==='accuracy')root.innerHTML=renderAccuracy();
   else if(v==='results')root.innerHTML=renderResults();
   else if(v==='model')root.innerHTML=renderModel();
+  else if(v==='rankanalysis')root.innerHTML=renderRankAnalysis();
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.25.0";
-const BUILD_STAMP="2026-07-20 00:49 SAST (time web-verified in this command burst, epoch+7200)";
+const BUILD_VERSION="v7.26.0";
+const BUILD_STAMP="2026-07-20 01:09 SAST (time web-verified in this command burst, epoch+7200)";
 const CHANGELOG=[
+  {v:"v7.26.0",d:"2026-07-20",items:[
+    "NEW RANK ANALYSIS TAB (post-final programme, Phase 2) - the finishing-order components of every sealed forecast, graded live against the realised order. The binary champion call is one bit; rank metrics ask the fuller question a squad-strength model actually claims to answer - how close was the whole ordering to what reality produced. Three metrics per sealed order: Spearman&#39;s rho (rank agreement, computed as the Pearson correlation of the rank vectors so it is correct under ties), MAE in ranking places, and top-4/8/16 set overlap. The realised finishing order is derived LIVE from the baked results (champion, runner-up, third, fourth fully resolved; same-round exits tied at their tier midrank - the standard handling for a partial order; tiers sum to 48). RESULTS: pre-tournament full ranking rho +0.55 (MAE 10.2, champion France finished 4th); R16 order-of-16 +0.59 (dragged by Brazil, its predicted runner-up, exiting in the R16); QF order-of-8 +0.76 with all four eventual semi-finalists inside its top four (top-4 4/4); SF order-of-4 NEGATIVE at -0.40 - it ranked France first of the four and France came fourth, the model&#39;s biggest ordering miss, reported as plainly as its hits; FINAL order-of-4 its best at +0.80 (MAE 0.50, a single France/England transposition) with the champion pick Spain CORRECT. The ordering sharpened as the field narrowed. FIFA-official 1-48 comparison flagged pending official publication, to be recomputed when it exists.",
+    "FULL-COMPONENT NODE GRADING COMPLETED (12 Jul rule): the per-node scoreboard&#39;s finishing-order lines, which read graded at tournament end all tournament, now show the live-computed grade for each node (Spearman, MAE, top-4) - no sealed component is left ungraded now that the tournament is complete. The five frozen registration panels are UNTOUCHED (md5-identical x5 vs HEAD: 4de17d96 / b3d0124b / 9933c81b / d3a40a8d / c4ebc571); all order grading lives in the editable scoreboard and the new tab, and the realised order is one shared live function feeding both so display and arithmetic cannot diverge. The tenth surface (renderRankAnalysis) joins the standing render sweep. Zero scores, probabilities, registrations or market captures changed; the tab reads existing baked data. Verified: node --check PASS, ten-surface sweep ALL PASS, every rank figure recomputed and matched, backticks even, div balance at baseline, frozen panels identical."
+  ]},
   {v:"v7.25.0",d:"2026-07-20",items:[
     "SPAIN 0-0 ARGENTINA at 90 minutes; SPAIN won 1-0 in extra time to become 2026 World Cup champions - the FINAL is baked (19 Jul, MetLife Stadium, East Rutherford; Ferran Torres 106&#39; from a Nico Williams knock-down off a Pedro Porro cross; Argentina reduced to ten men when Enzo Fernandez was sent off on 90&#39; for a foul on Cubarsi; confirmed complete including extra time via ESPN, NPR, Yahoo Sports, The National, amNewYork, Bolavip and Forbes before baking, the designer&#39;s +15-minute confirmation buffer observed). Level at 90 minutes, so baked as the 90-minute score 0-0 with KO_ADVANCERS/KO_HOW recording Spain through via extra time (aet) - the identical mechanism used for every prior level-at-90 tie. GRADING on both endpoints: the 90-minute 1X2 was a draw, so BOTH forecasters miss it (the model leaned Spain 38/27/35 and the market priced Spain 41.5/31.5/26.5 - both a Spain win, not the drawn regulation result); on the PRIMARY advancement endpoint BOTH hit - Spain advanced and both had Spain. The sealed final node (v7.22.0, 15 Jul, registered before the final) scored Spain 129.2 over Argentina 122.6 with the matchup pick equal to the champion pick: the model&#39;s CHAMPION CALL IS CORRECT.",
     "TOURNAMENT COMPLETE - final running tallies, all recomputed against the baked results this build. Primary knockout ADVANCEMENT endpoint (who goes through, extra time and penalties included): model 24/32, market 24/32 - DEAD LEVEL across the whole tournament (per stage, model vs market: R32 12 vs 14 of 16, R16 6 vs 5 of 8, QF 4 vs 4 of 4, SF 1 vs 0 of 2, 3P 0 vs 0 of 1, final 1 vs 1 of 1). Co-reported 90-minute 1X2: model 63/104, market 66/104 (market three ahead on regulation results, level on advancement). The realised finishing order is now fixed - 1 Spain, 2 Argentina, 3 England, 4 France, with the quarter-finalists and below settled - so the finishing-order components (podium 1-4, order-of-16, the pre-tournament order and every per-node sealed order) become gradeable from this build; the dedicated RANK ANALYSIS follows as its own build tonight per the post-final programme.",
@@ -3156,6 +3162,132 @@ function champStatus(champ){
   }
   return'OUT';
 }
+// ════════════ FINISHING-ORDER GRADING + RANK ANALYSIS (post-final; tournament complete) ════════════
+// The realised finishing order is derived LIVE from the baked knockout results, never hardcoded.
+// Champion / runner-up / third / fourth are fully resolved by the final and the third-place playoff;
+// teams eliminated in the SAME round share a tied tier and take that tier's MIDRANK - the standard
+// tie handling for rank statistics. Tier sizes sum to 48. This function is the single source of the
+// realised order used by both the per-node scoreboard and the Rank Analysis tab.
+function realisedFinishingRanks(){
+  const kf=knockoutFixtures();
+  const champ=[],runner=[],third=[],fourth=[],qfL=[],r16L=[],r32L=[];
+  for(const f of kf){ const a=f[0],b=f[1]; if(f[3]===null||f[3]===undefined||f[4]===null||f[4]===undefined)continue;
+    const o=actualOutcome(f); const adv=(o==='D')?KO_ADVANCERS[a+'|'+b]:(o==='A'?a:b); if(!adv)continue;
+    const los=(adv===a)?b:a; const st=koStageOf(a,b);
+    if(st==='FINAL'){champ.push(adv);runner.push(los);}
+    else if(st==='3P'){third.push(adv);fourth.push(los);}
+    else if(st==='QF')qfL.push(los); else if(st==='R16')r16L.push(los); else if(st==='R32')r32L.push(los);
+  }
+  const koTeams=new Set(); kf.forEach(f=>{koTeams.add(f[0]);koTeams.add(f[1]);});
+  const groupExit=Object.keys(S).filter(t=>!koTeams.has(t));
+  const rank={}; let r=1;
+  const assign=(list)=>{const n=list.length; if(!n)return; const mid=r+(n-1)/2; list.forEach(t=>rank[t]=mid); r+=n;};
+  assign(champ);assign(runner);assign(third);assign(fourth);
+  assign(qfL.slice().sort());assign(r16L.slice().sort());assign(r32L.slice().sort());assign(groupExit.slice().sort());
+  return {rank,tiers:{champ,runner,third,fourth,qfL:qfL.slice().sort(),r16L:r16L.slice().sort(),r32L:r32L.slice().sort(),groupExit:groupExit.slice().sort()}};
+}
+// Spearman's rho as the Pearson correlation of the two rank vectors (this definition is correct
+// under ties, where the simplified 6*sum(d^2) formula is not; the realised side carries midrank ties).
+function spearmanRho(pred,real){const n=pred.length;if(n<2)return NaN;
+  const mp=pred.reduce((s,x)=>s+x,0)/n,mr=real.reduce((s,x)=>s+x,0)/n;let sxy=0,sxx=0,syy=0;
+  for(let i=0;i<n;i++){const dx=pred[i]-mp,dy=real[i]-mr;sxy+=dx*dy;sxx+=dx*dx;syy+=dy*dy;}
+  return (sxx===0||syy===0)?NaN:sxy/Math.sqrt(sxx*syy);}
+function maePos(pred,real){let s=0;for(let i=0;i<pred.length;i++)s+=Math.abs(pred[i]-real[i]);return s/pred.length;}
+// Sealed finishing orders, transcribed VERBATIM from the frozen panels (facts of record only used to
+// GRADE - the panels' registered prose is never computed from these and is never touched). The
+// pre-tournament order is the frozen full-field score ranking (the deterministic model, read live).
+const SEALED_ORDERS=[
+ {key:'PRE',label:'Pre-tournament full ranking',date:'24 Jun',champ:'FRANCE',note:'read before a ball was kicked; all 48 teams by frozen Top-15 squad score; champion pick France',get order(){return Object.keys(S).map(t=>[t,teamScore(t)]).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);}},
+ {key:'R16',label:'R16 node - order of 16',date:'4 Jul',champ:'FRANCE',note:'the 16 actual round-of-16 survivors, ordered before any R16 kickoff',order:['FRANCE','BRAZIL','SPAIN','ARGENTINA','BELGIUM','ENGLAND','MOROCCO','COLOMBIA','PORTUGAL','NORWAY','EGYPT','MEXICO','USA','SWITZERLAND','CANADA','PARAGUAY']},
+ {key:'QF',label:'QF node - order of 8',date:'8 Jul',champ:'FRANCE',note:'the 8 actual quarter-finalists, ordered before any quarter-final',order:['FRANCE','ARGENTINA','SPAIN','ENGLAND','BELGIUM','NORWAY','MOROCCO','SWITZERLAND']},
+ {key:'SF',label:'SF node - order of 4',date:'12 Jul',champ:'FRANCE',note:'the 4 actual semi-finalists, ordered before either semi-final',order:['FRANCE','ARGENTINA','SPAIN','ENGLAND']},
+ {key:'FINAL',label:'Final node - order of 4',date:'16 Jul',champ:'SPAIN',note:'re-read from the two finalists before the final and third-place playoff; champion pick flips to Spain',order:['SPAIN','ARGENTINA','FRANCE','ENGLAND']}
+];
+function gradeFinishingOrder(orderArr){
+  const {rank}=realisedFinishingRanks();
+  const pred=orderArr.map((t,i)=>i+1), real=orderArr.map(t=>rank[t]);
+  const realSorted=Object.keys(rank).sort((a,b)=>rank[a]-rank[b]);
+  const overlap=k=>{const rs=new Set(realSorted.slice(0,k));return orderArr.slice(0,k).filter(t=>rs.has(t)).length;};
+  const res={N:orderArr.length,rho:spearmanRho(pred,real),mae:maePos(pred,real),
+    champ:orderArr[0],champReal:rank[orderArr[0]],top4:overlap(4),pred,real};
+  if(orderArr.length>=8)res.top8=overlap(8);
+  if(orderArr.length>=16)res.top16=overlap(16);
+  return res;
+}
+// One-line finishing-order grade for a node's scoreboard row (full-component grading, 12 Jul rule).
+function orderGradeLine(key){
+  const so=SEALED_ORDERS.find(o=>o.key===key); if(!so)return'graded at tournament end';
+  const g=gradeFinishingOrder(so.order);
+  const rho=isNaN(g.rho)?'n/a':(g.rho>=0?'+':'')+g.rho.toFixed(2);
+  return `order graded: Spearman ${rho}, MAE ${g.mae.toFixed(2)} places, top-4 ${g.top4}/4 (Rank Analysis tab)`;
+}
+
+function renderRankAnalysis(){
+  const rf=realisedFinishingRanks(), T=rf.tiers;
+  const NM=t=>(S[t]?S[t].meta.name:t);
+  const grades=SEALED_ORDERS.map(o=>({o,g:gradeFinishingOrder(o.order)}));
+  const rhoCol=r=>isNaN(r)?'var(--mut)':(r>=0.5?'#22C55E':(r>=0?'#EAB308':'#EF4444'));
+  const fmt=r=>isNaN(r)?'n/a':(r>=0?'+':'')+r.toFixed(3);
+  const champReal=t=>{const rk=rf.rank[t];return rk===1?'champion (1st)':rk===2?'runner-up (2nd)':rk===3?'third (3rd)':rk===4?'fourth (4th)':('finished ~'+rk);};
+  const tierRow=(list,lbl)=>list.length?`<div style="margin:2px 0"><b style="color:var(--text)">${lbl}</b> <span style="color:var(--mut)">${list.map(NM).join(' · ')}</span></div>`:'';
+  const rowsHtml=grades.map(({o,g})=>{
+    const champHit=rf.rank[o.champ]===1;
+    const overlaps=`${g.top4}/4`+(g.top8!==undefined?` · ${g.top8}/8`:'')+(g.top16!==undefined?` · ${g.top16}/16`:'');
+    return `<tr style="border-top:1px solid var(--gdim)">
+      <td style="padding:7px 8px"><b style="color:var(--text)">${o.label}</b><div style="font-size:9px;color:var(--dim)">sealed ${o.date}</div></td>
+      <td style="padding:7px 8px;text-align:center;font-family:monospace">${g.N}</td>
+      <td style="padding:7px 8px;text-align:center;font-family:monospace;font-weight:800;color:${rhoCol(g.rho)}">${fmt(g.rho)}</td>
+      <td style="padding:7px 8px;text-align:center;font-family:monospace">${g.mae.toFixed(2)}</td>
+      <td style="padding:7px 8px;text-align:center;font-family:monospace">${overlaps}</td>
+      <td style="padding:7px 8px;font-size:10px">${NM(o.champ)} <span style="color:var(--mut)">→ ${champReal(o.champ)}</span> <b style="color:${champHit?'#22C55E':'#EF4444'}">${champHit?'✓':'✗'}</b></td>
+    </tr>`;
+  }).join('');
+  // worked example: the final node
+  const fg=gradeFinishingOrder(SEALED_ORDERS.find(o=>o.key==='FINAL').order);
+  return `<div style="max-width:920px;margin:0 auto">
+    <h2 style="font-size:19px;font-weight:800;margin:6px 0 2px">📊 Rank Analysis - how well did the whole ordering do?</h2>
+    <p style="font-size:12px;color:var(--mut);line-height:1.6;margin:6px 0 12px">The binary champion call is one bit of information. Rank metrics ask a harder, fuller question: across a whole registered finishing order, <b style="color:var(--text)">how close was the model's ordering to the order reality produced?</b> This is exactly what a squad-strength model claims to know - a ranking - and where a single win-or-lose headline cannot reach. Every figure below is computed live from the baked results against the frozen sealed orders; nothing is hand-entered.</p>
+    <div style="background:var(--card);border:1px solid var(--gdim);border-radius:10px;padding:11px 13px;margin-bottom:13px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--gold);margin-bottom:5px">THE REALISED FINISHING ORDER (derived live from results)</div>
+      ${tierRow(T.champ,'1 -')}${tierRow(T.runner,'2 -')}${tierRow(T.third,'3 -')}${tierRow(T.fourth,'4 -')}
+      ${tierRow(T.qfL,'5-8 (quarter-final losers, tied - no play-off ranks them, midrank 6.5):')}
+      ${tierRow(T.r16L,'9-16 (round-of-16 losers, tied, midrank 12.5):')}
+      <div style="margin:4px 0;font-size:10px;color:var(--dim)">17-32 - the ${T.r32L.length} round-of-32 losers (tied, midrank 24.5) · 33-48 - the ${T.groupExit.length} group-stage exits (tied, midrank 40.5)</div>
+      <div style="font-size:10px;color:var(--mut);margin-top:5px">Teams knocked out in the same round are genuinely tied - the tournament produced no order among them, so they share the midrank of their tier. This is the standard, judgement-free way to score rank agreement against a partial order.</div>
+    </div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">
+      <tr style="color:var(--dim);font-size:9px;text-transform:uppercase;text-align:left"><td style="padding:4px 8px">Sealed order</td><td style="padding:4px 8px;text-align:center">N</td><td style="padding:4px 8px;text-align:center">Spearman ρ</td><td style="padding:4px 8px;text-align:center">MAE (places)</td><td style="padding:4px 8px;text-align:center">top-4 · 8 · 16 overlap</td><td style="padding:4px 8px">champion pick → finish</td></tr>
+      ${rowsHtml}
+    </table></div>
+    <p style="font-size:10px;color:var(--mut);line-height:1.55;margin:9px 0 14px"><b style="color:var(--text)">Reading it honestly.</b> The ordering <b style="color:var(--text)">sharpened as the field narrowed</b>: the quarter-final node placed all four eventual top-4 teams in its own top four (top-4 4/4, ρ +0.76). The pre-tournament and R16 orders correlate moderately (ρ ~ +0.55/+0.59) - dragged down by Brazil, the R16 node's predicted runner-up, going out in the round of 16. The <b style="color:var(--text)">semi-final node's order-of-4 correlates negatively (ρ −0.40)</b>: it ranked France first of the four, and France finished fourth - the model's biggest ordering miss, reported as plainly as its hits. The <b style="color:var(--text)">final node's order is its best (ρ +0.80, MAE 0.50)</b> and its champion pick - Spain - is correct; only France and England are swapped (the third-place playoff), a single adjacent transposition. Each node is graded on its own seal; the champion pick was France at every node until the final node, where it flipped to Spain and landed.</p>
+    <div style="display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:14px">
+      <div style="background:var(--card);border:1px solid var(--gdim);border-radius:9px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:.5px">SPEARMAN'S ρ - does the ordering agree?</div>
+        <div style="font-size:10.5px;color:var(--mut);line-height:1.55;margin-top:4px">Correlation between the predicted rank vector and the realised rank vector (+1 = identical order, 0 = unrelated, −1 = exactly reversed). Computed as the Pearson correlation of the two rank vectors, which is the correct definition when reality has ties (the simple 6·Σd² formula assumes none). Worked example, final node: predicted [1,2,3,4] for Spain, Argentina, France, England; realised [1,2,4,3]; ρ = +0.80.</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--gdim);border-radius:9px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:.5px">MAE IN PLACES - how far off, on average?</div>
+        <div style="font-size:10.5px;color:var(--mut);line-height:1.55;margin-top:4px">Mean absolute difference between each team's predicted position and its realised position, in ranking places. Lower is better; 0 is a perfect order. Scale-anchored to N, so it is comparable within a node but not across nodes of different size.</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--gdim);border-radius:9px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:.5px">TOP-4 / 8 / 16 OVERLAP - right teams in the right tier?</div>
+        <div style="font-size:10.5px;color:var(--mut);line-height:1.55;margin-top:4px">How many of the predicted top-k are in the realised top-k, as sets (tie-agnostic). Answers "did it identify the right group" even when it ordered them imperfectly - e.g. the QF node named all four eventual semi-finalists (top-4 4/4) though it ordered them wrongly.</div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--gdim);border-radius:9px;padding:10px 12px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:.5px">FIFA-OFFICIAL 1-48 COMPARISON</div>
+      <div style="font-size:10.5px;color:var(--mut);line-height:1.55;margin-top:4px">FIFA publishes an official final tournament ranking of all 48 teams (tie-breaks by stage reached, then points, goal difference, goals). The model's pre-tournament full ranking will be scored against it on the same three metrics <b style="color:var(--text)">the moment it is published</b> - <b style="color:var(--text)">pending official publication</b>. The realised order above uses stage-of-elimination with midrank ties, which agrees with the FIFA order down to fourth place and differs only in how same-stage exits are broken; the recompute will be shown here when the official table exists.</div>
+    </div>
+    <details style="margin-bottom:14px"><summary style="cursor:pointer;font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.5px">SHOW THE COMPUTATION (predicted vs realised rank, per team, per node)</summary>
+      <div style="font-size:10px;color:var(--mut);line-height:1.6;padding:8px 4px;font-family:monospace">
+      ${grades.filter(x=>x.o.key!=='PRE').map(({o,g})=>`<div style="margin:6px 0"><b style="color:var(--text)">${o.label}</b> (ρ ${fmt(g.rho)}, MAE ${g.mae.toFixed(2)}):<br>${o.order.map((t,i)=>NM(t)+' p'+(i+1)+'/r'+g.real[i]).join(' · ')}</div>`).join('')}
+      <div style="margin:6px 0;color:var(--dim)">Pre-tournament (N=48) omitted here for length - ρ ${fmt(grades[0].g.rho)}, MAE ${grades[0].g.mae.toFixed(2)}; its predicted top-8 by frozen score: ${SEALED_ORDERS[0].order.slice(0,8).map(NM).join(' · ')}.</div>
+      </div>
+    </details>
+    <p style="font-size:9.5px;color:var(--dim);line-height:1.55;margin-bottom:10px">These are multiple pre-registered assessment points within one tournament, not independent replications - later nodes share downstream games with earlier ones and each surviving field is stronger than the last, so figures are reported per node and never blended. Spearman and MAE reward the whole ordering; the champion column is the single binary call. Realised ranks use midrank tie handling (standard for partial orders). England's pre-tournament score reflects the baked Henderson dropout (−0.9), which does not change its ordinal band.</p>
+  </div>`;
+}
+
 // THE PER-NODE SCOREBOARD - the study design made visible: every pre-registered node graded on
 // ITS OWN denominator, with the market's like-for-like figure wherever one exists.
 function renderNodeScoreboard(){
@@ -3185,18 +3317,18 @@ function renderNodeScoreboard(){
   const st=m=>`<td class="ndbc" style="padding:7px 8px;font-family:monospace;font-weight:800;color:${m}">`;
   const rows=[
    ['Pre-tournament bracket · survivors','pre-knockout*','survivor overlap per stage',`R16 ${inter(predR16,actR16)}/16 · QF ${inter(predQF,actQF)}/8 · SF ${inter(predSF,actSF)}/${actSF.size}${actSF.size<4?' so far':''}`,'n/a*',actSF.size<4?'in progress':'complete to SF field'],
-   ['&nbsp;&nbsp;· champion & finishing order','pre-knockout*','champion pick + full order',`champion France: ${champ} · finishing order: graded at tournament end`,'n/a*','open'],
+   ['&nbsp;&nbsp;· champion & finishing order','pre-knockout*','champion pick + full order',`champion France: ${champ} · ${orderGradeLine('PRE')}`,'n/a*','open'],
    ['R32 matchups','28 Jun','16 matchups · who advances',`${ps.R32.advM}/16`,`${ps.R32.advK}/16`,'complete'],
    ['R16 node · matchups','2 Jul','8 matchups · who advances',`${ps.R16.advM}/8`,`${ps.R16.advK}/8`,'complete'],
    ['&nbsp;&nbsp;· champion (sealed in the same panel)','2 Jul','tournament winner pick',`champion France: ${champ}`,'n/a*','open'],
    ['R16 forward path','4 Jul','implied QFs → SFs → final',`QFs: ${fwdSum(NODE_R16FWD.QF,'QF')} · SFs: ${fwdSum(NODE_R16FWD.SF,'SF')} · final: ${fwdSum(NODE_R16FWD.FINAL,'FINAL')}`,'n/a*','open'],
-   ['&nbsp;&nbsp;· champion & order of the 16','4 Jul','champion pick + full order',`champion France: ${champ} · order: graded at tournament end`,'n/a*','open'],
+   ['&nbsp;&nbsp;· champion & order of the 16','4 Jul','champion pick + full order',`champion France: ${champ} · ${orderGradeLine('R16')}`,'n/a*','open'],
    ['QF node · matchups','8 Jul','4 matchups · who advances',`${ps.QF.advM}/${ps.QF.advD||0}`,`${ps.QF.advK}/${ps.QF.advKN||0}`,qfPend?`${qfPend} pending`:'complete'],
-   ['&nbsp;&nbsp;· forward path','8 Jul','implied SFs + final + champion + order',`SFs: ${fwdSum(NODE_QF.SF,'SF')} · final: ${fwdSum(NODE_QF.FINAL,'FINAL')} · champion France: ${champ} · order of the 8: graded at tournament end`,'n/a*','open'],
+   ['&nbsp;&nbsp;· forward path','8 Jul','implied SFs + final + champion + order',`SFs: ${fwdSum(NODE_QF.SF,'SF')} · final: ${fwdSum(NODE_QF.FINAL,'FINAL')} · champion France: ${champ} · ${orderGradeLine('QF')}`,'n/a*','open'],
    ['SF node · matchups','12 Jul','2 matchups · who advances',`${sfStage.advM}/${sfStage.advD||0}`,`${sfStage.advK}/${sfStage.advKN||0}`,sfPend?`${sfPend} pending`:'complete'],
-   ['&nbsp;&nbsp;· forward path','12 Jul','implied final + 3rd-place matchup + champion + order 1-4',`final France v Argentina: ${fwdSum(NODE_SF.FINAL,'FINAL')} · implied 3rd-place matchup Spain v England, pick Spain: ${fwdSum(NODE_SF.P3,'3P')} · champion France: ${champ} · sealed order (mechanically derived - higher frozen score at each implied node): 1 France (champion) · 2 Argentina (runner-up) · 3 Spain (third) · 4 England (fourth) - graded at tournament end`,'n/a*','open'],
+   ['&nbsp;&nbsp;· forward path','12 Jul','implied final + 3rd-place matchup + champion + order 1-4',`final France v Argentina: ${fwdSum(NODE_SF.FINAL,'FINAL')} · implied 3rd-place matchup Spain v England, pick Spain: ${fwdSum(NODE_SF.P3,'3P')} · champion France: ${champ} · sealed order (mechanically derived - higher frozen score at each implied node): 1 France (champion) · 2 Argentina (runner-up) · 3 Spain (third) · 4 England (fourth) - ${orderGradeLine('SF')}`,'n/a*','open'],
    ['FINAL node · matchup','16 Jul','1 matchup · who lifts it',`${fwdSum(NODE_FINAL.FINAL,'FINAL')}`,`line capture pending`,'pending'],
-   ['&nbsp;&nbsp;· forward path','16 Jul','3rd place + champion (= the matchup call, stated once) + order 1-4',`3rd place France (v England): ${fwdSum(NODE_FINAL.P3,'3P')} · champion Spain: ${champStatus('SPAIN')} - the SAME call as the matchup pick · completed order 1 Spain · 2 Argentina · 3 France · 4 England - graded at tournament end`,'n/a*','open']
+   ['&nbsp;&nbsp;· forward path','16 Jul','3rd place + champion (= the matchup call, stated once) + order 1-4',`3rd place France (v England): ${fwdSum(NODE_FINAL.P3,'3P')} · champion Spain: ${champStatus('SPAIN')} - the SAME call as the matchup pick · completed order 1 Spain · 2 Argentina · 3 France · 4 England - ${orderGradeLine('FINAL')}`,'n/a*','open']
   ];
   return `<div style="background:var(--card);border:1px solid var(--gdim);border-radius:12px;padding:14px 14px 10px;margin-bottom:16px">
     <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin-bottom:4px">📋 THE PRE-REGISTERED NODES - EACH GRADED ON ITS OWN TEST</div>
