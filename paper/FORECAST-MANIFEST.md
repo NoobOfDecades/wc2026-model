@@ -22,7 +22,7 @@ One row per registered prediction set: what was predicted | introducing git comm
 | Final bake (v7.25.0) | Spain 1-0 aet, champion pick correct | 5d80573 | 19 Jul 00:56 | https://web.archive.org/web/20260719225831/https://model26.xyz/ |
 | Rank Analysis + full-component grading (v7.26.0) | every sealed order graded vs realised finish | b196c03 | 20 Jul 01:10 | https://web.archive.org/web/20260720050130/https://model26.xyz/ |
 | 48-nation FIFA-procedure standings (v7.27.0) | frozen pre-knockout ranking vs final standings, all 48 | 642a76e | 20 Jul 10:47 | https://web.archive.org/web/20260720084835/https://model26.xyz/ |
-| The Paper published (v7.28.x) | manuscript, dossier, manifest + infographics public on model26.xyz | afeaaba | 20 Jul | archived at each publication capture |
+| The Paper published (v7.28.x) | manuscript, dossier, manifest + infographics public on model26.xyz | v7.28.x publication builds (hashes rewritten 20 Jul in the authorised privacy remediation; see changelog) | 20 Jul | archived at each publication capture |
 
 ## PROSPECTIVE ROWS (registration due, rows completed at seal time)
 | Node | Due | Status |
