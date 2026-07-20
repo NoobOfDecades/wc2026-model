@@ -379,6 +379,7 @@ a{color:inherit;text-decoration:none}
   <button class="nb" onclick="nav('results')">📋 Results</button>
   <button class="nb" onclick="nav('model')">🔢 Model</button>
   <button class="nb" onclick="nav('rankanalysis')">📊 Rank Analysis</button>
+  <button class="nb" onclick="nav('paper')">📄 The Paper</button>
 </nav>
 </div></div></header>
 <main class="content" id="root"></main>
@@ -1170,7 +1171,7 @@ function modeTag(){return modeName();}
 function nav(view,opts={}){
   STATE={...STATE,view,...opts};render();
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,results:6,model:7,rankanalysis:8};
+  const map={home:0,rank:1,fixtures:2,compare:3,bracket:4,accuracy:5,results:6,model:7,rankanalysis:8,paper:9};
   if(map[view]!==undefined){
     const btn=document.querySelectorAll('.nb')[map[view]];
     btn.classList.add('on');
@@ -1212,12 +1213,17 @@ function render(){
   else if(v==='results')root.innerHTML=renderResults();
   else if(v==='model')root.innerHTML=renderModel();
   else if(v==='rankanalysis')root.innerHTML=renderRankAnalysis();
+  else if(v==='paper')root.innerHTML=renderPaper();
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.27.0";
-const BUILD_STAMP="2026-07-20 10:47 SAST (time web-verified in this command burst, epoch+7200)";
+const BUILD_VERSION="v7.28.0";
+const BUILD_STAMP="2026-07-20 12:58 SAST (time web-verified in this command burst, epoch+7200)";
 const CHANGELOG=[
+  {v:"v7.28.0",d:"2026-07-20",items:[
+    "POST-FINAL ANALYSIS PUBLISHED. New tab THE PAPER carries the complete written study - 'An Un-gameable Design, Then Shown Working: A Pre-registered, Information-restricted Club-context Index for International Tournament Forecasting' (Dr Schalk Wiehan Van Der Merwe, 20 July 2026) - viewable inline and downloadable, together with the results dossier (every computation shown) and the sealed-forecast manifest, all now files in the public repository so the paper's references resolve. The PDF's SHA-256 is sealed here as the provenance anchor: 516533198ee515dcd6f1727c0ce160fa874dcc15758f887981e950010c28fb0b. The paper states the record as the record stands: model and market exactly level on the primary advancement endpoint (24 of 32 each); the market better calibrated (Brier 0.495 v 0.588) and ahead 66-63 on the 90-minute basis; a pre-committed zero-cost Elo baseline ahead of the model on every metric (67/104, 26/32, 0.526) - reported at full volume; the sealed non-inferiority margins leave the parity underpowered at single-tournament resolution; the permitted claim, fixed by the interpretation ladder registered before the semi-finals, is parity at negligible information cost, not superiority.",
+    "The two companion infographics join the top of the Rank Analysis tab (same sealed numbers, concessions included). The render sweep becomes ELEVEN surfaces with renderPaper. Repository file-list extension per the standing authorization: paper/manuscript.pdf, paper/PAPER-RESULTS-DOSSIER.md, paper/FORECAST-MANIFEST.md, and the two infographic PNGs. No score, probability, grade, registration or market capture changed in this build - the tournament record closed at v7.27.0; this build publishes its write-up."
+  ]},
   {v:"v7.27.0",d:"2026-07-20",items:[
     "FINAL STANDINGS OF ALL 48 NATIONS vs THE FROZEN PRE-TOURNAMENT RANKING, designer-ordered, now on the Rank Analysis tab: a 48-row table (final standing, nation, model pre-rank, off-by with distance colouring, pts/GD/GF) with the same three metrics applied - Spearman rho +0.652, MAE 9.17 places, top-4 2/4, top-8 3/8, top-16 9/16 - and a plain-language reading at the end. HONESTY OF SOURCING, stated up front: FIFA has published NO official 1-48 table for this tournament (none has been issued since 2014; FIFA.com carries only group tables and the bracket, and Wikipedia has no final-standings section at build time), so the standings are computed live from the tournament's complete verified results by FIFA's documented ranking procedure - stage reached, then points, goal difference, goals scored across all matches; extra-time results at the ET score, penalty shootouts as draws - and the section states it will be re-verified against any official FIFA publication. Cross-verified row-for-row against an independent from-scratch derivation (48/48 rows identical) and against the only published full table (a fan-computed points-first list, methodologically different, agreeing on every band's membership).",
     "Two data additions, zero re-scores: KO_ET_SCORES records the five extra-time final scores (Belgium 3-2 Senegal, Argentina 3-2 Cape Verde, England 2-1 Norway, Argentina 3-1 Switzerland, Spain 1-0 Argentina) - baked facts web-verified at their original bakes but until now recorded only in comments; used solely by the standings computation, never by any probability or grade. Exact points/GD/GF ties (Morocco/Switzerland at =7, Ecuador/South Africa at =25) are shown at shared ranks and midranked in the metrics rather than broken by a tie-breaker the record does not carry (FIFA would use fair-play points or lots). The result read honestly: moderate agreement (rho +0.65) with no tournament football seen; champion pick France finished fourth while the eventual champion Spain sat SECOND in the frozen order; the largest misses named in full - Uruguay (7th pre, 37th final), Czechia (14th/39th), Turkey (11th/35th), Australia underrated by 23 places (45th/22nd), Saudi Arabia (17th/38th)."
@@ -3273,6 +3279,27 @@ function orderGradeLine(key){
   return `order graded: Spearman ${rho}, MAE ${g.mae.toFixed(2)} places, top-4 ${g.top4}/4 (Rank Analysis tab)`;
 }
 
+// ════════════ THE PAPER (published 20 Jul 2026; PDF is a same-origin repo file) ════════════
+function renderPaper(){
+  return `<div class="sect-title">THE PAPER - THE STUDY, WRITTEN UP IN FULL</div>
+  <div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-bottom:14px;background:var(--card2);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px">
+  <b style="color:var(--text)">An Un-gameable Design, Then Shown Working: A Pre-registered, Information-restricted Club-context Index for International Tournament Forecasting</b> - Dr Schalk Wiehan Van Der Merwe, 20 July 2026.
+  The complete write-up of this project: the pre-registration architecture, every sealed forecast graded, and the honest result - the model and the betting market finished exactly level on the primary advancement endpoint (24 of 32 ties each); the market was better calibrated (Brier 0.495 v 0.588) and led the 90-minute basis 66-63; a pre-committed zero-cost Elo baseline outperformed the model on every metric (67/104, 26/32). The claim the record supports is parity at negligible information cost, not superiority - and every number in the paper can be reconstructed from this site's sealed data.
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <a href="paper/manuscript.pdf" download="wc2026-squad-context-paper.pdf" style="display:inline-block;padding:9px 16px;background:var(--gold);color:#07111A;border-radius:7px;font-size:12px;font-weight:800">⬇ Download the paper (PDF)</a>
+    <a href="paper/PAPER-RESULTS-DOSSIER.md" download style="display:inline-block;padding:9px 16px;border:1px solid var(--gdim);color:var(--gold);border-radius:7px;font-size:12px;font-weight:700">Results dossier (every computation)</a>
+    <a href="paper/FORECAST-MANIFEST.md" download style="display:inline-block;padding:9px 16px;border:1px solid var(--gdim);color:var(--gold);border-radius:7px;font-size:12px;font-weight:700">Sealed-forecast manifest</a>
+  </div>
+  <div style="font-size:9.5px;color:var(--dim);margin-bottom:8px;font-family:monospace;word-break:break-all">PDF SHA-256 (sealed in the changelog of this build): 516533198ee515dcd6f1727c0ce160fa874dcc15758f887981e950010c28fb0b</div>
+  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden">
+    <object data="paper/manuscript.pdf" type="application/pdf" style="width:100%;height:78vh;display:block">
+      <div style="padding:24px;text-align:center;font-size:12px;color:var(--mut)">Your browser does not display PDFs inline - <a href="paper/manuscript.pdf" style="color:var(--gold);font-weight:700">open or download the paper here</a>.</div>
+    </object>
+  </div>
+  <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-top:10px">Every forecast graded in the paper was sealed publicly before the round it concerns (git commits + Internet Archive snapshots - the Sealed Record on the Model tab lists each one). The companion infographics sit at the top of the Rank Analysis tab. The paper is self-hosted here first; journal and preprint versions follow the same sealed record.</div>`;
+}
+
 function renderRankAnalysis(){
   const rf=realisedFinishingRanks(), T=rf.tiers;
   const NM=t=>(S[t]?S[t].meta.name:t);
@@ -3296,6 +3323,11 @@ function renderRankAnalysis(){
   // worked example: the final node
   const fg=gradeFinishingOrder(SEALED_ORDERS.find(o=>o.key==='FINAL').order);
   return `<div style="max-width:920px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px">
+      <img src="paper/infographic_A_model_vs_market.png" alt="Infographic: model versus market across the pre-registered endpoints" style="width:100%;border-radius:10px;border:1px solid var(--bdr)">
+      <img src="paper/infographic_B_node_journey.png" alt="Infographic: the per-node journey and finishing-order accuracy" style="width:100%;border-radius:10px;border:1px solid var(--bdr)">
+      <div style="font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:-4px">The companion infographics, built from the same sealed numbers as everything below - including the concessions. The full write-up is on <b style="color:var(--gold)">The Paper</b> tab.</div>
+    </div>
     <h2 style="font-size:19px;font-weight:800;margin:6px 0 2px">📊 Rank Analysis - how well did the whole ordering do?</h2>
     <p style="font-size:12px;color:var(--mut);line-height:1.6;margin:6px 0 12px">The binary champion call is one bit of information. Rank metrics ask a harder, fuller question: across a whole registered finishing order, <b style="color:var(--text)">how close was the model's ordering to the order reality produced?</b> This is exactly what a squad-strength model claims to know - a ranking - and where a single win-or-lose headline cannot reach. Every figure below is computed live from the baked results against the frozen sealed orders; nothing is hand-entered.</p>
     <div style="background:var(--card);border:1px solid var(--gdim);border-radius:10px;padding:11px 13px;margin-bottom:13px">
