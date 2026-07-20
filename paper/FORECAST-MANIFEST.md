@@ -16,8 +16,13 @@ One row per registered prediction set: what was predicted | introducing git comm
 | Post-SF1 grading + limitation hash | SF1 miss graded both endpoints; champion OUT; limitation 9.1 hash 3934d490... | 7c7ee21 | 15 Jul 11:41 | https://web.archive.org/web/20260715094548/https://model26.xyz/ |
 
 | FINAL NODE (actual 2) | Spain over Argentina - matchup pick = champion pick, one call; 3P France over England; order 1 Spain, 2 Argentina, 3 France, 4 England | a7cbd2e | 15 Jul 23:11 | https://web.archive.org/web/20260715211541/https://model26.xyz/ (confirmed 15 Jul, final-node text present) |
-| 3P market line (pre-game) | Polymarket FRA 49.5 / D 25.5 / ENG 26.5, ~63h pre-kickoff | 26bd82a | 16 Jul 07:08 | joins the Sealed Record at next confirmed capture |
-| Final market line (pre-game) | Polymarket ESP 41.5 / D 31.5 / ARG 26.5, ~86h pre-kickoff | 26bd82a | 16 Jul 07:08 | joins the Sealed Record at next confirmed capture |
+| 3P market line (pre-game) | Polymarket FRA 49.5 / D 25.5 / ENG 26.5, ~63h pre-kickoff | 26bd82a | 16 Jul 07:08 | https://web.archive.org/web/20260716130329/https://model26.xyz/ (v7.23.1 capture, both lines present pre-kickoff) |
+| Final market line (pre-game) | Polymarket ESP 41.5 / D 31.5 / ARG 26.5, ~86h pre-kickoff | 26bd82a | 16 Jul 07:08 | https://web.archive.org/web/20260716130329/https://model26.xyz/ (v7.23.1 capture, both lines present pre-kickoff) |
+
+| Final bake (v7.25.0) | Spain 1-0 aet, champion pick correct | 5d80573 | 19 Jul 00:56 | https://web.archive.org/web/20260719225831/https://model26.xyz/ |
+| Rank Analysis + full-component grading (v7.26.0) | every sealed order graded vs realised finish | b196c03 | 20 Jul 01:10 | https://web.archive.org/web/20260720050130/https://model26.xyz/ |
+| 48-nation FIFA-procedure standings (v7.27.0) | frozen pre-knockout ranking vs final standings, all 48 | 642a76e | 20 Jul 10:47 | https://web.archive.org/web/20260720084835/https://model26.xyz/ |
+| The Paper published (v7.28.x) | manuscript, dossier, manifest + infographics public on model26.xyz | afeaaba | 20 Jul | archived at each publication capture |
 
 ## PROSPECTIVE ROWS (registration due, rows completed at seal time)
 | Node | Due | Status |
