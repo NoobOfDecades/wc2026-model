@@ -1215,9 +1215,13 @@ function render(){
   renderFooter();
   if(typeof redistributeStakes==='function')redistributeStakes(); // init pooled stake split if a betting panel is present
 }
-const BUILD_VERSION="v7.26.0";
-const BUILD_STAMP="2026-07-20 01:09 SAST (time web-verified in this command burst, epoch+7200)";
+const BUILD_VERSION="v7.27.0";
+const BUILD_STAMP="2026-07-20 10:47 SAST (time web-verified in this command burst, epoch+7200)";
 const CHANGELOG=[
+  {v:"v7.27.0",d:"2026-07-20",items:[
+    "FINAL STANDINGS OF ALL 48 NATIONS vs THE FROZEN PRE-TOURNAMENT RANKING, designer-ordered, now on the Rank Analysis tab: a 48-row table (final standing, nation, model pre-rank, off-by with distance colouring, pts/GD/GF) with the same three metrics applied - Spearman rho +0.652, MAE 9.17 places, top-4 2/4, top-8 3/8, top-16 9/16 - and a plain-language reading at the end. HONESTY OF SOURCING, stated up front: FIFA has published NO official 1-48 table for this tournament (none has been issued since 2014; FIFA.com carries only group tables and the bracket, and Wikipedia has no final-standings section at build time), so the standings are computed live from the tournament's complete verified results by FIFA's documented ranking procedure - stage reached, then points, goal difference, goals scored across all matches; extra-time results at the ET score, penalty shootouts as draws - and the section states it will be re-verified against any official FIFA publication. Cross-verified row-for-row against an independent from-scratch derivation (48/48 rows identical) and against the only published full table (a fan-computed points-first list, methodologically different, agreeing on every band's membership).",
+    "Two data additions, zero re-scores: KO_ET_SCORES records the five extra-time final scores (Belgium 3-2 Senegal, Argentina 3-2 Cape Verde, England 2-1 Norway, Argentina 3-1 Switzerland, Spain 1-0 Argentina) - baked facts web-verified at their original bakes but until now recorded only in comments; used solely by the standings computation, never by any probability or grade. Exact points/GD/GF ties (Morocco/Switzerland at =7, Ecuador/South Africa at =25) are shown at shared ranks and midranked in the metrics rather than broken by a tie-breaker the record does not carry (FIFA would use fair-play points or lots). The result read honestly: moderate agreement (rho +0.65) with no tournament football seen; champion pick France finished fourth while the eventual champion Spain sat SECOND in the frozen order; the largest misses named in full - Uruguay (7th pre, 37th final), Czechia (14th/39th), Turkey (11th/35th), Australia underrated by 23 places (45th/22nd), Saudi Arabia (17th/38th)."
+  ]},
   {v:"v7.26.0",d:"2026-07-20",items:[
     "NEW RANK ANALYSIS TAB (post-final programme, Phase 2) - the finishing-order components of every sealed forecast, graded live against the realised order. The binary champion call is one bit; rank metrics ask the fuller question a squad-strength model actually claims to answer - how close was the whole ordering to what reality produced. Three metrics per sealed order: Spearman&#39;s rho (rank agreement, computed as the Pearson correlation of the rank vectors so it is correct under ties), MAE in ranking places, and top-4/8/16 set overlap. The realised finishing order is derived LIVE from the baked results (champion, runner-up, third, fourth fully resolved; same-round exits tied at their tier midrank - the standard handling for a partial order; tiers sum to 48). RESULTS: pre-tournament full ranking rho +0.55 (MAE 10.2, champion France finished 4th); R16 order-of-16 +0.59 (dragged by Brazil, its predicted runner-up, exiting in the R16); QF order-of-8 +0.76 with all four eventual semi-finalists inside its top four (top-4 4/4); SF order-of-4 NEGATIVE at -0.40 - it ranked France first of the four and France came fourth, the model&#39;s biggest ordering miss, reported as plainly as its hits; FINAL order-of-4 its best at +0.80 (MAE 0.50, a single France/England transposition) with the champion pick Spain CORRECT. The ordering sharpened as the field narrowed. FIFA-official 1-48 comparison flagged pending official publication, to be recomputed when it exists.",
     "FULL-COMPONENT NODE GRADING COMPLETED (12 Jul rule): the per-node scoreboard&#39;s finishing-order lines, which read graded at tournament end all tournament, now show the live-computed grade for each node (Spearman, MAE, top-4) - no sealed component is left ungraded now that the tournament is complete. The five frozen registration panels are UNTOUCHED (md5-identical x5 vs HEAD: 4de17d96 / b3d0124b / 9933c81b / d3a40a8d / c4ebc571); all order grading lives in the editable scoreboard and the new tab, and the realised order is one shared live function feeding both so display and arithmetic cannot diverge. The tenth surface (renderRankAnalysis) joins the standing render sweep. Zero scores, probabilities, registrations or market captures changed; the tab reads existing baked data. Verified: node --check PASS, ten-surface sweep ALL PASS, every rank figure recomputed and matched, backticks even, div balance at baseline, frozen panels identical."
@@ -2931,6 +2935,16 @@ const KO_HOW={
   'ARGENTINA|SWITZERLAND':'aet',
   'SPAIN|ARGENTINA':'aet',
 };
+// EXTRA-TIME final scores for the five aet ties (baked facts, web-verified at each bake and until
+// v7.27.0 recorded only in comments/changelog; FIXTURES deliberately holds the 90-minute score).
+// Used ONLY by the FIFA-procedure standings computation - never by any model probability or grade.
+const KO_ET_SCORES={
+  'BELGIUM|SENEGAL':[3,2],       // 2-2 at 90, Belgium won 3-2 aet (v7.8.0)
+  'ARGENTINA|CAPE_VERDE':[3,2],  // 1-1 at 90, Argentina won 3-2 aet (v7.10.0)
+  'NORWAY|ENGLAND':[1,2],        // 1-1 at 90, England won 2-1 aet (v7.19.0)
+  'ARGENTINA|SWITZERLAND':[3,1], // 1-1 at 90, Argentina won 3-1 aet (v7.19.0)
+  'SPAIN|ARGENTINA':[1,0],       // 0-0 at 90, Spain won 1-0 aet, Ferran Torres 106' (v7.25.0)
+};
 const QF_KEYS={'FRANCE|MOROCCO':1,'NORWAY|ENGLAND':1,'SPAIN|BELGIUM':1,'ARGENTINA|SWITZERLAND':1};
 const SF_KEYS={'FRANCE|SPAIN':1,'ENGLAND|ARGENTINA':1};
 const THIRD_KEYS={'FRANCE|ENGLAND':1};
@@ -3186,6 +3200,43 @@ function realisedFinishingRanks(){
   assign(qfL.slice().sort());assign(r16L.slice().sort());assign(r32L.slice().sort());assign(groupExit.slice().sort());
   return {rank,tiers:{champ,runner,third,fourth,qfL:qfL.slice().sort(),r16L:r16L.slice().sort(),r32L:r32L.slice().sort(),groupExit:groupExit.slice().sort()}};
 }
+// FINAL STANDINGS by FIFA's documented ranking procedure, computed LIVE from the baked results.
+// No official FIFA 1-48 table exists for this tournament as of 20 Jul 2026 (FIFA last published one
+// in 2014); this applies FIFA's historical procedure to the verified results: stage bands first
+// (champion, runner-up, third, fourth, QF losers 5-8, R16 9-16, R32 17-32, group exits 33-48), then
+// within a band: points, then goal difference, then goals scored, over ALL matches played.
+// Convention (FIFA 2022-era): a tie decided in EXTRA TIME counts as a win/loss at the ET final
+// score (KO_ET_SCORES); a PENALTY shootout counts as a draw at the level score. Exact-triple ties
+// (pts/GD/GF all equal) are SHOWN at a shared rank and take midranks in the metrics - FIFA would
+// break them on fair-play points or lots, which this record does not carry.
+function fifaProcedureStandings(){
+  const pts={},gdm={},gfm={};
+  Object.keys(S).forEach(t=>{pts[t]=0;gdm[t]=0;gfm[t]=0;});
+  for(const f of FIXTURES){
+    if(f[3]===null||f[3]===undefined)continue;
+    const a=f[0],b=f[1];if(!S[a]||!S[b])continue;
+    let sa=f[3],sb=f[4];
+    const key=a+'|'+b;
+    if(KO_ADVANCERS[key]&&KO_HOW[key]==='aet'&&KO_ET_SCORES[key]){sa=KO_ET_SCORES[key][0];sb=KO_ET_SCORES[key][1];}
+    gfm[a]+=sa;gfm[b]+=sb;gdm[a]+=sa-sb;gdm[b]+=sb-sa;
+    if(sa>sb)pts[a]+=3;else if(sb>sa)pts[b]+=3;else{pts[a]+=1;pts[b]+=1;}
+  }
+  const T=realisedFinishingRanks().tiers;
+  const bandSort=list=>list.slice().sort((x,y)=>pts[y]-pts[x]||gdm[y]-gdm[x]||gfm[y]-gfm[x]);
+  const bands=[T.champ,T.runner,T.third,T.fourth,bandSort(T.qfL),bandSort(T.r16L),bandSort(T.r32L),bandSort(T.groupExit)];
+  const rows=[];let r=1;
+  for(const band of bands){
+    let i=0;
+    while(i<band.length){
+      let j=i;
+      while(j+1<band.length&&pts[band[j+1]]===pts[band[i]]&&gdm[band[j+1]]===gdm[band[i]]&&gfm[band[j+1]]===gfm[band[i]])j++;
+      const mid=r+(j-i)/2;
+      for(let k=i;k<=j;k++)rows.push({t:band[k],rank:mid,shown:(j>i?'='+r:''+r),pts:pts[band[k]],gd:gdm[band[k]],gf:gfm[band[k]],tied:j>i});
+      r+=j-i+1;i=j+1;
+    }
+  }
+  return rows;
+}
 // Spearman's rho as the Pearson correlation of the two rank vectors (this definition is correct
 // under ties, where the simplified 6*sum(d^2) formula is not; the realised side carries midrank ties).
 function spearmanRho(pred,real){const n=pred.length;if(n<2)return NaN;
@@ -3274,10 +3325,28 @@ function renderRankAnalysis(){
         <div style="font-size:10.5px;color:var(--mut);line-height:1.55;margin-top:4px">How many of the predicted top-k are in the realised top-k, as sets (tie-agnostic). Answers "did it identify the right group" even when it ordered them imperfectly - e.g. the QF node named all four eventual semi-finalists (top-4 4/4) though it ordered them wrongly.</div>
       </div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--gdim);border-radius:9px;padding:10px 12px;margin-bottom:14px">
-      <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:.5px">FIFA-OFFICIAL 1-48 COMPARISON</div>
-      <div style="font-size:10.5px;color:var(--mut);line-height:1.55;margin-top:4px">FIFA publishes an official final tournament ranking of all 48 teams (tie-breaks by stage reached, then points, goal difference, goals). The model's pre-tournament full ranking will be scored against it on the same three metrics <b style="color:var(--text)">the moment it is published</b> - <b style="color:var(--text)">pending official publication</b>. The realised order above uses stage-of-elimination with midrank ties, which agrees with the FIFA order down to fourth place and differs only in how same-stage exits are broken; the recompute will be shown here when the official table exists.</div>
-    </div>
+    ${(()=>{ // FINAL STANDINGS (FIFA ranking procedure) vs the frozen pre-tournament ranking - all 48 teams
+      const st=fifaProcedureStandings();
+      const pre=SEALED_ORDERS[0].order; const preRank={}; pre.forEach((t,i)=>preRank[t]=i+1);
+      const predV=st.map(x=>preRank[x.t]), realV=st.map(x=>x.rank);
+      const rho=spearmanRho(predV,realV), mae=maePos(predV,realV);
+      const stSorted=st.slice().sort((x,y)=>x.rank-y.rank).map(x=>x.t);
+      const ov=k=>{const rs=new Set(stSorted.slice(0,k));return pre.slice(0,k).filter(t=>rs.has(t)).length;};
+      const worst=st.slice().sort((x,y)=>Math.abs(preRank[y.t]-y.rank)-Math.abs(preRank[x.t]-x.rank)).slice(0,3);
+      const wTxt=worst.map(x=>{const d=preRank[x.t]-x.rank;return NM(x.t)+' ('+(d>0?'underrated by ':'overrated by ')+Math.abs(d).toFixed(0)+' places)';}).join(', ');
+      const rows48=st.map(x=>{const d=preRank[x.t]-x.rank;const col=Math.abs(d)<=3?'#22C55E':Math.abs(d)<=8?'#EAB308':'#EF4444';
+        return `<tr><td style="padding:3px 8px;font-family:monospace">${x.shown}</td><td style="padding:3px 8px">${NM(x.t)}${x.tied?'<span style="color:var(--dim)">*</span>':''}</td><td style="padding:3px 8px;text-align:center;font-family:monospace">${preRank[x.t]}</td><td style="padding:3px 8px;text-align:center;font-family:monospace;color:${col}">${d>0?'+':''}${Number.isInteger(d)?d:d.toFixed(1)}</td><td style="padding:3px 8px;text-align:center;color:var(--mut);font-family:monospace;font-size:10px">${x.pts} / ${x.gd>0?'+':''}${x.gd} / ${x.gf}</td></tr>`;}).join('');
+      return `<div style="background:var(--card);border:1px solid var(--gold);border-radius:9px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.5px">FINAL STANDINGS (FIFA RANKING PROCEDURE) vs THE FROZEN PRE-TOURNAMENT RANKING - ALL 48 NATIONS</div>
+      <div style="font-size:10px;color:var(--mut);line-height:1.55;margin:6px 0 8px">FIFA has published no official 1-48 table for this tournament (none has been issued since 2014); the standings below are computed from the tournament's complete verified results by FIFA's documented ranking procedure - stage reached first, then points, goal difference and goals scored across all matches (extra-time results count at the ET score; penalty shootouts count as draws). Should FIFA publish an official table, this section is re-verified against it. <b style="color:var(--text)">Off by</b> = the model's frozen pre-tournament rank minus the final standing: positive = the model underrated them, negative = overrated. * = exact points/GD/GF tie, shown at a shared rank and midranked in the metrics.</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">Same three metrics, model pre-tournament order vs final standings: Spearman ρ <span style="color:${rho>=0.5?'#22C55E':(rho>=0?'#EAB308':'#EF4444')};font-family:monospace">${(rho>=0?'+':'')+rho.toFixed(3)}</span> · MAE <span style="font-family:monospace">${mae.toFixed(2)}</span> places · top-4 ${ov(4)}/4 · top-8 ${ov(8)}/8 · top-16 ${ov(16)}/16</div>
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px"><table style="width:100%;border-collapse:collapse;font-size:11px">
+        <tr style="color:var(--dim);font-size:9px;text-transform:uppercase;text-align:left;position:sticky;top:0;background:var(--card2)"><td style="padding:4px 8px">Final standing</td><td style="padding:4px 8px">Nation</td><td style="padding:4px 8px;text-align:center">Model pre-rank</td><td style="padding:4px 8px;text-align:center">Off by</td><td style="padding:4px 8px;text-align:center">pts / GD / GF</td></tr>
+        ${rows48}
+      </table></div>
+      <p style="font-size:10.5px;color:var(--mut);line-height:1.6;margin:9px 0 0"><b style="color:var(--text)">Reading the result honestly.</b> Across all 48 nations the frozen pre-tournament order correlates at ρ ${(rho>=0?'+':'')+rho.toFixed(2)} with the final standings, off by ${mae.toFixed(1)} places on average - moderate agreement from a model that had seen no tournament football. It placed ${ov(4)} of the eventual top four and ${ov(16)} of the top sixteen inside its own equivalents before a ball was kicked, and its champion pick France finished fourth; the eventual champion Spain sat ${preRank['SPAIN']}${preRank['SPAIN']===2?'nd':preRank['SPAIN']===3?'rd':'th'} in the frozen order. The largest misses are stated as plainly as the hits: ${wTxt}. The green/amber/red colouring marks nations within 3, within 8, and beyond 8 places of their final standing.</p>
+      </div>`;
+    })()}
     <details style="margin-bottom:14px"><summary style="cursor:pointer;font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.5px">SHOW THE COMPUTATION (predicted vs realised rank, per team, per node)</summary>
       <div style="font-size:10px;color:var(--mut);line-height:1.6;padding:8px 4px;font-family:monospace">
       ${grades.filter(x=>x.o.key!=='PRE').map(({o,g})=>`<div style="margin:6px 0"><b style="color:var(--text)">${o.label}</b> (ρ ${fmt(g.rho)}, MAE ${g.mae.toFixed(2)}):<br>${o.order.map((t,i)=>NM(t)+' p'+(i+1)+'/r'+g.real[i]).join(' · ')}</div>`).join('')}
